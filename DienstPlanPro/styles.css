@@ -227,7 +227,7 @@ body.dark-mode .absence-note{background:rgba(0,0,0,.25)}
 .duty-actions>summary::-webkit-details-marker{display:none}
 .duty-actions>summary:hover,.duty-actions[open]>summary{background:rgba(255,255,255,.25);opacity:1}
 .duty-actions-menu{display:grid;gap:2px;padding:4px;min-width:130px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);position:absolute;right:0;top:24px;z-index:30}
-body>.duty-actions-menu{position:fixed;z-index:2000}
+body>.duty-actions-menu{position:fixed;z-index:2000;right:auto;width:max-content;max-width:calc(100vw - 16px)}
 .duty-actions-menu button{border:0;background:transparent;text-align:left;padding:8px 10px;border-radius:7px;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
 .duty-actions-menu button:hover{background:var(--surface-3)}
 .duty-actions-menu .danger-text{color:var(--red)}
@@ -2425,3 +2425,34 @@ body.dark-mode .note-indicator{color:#f3c843}
 .note-self{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
 .note-self small{margin-left:auto}
 .note-del{justify-self:start;margin-top:4px}
+/* Notizen: Knopf „Notizen“ am Eintrag, Feld „Notiz hinzufügen“, Popup */
+.mt-note[data-notes-open]{cursor:pointer}
+.note-chip{display:inline-flex;align-items:center;gap:4px;margin:4px 0 1px;padding:2px 8px 2px 6px;border:1px solid color-mix(in srgb,#e0a800 55%,var(--line));border-radius:999px;background:color-mix(in srgb,#ffd84d 30%,var(--surface));color:#7a5b00;font:inherit;font-size:11px;font-weight:700;line-height:1.5;cursor:pointer;max-width:100%}
+.note-chip svg{width:12px;height:12px;flex:none}
+.note-chip:hover{border-color:#e0a800;box-shadow:0 0 0 2px color-mix(in srgb,#e0a800 25%,transparent)}
+body.dark-mode .note-chip{color:#f3c843;background:color-mix(in srgb,#e0a800 20%,var(--surface))}
+.calendar-assignment .note-chip{display:flex;width:fit-content}
+.note-chip{width:fit-content;align-self:flex-start;justify-self:start}
+.calendar-assignment.note-stub{display:block;width:100%;text-align:left;font:inherit;cursor:pointer}
+.calendar-assignment.note-stub:hover{border-color:#e0a800;box-shadow:0 0 0 2px color-mix(in srgb,#e0a800 25%,transparent)}
+.calendar-assignment.note-stub b,.calendar-assignment.note-stub small{display:block}
+.note-indicator svg{width:12px;height:12px}
+.note-add-field{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:38px;margin-top:6px;padding:8px 10px;border:1.5px dashed color-mix(in srgb,var(--muted) 45%,var(--line));border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.note-add-field svg{width:14px;height:14px;flex:none}
+.note-add-field:hover,.note-add-field:focus-visible{border-color:#e0a800;color:#9a7300;background:color-mix(in srgb,#ffd84d 14%,transparent);outline:none}
+body.dark-mode .note-add-field:hover{color:#f3c843}
+.week-day-cell .note-add-field{margin-top:0}
+.note-add-field.tm-note-add{min-height:30px;margin:0;padding:4px 6px;font-size:11px;opacity:0;gap:4px}
+.tm-cell:hover .note-add-field.tm-note-add,.note-add-field.tm-note-add:focus-visible{opacity:1}
+@media (hover:none){.note-add-field.tm-note-add{opacity:.8}}
+.note-add-field.day-note-add,.note-add-field.agenda-note-add{min-height:46px;margin-top:10px}
+.np-modal{max-width:520px}
+.np-modal .wp-actions [data-dlg="cancel"]{display:none}
+.np-list{display:flex;flex-direction:column;gap:10px;max-height:min(52vh,460px);overflow:auto}
+.np-item{border:1px solid color-mix(in srgb,#e0a800 40%,var(--line));border-left:4px solid #e0a800;border-radius:10px;background:color-mix(in srgb,#ffd84d 12%,var(--surface));padding:10px 12px}
+.np-text{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.45;color:var(--ink)}
+.np-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.np-meta small{color:var(--muted)}
+.np-actions{display:flex;gap:6px}
+.np-actions svg{width:13px;height:13px}
+.note-add-field.np-add{margin-top:10px}
