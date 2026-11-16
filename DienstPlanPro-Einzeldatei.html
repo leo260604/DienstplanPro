@@ -3410,6 +3410,19 @@ if(!localStorage.getItem('dienstplanClearEntries20261116')){
   localStorage.setItem('dienstplanClearEntries20261116','1');
  }catch(e){console.warn('Dienste/Bereitschaften konnten nicht gelöscht werden.',e)}
 }
+/* Bereinigung 16.11.2026 (2): alle Abwesenheiten (Urlaub, Zeitausgleich …) und Arbeitsorte (Büro, Homeoffice) einmalig löschen. */
+if(!localStorage.getItem('dienstplanClearAbsences20261116')){
+ try{
+  const isAbsOrPlace=a=>a&&(a.isAbsence||a.kind==='Arbeitsort');
+  const removed=assignments.filter(isAbsOrPlace);
+  if(removed.length){
+   const abs=removed.filter(a=>a.isAbsence).length,place=removed.length-abs;
+   assignments=assignments.filter(a=>!isAbsOrPlace(a));persistAssignments();
+   auditLog.unshift({id:makeId(),ts:Date.now(),user:'System',role:'Admin',action:'Gelöscht',area:'Dienstplan',detail:`Alle Abwesenheiten (${abs}) und Arbeitsorte (${place}) gelöscht`,title:'Abwesenheiten und Arbeitsorte gelöscht',object:'Alle Teams',before:`${abs} Abwesenheiten, ${place} Arbeitsorte`,after:'0'});try{save('dienstplanAuditLog',auditLog,true)}catch(e){}
+  }
+  localStorage.setItem('dienstplanClearAbsences20261116','1');
+ }catch(e){console.warn('Abwesenheiten/Arbeitsorte konnten nicht gelöscht werden.',e)}
+}
 
 /* ------------------------------------------------------------------
    Benachrichtigungen
