@@ -2510,13 +2510,19 @@ body.dp-range-dragging{cursor:cell}
 .ca-foot .note-chip{margin:0;flex:none}
 .calendar-assignment .ca-foot .note-chip{display:inline-flex}
 .calendar-assignment .ca-foot{width:100%;align-self:stretch}
-/* Notizen-Anzeige: nur das Symbol gelb, der Rest weiß */
-.note-chip,body.dark-mode .note-chip{background:#fff;color:#1f2937;border-color:#fff;box-shadow:0 1px 2px rgba(15,23,42,.14)}
-.note-chip svg{color:#e0a800;stroke:#e0a800}
-.note-chip:hover{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.55)}
-.mobile-agenda-card .note-chip,.day-assignment-row .note-chip:not(.calendar-assignment .note-chip){border-color:var(--line)}
-.calendar-assignment.note-assignment.note-stub,body.dark-mode .calendar-assignment.note-assignment.note-stub{background:#fff;border:1px solid var(--line);color:#1f2937}
-.note-stub .note-indicator,body.dark-mode .note-stub .note-indicator{color:#1f2937}
-.note-stub .note-indicator svg{color:#e0a800;stroke:#e0a800}
-.note-stub b{color:#1f2937}.note-stub small{color:#64748b}
-.calendar-assignment.note-stub:hover{border-color:#e0a800}
+/* Notizen-Anzeige im „Liquid Glass“-Stil: durchscheinend, Glanzkante, nur das Symbol gelb */
+.note-chip,body.dark-mode .note-chip{position:relative;color:inherit;background:linear-gradient(135deg,rgba(255,255,255,.52) 0%,rgba(255,255,255,.22) 55%,rgba(255,255,255,.34) 100%);border:1px solid rgba(255,255,255,.62);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 1px rgba(255,255,255,.18),inset 0 0 6px rgba(255,255,255,.18),0 2px 8px rgba(15,23,42,.16);text-shadow:0 1px 1px rgba(15,23,42,.12);overflow:hidden;transition:transform .15s,box-shadow .15s,background .15s}
+.note-chip::before{content:"";position:absolute;inset:0 0 50% 0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none}
+.note-chip>*{position:relative}
+.note-chip svg{color:#f5b800;stroke:#f5b800;filter:drop-shadow(0 0 2px rgba(255,200,0,.35))}
+.note-chip:hover{border-color:rgba(255,255,255,.85);background:linear-gradient(135deg,rgba(255,255,255,.62),rgba(255,255,255,.3) 55%,rgba(255,255,255,.44));box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 1px rgba(255,255,255,.22),0 4px 14px rgba(15,23,42,.2);transform:translateY(-1px)}
+/* auf hellem Untergrund (Handy-Liste, weiße Karten): dunkle Schrift, feine Kontur */
+.mobile-agenda-card .note-chip,body.dark-mode .mobile-agenda-card .note-chip{color:var(--ink);border-color:rgba(15,23,42,.10);background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(236,242,250,.7) 60%,rgba(255,255,255,.85));text-shadow:none}
+body.dark-mode .mobile-agenda-card .note-chip{border-color:rgba(255,255,255,.18);background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.05) 60%,rgba(255,255,255,.1))}
+/* „Notizen“-Karte ohne Dienst als Glaskarte */
+.calendar-assignment.note-assignment.note-stub,body.dark-mode .calendar-assignment.note-assignment.note-stub{position:relative;overflow:hidden;color:var(--ink);background:linear-gradient(135deg,rgba(255,255,255,.88) 0%,rgba(238,243,250,.62) 55%,rgba(255,255,255,.8) 100%);border:1px solid rgba(15,23,42,.08);-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 1px rgba(255,255,255,.3),0 4px 14px rgba(15,23,42,.08)}
+body.dark-mode .calendar-assignment.note-assignment.note-stub{border-color:rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04) 55%,rgba(255,255,255,.1));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 4px 14px rgba(0,0,0,.25)}
+.note-stub .note-indicator,body.dark-mode .note-stub .note-indicator{color:var(--ink)}
+.note-stub .note-indicator svg{color:#f5b800;stroke:#f5b800}
+.note-stub b{color:var(--ink)}.note-stub small{color:var(--muted)}
+.calendar-assignment.note-stub:hover{border-color:rgba(245,184,0,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 6px 18px rgba(15,23,42,.12)}
