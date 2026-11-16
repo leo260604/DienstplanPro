@@ -2532,6 +2532,15 @@ body.dp-range-dragging{cursor:cell}
 /* Notizenfeld etwas kleiner */
 .note-chip,body.dark-mode .note-chip{padding:0 6px 0 5px;gap:3px;font-size:10px;line-height:1.5;font-weight:600}
 .note-chip svg,.note-chip svg *{width:10px;height:10px}
+/* Notiz-Knopf: nur ein kleines Sprechblasen-Symbol (ggf. mit Anzahl) in der Fußzeile,
+   in Farbe und Größe wie der Teamname – fügt sich in jeden Eintrag ein */
+.note-chip,body.dark-mode .note-chip{background:transparent;border:0;box-shadow:none;text-shadow:none;padding:2px 3px;margin:-2px -3px -2px 0;gap:2px;border-radius:6px;font-size:10.5px;font-weight:700;line-height:1;color:inherit;opacity:.82;transition:opacity .15s,background .15s}
+.note-chip svg,.note-chip svg *{width:14px;height:14px;opacity:1}
+.note-chip:hover,.note-chip:focus-visible{opacity:1;background:color-mix(in srgb,currentColor 16%,transparent);border:0;box-shadow:none;outline:none}
+.mobile-agenda-card .note-chip,body.dark-mode .mobile-agenda-card .note-chip{color:var(--muted);background:transparent;border:0;text-shadow:none}
+.mobile-agenda-card .note-chip svg,.mobile-agenda-card .note-chip svg *{width:16px;height:16px}
+.calendar-assignment .ca-foot .note-chip{margin-right:-22px}
+.mobile-agenda-card .ca-foot .note-chip{margin-right:-32px}
 
 </style>
 </head>
@@ -6530,7 +6539,7 @@ const noteKeyOf=a=>noteEmp(a)+'|'+a.date;
 const noteFoot=(small,chip)=>chip?`<div class="ca-foot">${small}${chip}</div>`:small;
 const notesForKey=k=>{const i=k.lastIndexOf('|'),emp=k.slice(0,i),date=k.slice(i+1);return assignments.filter(a=>a.kind==='Notiz'&&noteEmp(a)===emp&&a.date===date)};
 // Knopf „Notizen“ an einem Eintrag – der Text erscheint erst im Popup
-function noteChip(k,n){return `<button type="button" class="note-chip" data-notes-open="${escapeHtml(k)}" title="Notizen anzeigen">${icon('chat')}<span>Notizen${n>1?` (${n})`:''}</span></button>`}
+function noteChip(k,n){return `<button type="button" class="note-chip" data-notes-open="${escapeHtml(k)}" title="${n>1?n+' Notizen':'Notiz'} anzeigen" aria-label="${n>1?n+' Notizen':'Notiz'} anzeigen">${icon('chat')}${n>1?`<span>${n}</span>`:''}</button>`}
 // Notizen ohne Eintrag am selben Tag: kleine Karte „Notizen“ mit Name
 function noteStub(g,agenda){const n=g.notes.length;return `<button type="button" class="calendar-assignment note-assignment note-stub${agenda?' note-agenda':''}" data-notes-open="${escapeHtml(noteKeyOf(g))}" title="Notizen von ${escapeHtml(g.employee)} anzeigen"><span class="note-indicator">${icon('chat')}Notizen${n>1?` (${n})`:''}</span><b>${escapeHtml(g.employee)}</b><small>${escapeHtml(g.team||'')}</small></button>`}
 function noteCard(a,agenda){return noteStub({employee:a.employee,team:a.team,date:a.date,notes:notesForKey(noteKeyOf(a))},agenda)}

@@ -2524,3 +2524,12 @@ body.dp-range-dragging{cursor:cell}
 /* Notizenfeld etwas kleiner */
 .note-chip,body.dark-mode .note-chip{padding:0 6px 0 5px;gap:3px;font-size:10px;line-height:1.5;font-weight:600}
 .note-chip svg,.note-chip svg *{width:10px;height:10px}
+/* Notiz-Knopf: nur ein kleines Sprechblasen-Symbol (ggf. mit Anzahl) in der Fußzeile,
+   in Farbe und Größe wie der Teamname – fügt sich in jeden Eintrag ein */
+.note-chip,body.dark-mode .note-chip{background:transparent;border:0;box-shadow:none;text-shadow:none;padding:2px 3px;margin:-2px -3px -2px 0;gap:2px;border-radius:6px;font-size:10.5px;font-weight:700;line-height:1;color:inherit;opacity:.82;transition:opacity .15s,background .15s}
+.note-chip svg,.note-chip svg *{width:14px;height:14px;opacity:1}
+.note-chip:hover,.note-chip:focus-visible{opacity:1;background:color-mix(in srgb,currentColor 16%,transparent);border:0;box-shadow:none;outline:none}
+.mobile-agenda-card .note-chip,body.dark-mode .mobile-agenda-card .note-chip{color:var(--muted);background:transparent;border:0;text-shadow:none}
+.mobile-agenda-card .note-chip svg,.mobile-agenda-card .note-chip svg *{width:16px;height:16px}
+.calendar-assignment .ca-foot .note-chip{margin-right:-22px}
+.mobile-agenda-card .ca-foot .note-chip{margin-right:-32px}

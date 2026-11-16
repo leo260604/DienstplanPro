@@ -3435,7 +3435,7 @@ const noteKeyOf=a=>noteEmp(a)+'|'+a.date;
 const noteFoot=(small,chip)=>chip?`<div class="ca-foot">${small}${chip}</div>`:small;
 const notesForKey=k=>{const i=k.lastIndexOf('|'),emp=k.slice(0,i),date=k.slice(i+1);return assignments.filter(a=>a.kind==='Notiz'&&noteEmp(a)===emp&&a.date===date)};
 // Knopf „Notizen“ an einem Eintrag – der Text erscheint erst im Popup
-function noteChip(k,n){return `<button type="button" class="note-chip" data-notes-open="${escapeHtml(k)}" title="Notizen anzeigen">${icon('chat')}<span>Notizen${n>1?` (${n})`:''}</span></button>`}
+function noteChip(k,n){return `<button type="button" class="note-chip" data-notes-open="${escapeHtml(k)}" title="${n>1?n+' Notizen':'Notiz'} anzeigen" aria-label="${n>1?n+' Notizen':'Notiz'} anzeigen">${icon('chat')}${n>1?`<span>${n}</span>`:''}</button>`}
 // Notizen ohne Eintrag am selben Tag: kleine Karte „Notizen“ mit Name
 function noteStub(g,agenda){const n=g.notes.length;return `<button type="button" class="calendar-assignment note-assignment note-stub${agenda?' note-agenda':''}" data-notes-open="${escapeHtml(noteKeyOf(g))}" title="Notizen von ${escapeHtml(g.employee)} anzeigen"><span class="note-indicator">${icon('chat')}Notizen${n>1?` (${n})`:''}</span><b>${escapeHtml(g.employee)}</b><small>${escapeHtml(g.team||'')}</small></button>`}
 function noteCard(a,agenda){return noteStub({employee:a.employee,team:a.team,date:a.date,notes:notesForKey(noteKeyOf(a))},agenda)}
