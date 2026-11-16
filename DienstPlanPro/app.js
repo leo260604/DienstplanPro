@@ -799,7 +799,8 @@ function calendar(){
  const hostRank=a=>a.kind==='Dienstplan'&&!a.isAbsence?0:a.isAbsence?1:a.kind==='Bereitschaft'?2:3;
  visible.forEach(a=>{if(a.kind==='Notiz')return;const k=noteKeyOf(a);if(!notesBy[k])return;const h=noteHost[k];if(!h||hostRank(a)<hostRank(h))noteHost[k]=a});
  const noteChipFor=a=>{const k=noteKeyOf(a);return isDuty&&noteHost[k]===a?noteChip(k,notesBy[k].length):''};
- const noteAddField=(date,emp='',cls='')=>isDuty&&!onlyConflicts&&(emp?canNoteFor(emp):noteTargets().length)?`<button type="button" class="note-add-field ${cls}" data-note-add="${escapeHtml(emp+'|'+date)}">${icon('plus')}<span>Notiz hinzufügen</span></button>`:'';
+ // Kein Feld „Notiz hinzufügen“ am Samstag (Teamnotizen bleiben möglich)
+ const noteAddField=(date,emp='',cls='')=>isDuty&&!onlyConflicts&&new Date(date+'T12:00:00').getDay()!==6&&(emp?canNoteFor(emp):noteTargets().length)?`<button type="button" class="note-add-field ${cls}" data-note-add="${escapeHtml(emp+'|'+date)}">${icon('plus')}<span>Notiz hinzufügen</span></button>`:'';
  const dayEntries=date=>{const list=[],seen=new Set();(byDate[date]||[]).forEach(a=>{if(a.kind!=='Notiz'){list.push(a);return}const k=noteKeyOf(a);if(noteHost[k]||seen.has(k))return;seen.add(k);list.push({kind:'NotizGruppe',id:'ng|'+k,employee:a.employee,team:a.team,date:a.date,notes:notesBy[k]})});
   return list.sort((a,b)=>(a.kind==='NotizGruppe'?1:0)-(b.kind==='NotizGruppe'?1:0)||(a.kind==='Bereitschaft'?-1:0)-(b.kind==='Bereitschaft'?-1:0)||(a.start||'').localeCompare(b.start||''))};
  const movable=a=>!a.isAbsence&&a.kind!=='Arbeitsort'&&canEditEntry(a.team,a.employee,areaOf(a))||(a.kind==='Arbeitsort'&&managesTeam(a.team,'Dienstplan'));
