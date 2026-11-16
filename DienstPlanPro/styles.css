@@ -2504,3 +2504,9 @@ body.dp-range-dragging{cursor:cell}
 .sbc-teams{color:#4b53bc;border-color:color-mix(in srgb,#4b53bc 35%,var(--line));background:color-mix(in srgb,#4b53bc 7%,var(--surface))}
 .sbc-modal .is-off{opacity:.45;pointer-events:none}
 @media (max-width:560px){.sbc-live{display:none}.sbc-modal .wp-actions-right{width:100%}.sbc-modal .wp-actions-right .btn{flex:1;justify-content:center}}
+/* „Notizen“ rechts neben dem Team in der Fußzeile des Eintrags */
+.ca-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+.ca-foot>small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ca-foot .note-chip{margin:0;flex:none}
+.calendar-assignment .ca-foot .note-chip{display:inline-flex}
+.calendar-assignment .ca-foot{width:100%;align-self:stretch}
