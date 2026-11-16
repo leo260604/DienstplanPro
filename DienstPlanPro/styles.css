@@ -2372,3 +2372,35 @@ html:has(.modal-backdrop:not([hidden])),body:has(.modal-backdrop:not([hidden])){
 /* Kontakte: „Teams zuordnen“ als Dropdown */
 .employee-team-field{margin:12px 0}
 .employee-team-field .wp-label{font-size:12.5px;font-weight:650;color:var(--ink-2)}
+/* ===== Anmeldung: Microsoft-SSO (simuliert) ===== */
+.sso-block{display:grid;gap:10px}
+.sso-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:48px;padding:0 16px;border:1px solid #8c8c8c;border-radius:10px;background:#fff;color:#5e5e5e;font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,box-shadow .15s,border-color .15s}
+.sso-btn:hover{background:#f5f5f5;border-color:#6d6d6d}
+.sso-btn:focus-visible{outline:0;box-shadow:0 0 0 3px var(--accent-ring)}
+.sso-btn:disabled{cursor:progress;opacity:.75}
+body.dark-mode .sso-btn{background:#2f2f2f;border-color:#5c5c5c;color:#fff}
+body.dark-mode .sso-btn:hover{background:#3a3a3a}
+.ms-logo{display:grid;grid-template-columns:repeat(2,9px);grid-template-rows:repeat(2,9px);gap:2px;flex:none}
+.ms-logo i:nth-child(1){background:#f25022}.ms-logo i:nth-child(2){background:#7fba00}.ms-logo i:nth-child(3){background:#00a4ef}.ms-logo i:nth-child(4){background:#ffb900}
+.sso-account{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;font-size:12.5px;color:var(--muted);min-width:0}
+.sso-account:empty{display:none}
+.sso-account>span{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.sso-account b{color:var(--ink);font-size:13px}
+.sso-account small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sso-account em{margin-left:auto;font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-3);color:var(--ink-2);white-space:nowrap}
+.sso-progress{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:13px;color:var(--ink-2)}
+.sso-progress[hidden]{display:none}
+.sso-spinner{width:16px;height:16px;border-radius:50%;border:2px solid color-mix(in srgb,var(--accent-color) 25%,transparent);border-top-color:var(--accent-color);animation:sso-spin .8s linear infinite;flex:none}
+.sso-progress.done .sso-spinner{animation:none;border-color:#1f9a63;background:#1f9a63 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/10px no-repeat}
+.sso-progress.done{color:#1f9a63;font-weight:650}
+@keyframes sso-spin{to{transform:rotate(360deg)}}
+.login-divider{display:flex;align-items:center;gap:12px;margin:16px 0 10px;color:var(--muted);font-size:12px;font-weight:600}
+.login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.login-demo{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.login-demo>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;cursor:pointer;list-style:none;font-size:13px;font-weight:650;color:var(--ink-2)}
+.login-demo>summary::-webkit-details-marker{display:none}
+.login-demo>summary>span{display:inline-flex;align-items:center;gap:8px}
+.login-demo>summary .ic{width:16px;height:16px;color:var(--muted)}
+.login-demo .login-demo-chev{transition:transform .2s}
+.login-demo[open] .login-demo-chev{transform:rotate(180deg)}
+.login-demo>form{padding:0 12px 12px}

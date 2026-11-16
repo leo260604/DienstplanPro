@@ -124,16 +124,25 @@
     </div>
     <div class="login-panel">
       <section class="login-dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
-        <div class="eyebrow">DEMO-ANMELDUNG</div>
+        <div class="eyebrow">ANMELDUNG</div>
         <h2 id="login-title">Willkommen zurück</h2>
-        <p>Wähle deinen Benutzer – die Rolle wird automatisch übernommen.</p>
-        <form id="login-form">
-          <label class="login-search"><svg class="ic"><use href="#i-search"/></svg><input id="login-user-search" type="search" placeholder="Name suchen …" autocomplete="off" aria-label="Name suchen"></label>
-          <div class="login-user-list" id="login-user-list" role="listbox" aria-label="Benutzer"></div>
-          <div class="login-role-row"><span>Anmelden als Rolle</span><div class="login-role-chips" id="login-role-chips"></div></div>
-          <button class="btn primary login-submit" type="submit">Anmelden</button>
-        </form>
-        <small class="login-note"><svg class="ic"><use href="#i-lock"/></svg>Lokale Demo ohne Passwort. Für den Echtbetrieb ist eine Server-Anmeldung nötig.</small>
+        <p>Melde dich mit deinem Firmenkonto an.</p>
+        <div class="sso-block" id="sso-block">
+          <button class="sso-btn" id="sso-btn" type="button"><span class="ms-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="sso-label">Mit Microsoft anmelden</span></button>
+          <div class="sso-account" id="sso-account"></div>
+          <div class="sso-progress" id="sso-progress" hidden aria-live="polite"><span class="sso-spinner" aria-hidden="true"></span><span class="sso-step" id="sso-step">Verbindung zu Microsoft wird hergestellt …</span></div>
+        </div>
+        <div class="login-divider"><span>oder</span></div>
+        <details class="login-demo" id="login-demo">
+          <summary><span><svg class="ic"><use href="#i-users"/></svg>Demo: Benutzer &amp; Rolle wählen</span><svg class="ic login-demo-chev"><use href="#i-down"/></svg></summary>
+          <form id="login-form">
+            <label class="login-search"><svg class="ic"><use href="#i-search"/></svg><input id="login-user-search" type="search" placeholder="Name suchen …" autocomplete="off" aria-label="Name suchen"></label>
+            <div class="login-user-list" id="login-user-list" role="listbox" aria-label="Benutzer"></div>
+            <div class="login-role-row"><span>Anmelden als Rolle</span><div class="login-role-chips" id="login-role-chips"></div></div>
+            <button class="btn primary login-submit" type="submit">Anmelden</button>
+          </form>
+        </details>
+        <small class="login-note"><svg class="ic"><use href="#i-lock"/></svg>Demo: Die Microsoft-Anmeldung wird simuliert – es wird kein Konto geprüft und kein Passwort abgefragt.</small>
         <button class="login-close" id="login-close" type="button" aria-label="Schließen">×</button>
       </section>
     </div>

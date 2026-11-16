@@ -612,11 +612,12 @@ function openLogin(){
  loginSel={userId:currentUserId||staff[0]?.[8]||'',role:''};
  const userRole=id=>{const p=staff.find(x=>x[8]===id);return p&&roles.includes(p[10])?p[10]:(roles[0]||'Mitarbeiter')};
  loginSel.role=hasSession&&loginSel.userId===currentUserId?currentRole:userRole(loginSel.userId);
- const drawRoles=()=>{chips.innerHTML=roles.map(r=>`<button type="button" class="${r===loginSel.role?'active':''}" data-login-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('');chips.querySelectorAll('[data-login-role]').forEach(b=>b.onclick=()=>{loginSel.role=b.dataset.loginRole;drawRoles()})};
+ const drawRoles=()=>{chips.innerHTML=roles.map(r=>`<button type="button" class="${r===loginSel.role?'active':''}" data-login-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('');chips.querySelectorAll('[data-login-role]').forEach(b=>b.onclick=()=>{loginSel.role=b.dataset.loginRole;drawRoles()});document.getElementById('sso-account')&&(()=>{const p=staff.find(x=>x[8]===loginSel.userId);const em=document.querySelector('#sso-account em');if(em)em.textContent=loginSel.role})()};
  const drawUsers=()=>{const q=(search.value||'').trim().toLowerCase();const items=staff.filter(x=>!q||x[0].toLowerCase().includes(q)||(x[10]||'').toLowerCase().includes(q)||teams.some(t=>t.memberIds.includes(x[8])&&t.name.toLowerCase().includes(q)));
   list.innerHTML=items.map(x=>{const t=teams.find(t=>t.memberIds.includes(x[8]));return `<button type="button" role="option" aria-selected="${x[8]===loginSel.userId}" class="login-user ${x[8]===loginSel.userId?'selected':''}" data-login-user="${escapeHtml(x[8])}">${avatarHtml(x[0],teamColor(t),38)}<span><b>${escapeHtml(x[0])}</b><small>${escapeHtml(t?.name||'Ohne Team')}</small></span><em class="${(x[10]||'')==='Admin'?'admin':''}">${escapeHtml(x[10]||'Mitarbeiter')}</em></button>`}).join('')||'<div class="empty-note">Kein Benutzer gefunden.</div>';
   list.querySelectorAll('[data-login-user]').forEach(b=>{b.onclick=()=>{loginSel.userId=b.dataset.loginUser;loginSel.role=userRole(loginSel.userId);drawUsers();drawRoles()};b.ondblclick=()=>document.getElementById('login-form').requestSubmit()});
-  list.querySelector('.selected')?.scrollIntoView({block:'nearest'});};
+  list.querySelector('.selected')?.scrollIntoView({block:'nearest'});drawSso();};
+ const drawSso=()=>{const p=staff.find(x=>x[8]===loginSel.userId);const el=document.getElementById('sso-account');if(!el)return;el.innerHTML=p?`${avatarHtml(p[0],teamColor(teams.find(t=>t.memberIds.includes(p[8]))),28)}<span><b>${escapeHtml(p[0])}</b><small>${escapeHtml(p[6]||ssoMail(p[0]))}</small></span><em>${escapeHtml(loginSel.role)}</em>`:''};
  search.value='';search.oninput=()=>{drawUsers();const first=list.querySelector('[data-login-user]');if(first&&!list.querySelector('.selected')){loginSel.userId=first.dataset.loginUser;loginSel.role=userRole(loginSel.userId);drawUsers();drawRoles()}};
  drawUsers();drawRoles();
  const today=isoDate(new Date()),todays=assignments.filter(a=>a.date===today&&!a.isAbsence&&(a.kind==='Dienstplan'||a.kind==='Bereitschaft'));
@@ -624,8 +625,21 @@ function openLogin(){
  const d=todays.find(a=>a.kind==='Dienstplan'),sb=todays.find(a=>a.kind==='Bereitschaft');
  document.getElementById('login-hero-card').innerHTML=[d?`<div><i></i><span><b>${escapeHtml(d.shift)} · ${tRange(d)}</b><small>${escapeHtml(d.team)} · ${todays.filter(a=>a.kind==='Dienstplan'&&a.team===d.team).length} Mitarbeiter</small></span></div>`:'',sb?`<div><i></i><span><b>Bereitschaft · ${tRange(sb)}</b><small>${escapeHtml(sb.employee)} · ${escapeHtml(sb.team)}</small></span></div>`:''].join('');
  document.getElementById('login-close').hidden=!hasSession;
- modal.hidden=false;if(!window.matchMedia('(pointer: coarse)').matches)setTimeout(()=>search.focus(),30);
+ document.getElementById('login-demo').open=false;ssoReset();
+ modal.hidden=false;if(!window.matchMedia('(pointer: coarse)').matches)setTimeout(()=>document.getElementById('sso-btn').focus(),30);
 }
+/* Microsoft-SSO (simuliert): kein echter Login, keine Prüfung des Kontos – meldet den gewählten Demo-Benutzer an */
+const ssoMail=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').trim().replace(/\s+/g,'.').replace(/[^a-z.]/g,'')+'@firma.at';
+let ssoTimer=null;
+function ssoReset(){clearTimeout(ssoTimer);const b=document.getElementById('sso-btn'),pr=document.getElementById('sso-progress');if(b){b.disabled=false;b.classList.remove('busy')}if(pr){pr.hidden=true;pr.classList.remove('done')}}
+document.getElementById('sso-btn').onclick=()=>{
+ const p=staff.find(x=>x[8]===loginSel.userId);if(!p){toast('Kein Konto gefunden.');return}
+ const b=document.getElementById('sso-btn'),pr=document.getElementById('sso-progress'),st=document.getElementById('sso-step');
+ b.disabled=true;b.classList.add('busy');pr.hidden=false;pr.classList.remove('done');st.textContent='Verbindung zu Microsoft wird hergestellt …';
+ ssoTimer=setTimeout(()=>{st.textContent=`Konto ${p[6]||ssoMail(p[0])} wird bestätigt …`;
+  ssoTimer=setTimeout(()=>{pr.classList.add('done');st.textContent=`Angemeldet als ${p[0]}`;
+   ssoTimer=setTimeout(()=>{document.getElementById('login-form').requestSubmit();ssoReset()},450)},650)},700)};
+document.getElementById('login-demo').addEventListener('toggle',e=>{if(e.target.open&&!window.matchMedia('(pointer: coarse)').matches)setTimeout(()=>document.getElementById('login-user-search').focus(),30)});
 document.getElementById('profile-menu').onclick=e=>{e.stopPropagation();openLogin()};
 document.querySelector('.profile').addEventListener('click',()=>openLogin());
 document.getElementById('login-close').onclick=()=>{if(hasSession)document.getElementById('login-modal').hidden=true};
