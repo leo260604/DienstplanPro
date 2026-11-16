@@ -254,34 +254,38 @@ let currentPage='Dashboard',currentView='Woche',currentDate=new Date(),currentRo
 let expandedMonthView=localStorage.getItem('dienstplanExpandedMonthView')==='1';
 // Arbeitstage im Dienstplan: 5 = Mo–Fr, 6 = Mo–Sa, 7 = Mo–So (Bereitschaft immer Mo–So).
 let dutyDays=[5,6,7].includes(Number(localStorage.getItem('dienstplanDutyDays')))?Number(localStorage.getItem('dienstplanDutyDays')):6;
-let roles=(()=>{const saved=load('dienstplanRoles',null);if(Array.isArray(saved)&&saved.every(x=>typeof x==='string'))return saved;return ['Mitarbeiter','Teamleiter','Abteilungsleiter','Deputy','Admin','Lohnverrechnung','Bereitschaftsadmin']})();
+const __ld_roles=()=>{const saved=load('dienstplanRoles',null);if(Array.isArray(saved)&&saved.every(x=>typeof x==='string'))return saved;return ['Mitarbeiter','Teamleiter','Abteilungsleiter','Deputy','Admin','Lohnverrechnung','Bereitschaftsadmin']};let roles=__ld_roles();
 const safePhoto=v=>typeof v==='string'&&/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$/.test(v)?v:'';
-let staff=(()=>{try{const v=JSON.parse(localStorage.getItem('dienstplanStaff')||'null');if(Array.isArray(v))return v.filter(s=>Array.isArray(s)&&typeof s[0]==='string').map(s=>[s[0],s[1]||initials(s[0]),s[2]||'Noch nicht eingeteilt',s[3]||'—',s[4]||'blue',s[5]||'Team Nord',s[6]||'',s[7]||'',s[8]||'',safePhoto(s[9]),s[10]||'Mitarbeiter',s[11]||'']);}catch(e){console.warn('Alte Mitarbeiterdaten werden ignoriert.',e)}return [
+const __ld_staff=()=>{try{const v=JSON.parse(localStorage.getItem('dienstplanStaff')||'null');if(Array.isArray(v))return v.filter(s=>Array.isArray(s)&&typeof s[0]==='string').map(s=>[s[0],s[1]||initials(s[0]),s[2]||'Noch nicht eingeteilt',s[3]||'—',s[4]||'blue',s[5]||'Team Nord',s[6]||'',s[7]||'',s[8]||'',safePhoto(s[9]),s[10]||'Mitarbeiter',s[11]||'']);}catch(e){console.warn('Alte Mitarbeiterdaten werden ignoriert.',e)}return [
  ['Max Mustermann','MM','Frühdienst','06:00–14:00','blue','Team Nord','max@example.at','0664 100 1001'],
  ['Anna Beispiel','AB','Spätdienst','14:00–22:00','green','Team Nord','anna@example.at','0664 100 1002'],
  ['Thomas Berger','TB','Tagdienst','08:00–16:00','blue','Team Süd','thomas@example.at','0664 100 1003'],
  ['Lisa Huber','LH','Bereitschaft','00:00–24:00','amber','Team Süd','lisa@example.at','0664 100 1004'],
  ['Paul Wagner','PW','Nachtdienst','22:00–06:00','green','Team Nord','paul@example.at','0664 100 1005']
-];})();
+];};let staff=__ld_staff();
 staff.forEach((person,i)=>{if(!person[8])person[8]='emp-'+i+'-'+String(person[0]).toLowerCase().replace(/[^a-z0-9]+/g,'-')});
-let teams=(()=>{const v=load('dienstplanTeams',null);if(Array.isArray(v))return v.filter(t=>t&&typeof t==='object'&&t.id&&typeof t.name==='string').map(t=>({...t,memberIds:Array.isArray(t.memberIds)?t.memberIds:[]}));return [
+const __ld_teams=()=>{const v=load('dienstplanTeams',null);if(Array.isArray(v))return v.filter(t=>t&&typeof t==='object'&&t.id&&typeof t.name==='string').map(t=>({...t,memberIds:Array.isArray(t.memberIds)?t.memberIds:[]}));return [
  {id:'team-nord',name:'Team Nord',memberIds:staff.filter(x=>(x[5]||'Team Nord')==='Team Nord').map(x=>x[8]),leaderId:staff.find(x=>x[0]==='Max Mustermann')?.[8]||'',deputyId:staff.find(x=>x[0]==='Anna Beispiel')?.[8]||''},
  {id:'team-sued',name:'Team Süd',memberIds:staff.filter(x=>x[5]==='Team Süd').map(x=>x[8]),leaderId:staff.find(x=>x[0]==='Thomas Berger')?.[8]||'',deputyId:staff.find(x=>x[0]==='Lisa Huber')?.[8]||''}
-]})();
+]};let teams=__ld_teams();
 teams.forEach(t=>{t.memberIds=Array.isArray(t.memberIds)?t.memberIds.filter(Boolean):[]});
 staff.forEach(person=>{person[8]=person[8]||makeId();});
 teams.forEach(t=>{if(!t.memberIds.length)t.memberIds=staff.filter(x=>(x[5]||'Team Nord')===t.name).map(x=>x[8]);});
 
 let currentUserId=staff[0]?.[8]||'';
-function persistTeams(){save('dienstplanTeams',teams)}
+/* Teamleiter nehmen an keiner automatischen Rotation teil (Dienst & Bereitschaft) */
+const rotationMembers=t=>staff.filter(p=>t.memberIds.includes(p[8])&&(p[10]||'')!=='Teamleiter'&&p[8]!==t.leaderId);
+/* Teamleitung automatisch: Hat ein Team keine (gültige) Teamleitung, wird ein Mitglied mit der Rolle „Teamleiter“ eingetragen */
+function autoAssignLeaders(){let ch=false;teams.forEach(t=>{const ok=t.leaderId&&staff.some(p=>p[8]===t.leaderId);if(ok)return;const tl=staff.find(p=>(t.memberIds||[]).includes(p[8])&&(p[10]||'')==='Teamleiter');const nv=tl?tl[8]:'';if((t.leaderId||'')!==nv){t.leaderId=nv;ch=true}});return ch}
+function persistTeams(){autoAssignLeaders();save('dienstplanTeams',teams)}
 /* Abteilungen: fassen Teams zusammen und haben eine Abteilungsleitung */
-let departments=(()=>{const v=load('dienstplanDepartments',[]);if(!Array.isArray(v))return [];const seen=new Set();
- return v.filter(d=>d&&typeof d==='object'&&d.id&&typeof d.name==='string').map(d=>({id:String(d.id),name:d.name.slice(0,60),headId:typeof d.headId==='string'?d.headId:'',color:/^#[0-9a-f]{6}$/i.test(d.color||'')?d.color:'#0068A8',teamIds:(Array.isArray(d.teamIds)?d.teamIds:[]).map(String).filter(id=>!seen.has(id)&&seen.add(id))}))})();
+const __ld_departments=()=>{const v=load('dienstplanDepartments',[]);if(!Array.isArray(v))return [];const seen=new Set();
+ return v.filter(d=>d&&typeof d==='object'&&d.id&&typeof d.name==='string').map(d=>({id:String(d.id),name:d.name.slice(0,60),headId:typeof d.headId==='string'?d.headId:'',color:/^#[0-9a-f]{6}$/i.test(d.color||'')?d.color:'#0068A8',teamIds:(Array.isArray(d.teamIds)?d.teamIds:[]).map(String).filter(id=>!seen.has(id)&&seen.add(id))}))};let departments=__ld_departments();
 function persistDepartments(){save('dienstplanDepartments',departments)}
 const deptOfTeam=t=>t?departments.find(d=>d.teamIds.includes(t.id)):null;
 /* Abteilungsleitung mit eigener Abteilung sieht nur deren Teams; ohne Zuordnung weiterhin alle Teams */
 function headDeptTeams(){if(currentRole!=='Abteilungsleiter')return null;const mine=departments.filter(d=>d.headId===currentUserId);if(!mine.length)return null;const ids=new Set(mine.flatMap(d=>d.teamIds));return teams.filter(t=>ids.has(t.id))}
-function persistStaff(){save('dienstplanStaff',staff)}
+function persistStaff(){save('dienstplanStaff',staff);if(autoAssignLeaders())save('dienstplanTeams',teams)}
 function persistAssignments(){save('dienstplanAssignments',assignments)}
 function teamNames(){return teams.map(t=>t.name)}
 function teamByName(name){return teams.find(t=>t.name===name)}
@@ -328,7 +332,7 @@ let calendarTeamFilter='Alle Teams',calendarMemberFilter='Alle Mitarbeiter',mobi
 let reportFrom='',reportTo='';
 let mobileFocusEmp='';
 let editingDutyId=null;
-let assignments=(()=>{const v=load('dienstplanAssignments',[]);const T=/^\d\d:\d\d$/;return Array.isArray(v)?v.filter(a=>a&&typeof a==='object'&&typeof a.date==='string'&&/^\d{4}-\d\d-\d\d$/.test(a.date)).map(a=>{if(a.start&&!T.test(a.start))a.start='';if(a.end&&!T.test(a.end))a.end='';['employee','team','shift'].forEach(k=>{if(a[k]!=null&&typeof a[k]!=='string')a[k]=String(a[k])});return a}):[]})();
+const __ld_assignments=()=>{const v=load('dienstplanAssignments',[]);const T=/^\d\d:\d\d$/;return Array.isArray(v)?v.filter(a=>a&&typeof a==='object'&&typeof a.date==='string'&&/^\d{4}-\d\d-\d\d$/.test(a.date)).map(a=>{if(a.start&&!T.test(a.start))a.start='';if(a.end&&!T.test(a.end))a.end='';['employee','team','shift'].forEach(k=>{if(a[k]!=null&&typeof a[k]!=='string')a[k]=String(a[k])});return a}):[]};let assignments=__ld_assignments();
 const navItems=['Dashboard','Dienstplan','Bereitschaft','Bereitschaft verwalten','Dienstzeiten','Kontakte','Berichte / Export','Administration','Team Berechtigungen','Audit Log','Export Audit','Einstellungen'];
 /* Berechtigungen: pro Rolle und Bereich „N“ (kein Zugriff), „R“ (Lesen) oder „E“ (Bearbeiten).
    Die Matrix unter „Team Berechtigungen“ steuert Navigation und Bearbeitungsrechte. */
@@ -343,7 +347,7 @@ const DEFAULT_PERMS={
  'Bereitschaftsadmin':{'Bereitschaft':'E','Kontakte':'R','Einstellungen':'E'}
 };
 const BASE_PERMS={'Dashboard':'R','Dienstplan':'R','Bereitschaft':'R','Kontakte':'R','Einstellungen':'E'};
-let permissions=(()=>{const v=load('dienstplanPermissions',null);return v&&typeof v==='object'?v:{}})();
+const __ld_permissions=()=>{const v=load('dienstplanPermissions',null);return v&&typeof v==='object'?v:{}};let permissions=__ld_permissions();
 // einmalig: gespeicherte Rechte um „Administration“ für Teamleitung, Deputy und Abteilungsleitung ergänzen
 try{if(!localStorage.getItem('dienstplanPermMig2')){['Teamleiter','Deputy','Abteilungsleiter'].forEach(r=>{if(permissions[r]&&typeof permissions[r]==='object'&&(permissions[r].Administration||'N')==='N')permissions[r].Administration='E'});localStorage.setItem('dienstplanPermMig2','1');if(Object.keys(permissions).length)localStorage.setItem('dienstplanPermissions',JSON.stringify(permissions))}}catch(_){}
 // einmalig: Teamleitung darf unter „Bereitschaft verwalten“ die Bereitschaftsfarben der eigenen Teams ändern
@@ -371,14 +375,14 @@ function applyRoleNavigation(){
  document.querySelectorAll('#main-nav .nav-item').forEach(b=>{let c=b.querySelector('.nav-count');const v=counts[b.dataset.page];if(v===undefined){if(c)c.remove();return}if(!c){c=document.createElement('span');c.className='nav-count';b.appendChild(c)}c.textContent=v});
 }
 let defaults=load('dienstplanDefaults',{Dienstplan:'Woche',Bereitschaft:'Monat'});
-let shiftTypes=(v=>Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&typeof x.name==='string'&&typeof x.team==='string').map(x=>({...x,start:/^\d\d:\d\d$/.test(x.start)?x.start:'08:00',end:/^\d\d:\d\d$/.test(x.end)?x.end:'16:00'})):null)(load('dienstplanShiftTypes',null))||[
+const __ld_shiftTypesParse=v=>Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&typeof x.name==='string'&&typeof x.team==='string').map(x=>({...x,start:/^\d\d:\d\d$/.test(x.start)?x.start:'08:00',end:/^\d\d:\d\d$/.test(x.end)?x.end:'16:00'})):null;let shiftTypes=__ld_shiftTypesParse(load('dienstplanShiftTypes',null))||[
  {id:1,team:'Team Nord',name:'1A Dienst',start:'06:00',end:'14:12',color:'blue'},
  {id:2,team:'Team Nord',name:'2A Dienst',start:'14:00',end:'22:12',color:'green'},
  {id:3,team:'Team Süd',name:'Tagdienst',start:'08:00',end:'16:00',color:'amber'}
 ];
 // Bereitschaftsgruppen und -zeiten sind bewusst unabhängig von Dienstzeiten.
-let standbyGroups=(()=>{const v=load('dienstplanStandbyGroups',[]);return Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]})();
-let standbyTimes=(()=>{const v=load('dienstplanStandbyTimes',[]);return Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]})();
+const __ld_standbyGroups=()=>{const v=load('dienstplanStandbyGroups',[]);return Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]};let standbyGroups=__ld_standbyGroups();
+const __ld_standbyTimes=()=>{const v=load('dienstplanStandbyTimes',[]);return Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]};let standbyTimes=__ld_standbyTimes();
 function persistStandbyConfig(){save('dienstplanStandbyGroups',standbyGroups);save('dienstplanStandbyTimes',standbyTimes)}
 
 /* Einmalige Demo-Neuanlage: ersetzt alte Teams/Kontakte und erzeugt eine vollständige Beispieldatenbasis. */
@@ -454,7 +458,7 @@ if(!localStorage.getItem('dienstplanClearAbsences20261116')){
 /* ------------------------------------------------------------------
    Benachrichtigungen
 ------------------------------------------------------------------ */
-let notifications=(()=>{const saved=load('dienstplanNotifications',[]);return Array.isArray(saved)?saved.filter(n=>n&&n.id&&n.recipientId):[]})();
+const __ld_notifications=()=>{const saved=load('dienstplanNotifications',[]);return Array.isArray(saved)?saved.filter(n=>n&&n.id&&n.recipientId):[]};let notifications=__ld_notifications();
 function persistNotifications(){save('dienstplanNotifications',notifications)}
 function relevantNotifications(){return notifications.filter(n=>n.recipientId===currentUserId&&n.recipientRole===currentRole).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));}
 function refreshNotifications(){
@@ -780,17 +784,17 @@ function calendar(){
  const kw=`<span class="kw-pill">KW ${isoWeek(ws)}</span>`;
  const range=(currentView==='Woche'||currentView==='Team'||currentView==='Zeitleiste')?`${fmt(ws)} – ${fmt(we)} ${kw}`:currentView==='Monat'?monthName(d):fmtWithWeekday(d);
  const conflicts=computeConflicts();buildWpIndex();
- const visible=assignments.filter(a=>{const kindMatches=!isDuty?a.kind==='Bereitschaft':(a.kind==='Dienst'||a.kind==='Abwesenheit'||a.kind==='Dienstplan'||a.kind==='Arbeitsort')||(a.kind==='Bereitschaft'&&canSeeStandbyInDutyPlan(a));return kindMatches&&calTeamOk(a.team)&&(calendarMemberFilter==='Alle Mitarbeiter'||a.employee===calendarMemberFilter)&&(!onlyConflicts||conflicts.has(a.id))&&!wpMerged(a)});
+ const visible=assignments.filter(a=>{const kindMatches=!isDuty?a.kind==='Bereitschaft':(a.kind==='Dienst'||a.kind==='Abwesenheit'||a.kind==='Dienstplan'||a.kind==='Arbeitsort'||a.kind==='Notiz')||(a.kind==='Bereitschaft'&&canSeeStandbyInDutyPlan(a));return kindMatches&&calTeamOk(a.team)&&(calendarMemberFilter==='Alle Mitarbeiter'||a.employee===calendarMemberFilter)&&(!onlyConflicts||conflicts.has(a.id))&&!wpMerged(a)});
  const byDate={};visible.forEach(a=>{(byDate[a.date]=byDate[a.date]||[]).push(a)});
- const dayEntries=date=>(byDate[date]||[]).slice().sort((a,b)=>(a.kind==='Bereitschaft'?-1:0)-(b.kind==='Bereitschaft'?-1:0)||(a.start||'').localeCompare(b.start||''));
+ const dayEntries=date=>(byDate[date]||[]).slice().sort((a,b)=>(a.kind==='Notiz'?1:0)-(b.kind==='Notiz'?1:0)||(a.kind==='Bereitschaft'?-1:0)-(b.kind==='Bereitschaft'?-1:0)||(a.start||'').localeCompare(b.start||''));
  const movable=a=>!a.isAbsence&&a.kind!=='Arbeitsort'&&canEditEntry(a.team,a.employee,areaOf(a))||(a.kind==='Arbeitsort'&&managesTeam(a.team,'Dienstplan'));
  const actionsMenu=a=>`<details class="duty-actions"><summary aria-label="Dienstaktionen" title="Dienstaktionen">⋯</summary><div class="duty-actions-menu">${a.isAbsence||a.kind==='Arbeitsort'?'':`<button type="button" data-edit-duty="${a.id}">Bearbeiten</button>`}${movable(a)&&a.kind!=='Arbeitsort'?`<button type="button" data-copy-duty="${a.id}">Auf nächsten Tag kopieren</button>`:''}${canSwapDuty(a)?`<button type="button" data-swap-duty="${a.id}">${icon('refresh')}Dienst tauschen</button>`:''}${wpFor(a)?`<button type="button" data-edit-wp="${wpFor(a).id}">Arbeitsort ändern</button><button type="button" data-delete-duty="${wpFor(a).id}">Arbeitsort entfernen</button>`:''}<button type="button" class="danger-text" data-delete-duty="${a.id}">Löschen</button></div></details>`;
- const dayCard=a=>`<div class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment ':''}${a.isAbsence?'absence-assignment ':''}${a.kind==='Arbeitsort'?'workplace-assignment ':''}${conflicts.has(a.id)?'conflict ':''}" ${movable(a)?`draggable="true" data-drag-id="${a.id}"`:''} title="${escapeHtml(a.employee)} · ${escapeHtml(a.shift)}${conflicts.has(a.id)?' · Konflikt':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${conflicts.has(a.id)&&!a.isAbsence?'<span class="conflict-indicator">⚠ Konflikt</span>':''}${a.kind==='Bereitschaft'?'<span class="standby-indicator">◷ Bereitschaft</span>':a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b><span class="ca-shift">${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}</span>${a.start&&a.end?`<span class="ca-time">${tRange(a)}</span>`:(isVariableStandby(a)?'<span class="ca-time">variabel</span>':'')}${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}<small>${escapeHtml(a.team)}${a.groupName?' · '+escapeHtml(a.groupName):''}</small>${actionsMenu(a)}</div>`;
+ const dayCard=a=>a.kind==='Notiz'?noteCard(a):`<div class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment ':''}${a.isAbsence?'absence-assignment ':''}${a.kind==='Arbeitsort'?'workplace-assignment ':''}${conflicts.has(a.id)?'conflict ':''}" ${movable(a)?`draggable="true" data-drag-id="${a.id}"`:''} title="${escapeHtml(a.employee)} · ${escapeHtml(a.shift)}${conflicts.has(a.id)?' · Konflikt':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${conflicts.has(a.id)&&!a.isAbsence?'<span class="conflict-indicator">⚠ Konflikt</span>':''}${a.kind==='Bereitschaft'?'<span class="standby-indicator">◷ Bereitschaft</span>':a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b><span class="ca-shift">${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}</span>${a.start&&a.end?`<span class="ca-time">${tRange(a)}</span>`:(isVariableStandby(a)?'<span class="ca-time">variabel</span>':'')}${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}<small>${escapeHtml(a.team)}${a.groupName?' · '+escapeHtml(a.groupName):''}</small>${actionsMenu(a)}</div>`;
  const dayStack=date=>{const entries=dayEntries(date);
   if(currentView==='Monat'&&expandedMonthView)return entries.map(dayCard).join('');
   const limit=entryLimit(),shown=entries.slice(0,limit),remaining=entries.length-shown.length;
   return shown.map(dayCard).join('')+(remaining>0?`<button type="button" class="calendar-more" data-open-day="${date}" aria-label="${remaining} weitere Einträge am ${date} anzeigen">+${remaining} weitere</button>`:'');};
- const agendaCard=a=>`<div class="mobile-agenda-card ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${conflicts.has(a.id)?'conflict':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}"><div class="mobile-agenda-time">${a.start||(isVariableStandby(a)?'Var.':'—')}<small>${a.end||''}</small></div><div class="mobile-agenda-content">${a.kind==='Bereitschaft'?'<span class="standby-indicator">◷ Bereitschaft</span>':''}<b>${a.kind==='Arbeitsort'?escapeHtml(a.shift)+' (Arbeitsort)':escapeHtml(a.shift)}</b><span>${escapeHtml(a.employee)}</span>${wpHint(wpFor(a))}${swapPill(a)}<small>${escapeHtml(a.team)}${a.groupName?' · '+escapeHtml(a.groupName):''}</small></div>${actionsMenu(a)}</div>`;
+ const agendaCard=a=>a.kind==='Notiz'?noteCard(a,true):`<div class="mobile-agenda-card ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${conflicts.has(a.id)?'conflict':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}"><div class="mobile-agenda-time">${a.start||(isVariableStandby(a)?'Var.':'—')}<small>${a.end||''}</small></div><div class="mobile-agenda-content">${a.kind==='Bereitschaft'?'<span class="standby-indicator">◷ Bereitschaft</span>':''}<b>${a.kind==='Arbeitsort'?escapeHtml(a.shift)+' (Arbeitsort)':escapeHtml(a.shift)}</b><span>${escapeHtml(a.employee)}</span>${wpHint(wpFor(a))}${swapPill(a)}<small>${escapeHtml(a.team)}${a.groupName?' · '+escapeHtml(a.groupName):''}</small></div>${actionsMenu(a)}</div>`;
  const todayIso=isoDate(new Date());
  const shownTeams=teams.filter(t=>calTeamOk(t.name));
  let body='';
@@ -834,7 +838,7 @@ function calendar(){
   const selDay=selectedMobileDate&&dates.includes(selectedMobileDate)?selectedMobileDate:(dates.includes(todayIso)?todayIso:dates[0]);
   const abbr=a=>{if(a.kind==='Arbeitsort')return a.shift==='Homeoffice'?'HO':'BÜ';const nn=String(a.shift||'').replace(/[^A-Za-zÄÖÜäöüß0-9]/g,'');return (nn.slice(0,2)||'•')};
   const legendMap=new Map();
-  const tileFor=items=>{const duty=items.find(a=>a.kind==='Dienstplan'&&!a.isAbsence),abs=items.find(a=>a.isAbsence),sb=items.find(a=>a.kind==='Bereitschaft'),wp=items.find(a=>a.kind==='Arbeitsort')||(duty&&wpFor(duty));const main=abs||duty;let html='';if(main){legendMap.set(abbr(main),main.shift);html=`<span class="mt-tile ${abs?'is-absence':''} ${conflicts.has(main.id)?'is-conflict':''}" style="--shift-color:${shiftHexColor(assignmentColor(main))}">${escapeHtml(abbr(main))}</span>`}else if(!sb)html='<span class="mt-empty"></span>';if(sb){html+=`<i class="mt-sb" style="--c:${shiftHexColor(assignmentColor(sb))}" title="Bereitschaft"></i>`;if(!main)html=`<span class="mt-tile is-standby" style="--shift-color:${shiftHexColor(assignmentColor(sb))}">◷</span>`+html}if(wp&&wp.shift==='Homeoffice')html+='<i class="mt-ho" title="Homeoffice">⌂</i>';return html};
+  const tileFor=items=>{const duty=items.find(a=>a.kind==='Dienstplan'&&!a.isAbsence),abs=items.find(a=>a.isAbsence),sb=items.find(a=>a.kind==='Bereitschaft'),wp=items.find(a=>a.kind==='Arbeitsort')||(duty&&wpFor(duty));const main=abs||duty;let html='';if(main){legendMap.set(abbr(main),main.shift);html=`<span class="mt-tile ${abs?'is-absence':''} ${conflicts.has(main.id)?'is-conflict':''}" style="--shift-color:${shiftHexColor(assignmentColor(main))}">${escapeHtml(abbr(main))}</span>`}else if(!sb)html='<span class="mt-empty"></span>';if(sb){html+=`<i class="mt-sb" style="--c:${shiftHexColor(assignmentColor(sb))}" title="Bereitschaft"></i>`;if(!main)html=`<span class="mt-tile is-standby" style="--shift-color:${shiftHexColor(assignmentColor(sb))}">◷</span>`+html}if(wp&&wp.shift==='Homeoffice')html+='<i class="mt-ho" title="Homeoffice">⌂</i>';const nt=items.find(a=>a.kind==='Notiz');if(nt)html+=`<i class="mt-note" title="Notiz: ${escapeHtml(nt.note||'')}" ${canNoteFor(nt.employee)?`data-note-open="${nt.id}"`:''}>✎</i>`;return html};
   let mWeek='',mDay='';
   shownTeams.forEach(t=>{
    const allMembers=staff.filter(p=>t.memberIds.includes(p[8]));
@@ -853,7 +857,7 @@ function calendar(){
  }
  const managerWorkplace=['Admin','Teamleiter','Abteilungsleiter'].includes(currentRole);
  const canAdd=entryTeams().length>0,canManageAny=manageableTeams().length>0;
-  const actionsRaw=isDuty?`${canRequestSwap()?`<button class="btn" id="swap-new-btn">${icon('refresh')}Diensttausch</button>`:''}<button class="btn" id="add-workplace">${icon('home')}Arbeitsort</button>${absenceTeams().length?`<button class="btn" id="add-absence">${icon('travel','ic-fill')}Abwesenheit</button>`:''}${canManageAny&&manageableTeams('Dienstplan').some(t=>shiftTypes.some(s=>s.team===t.name))?`<button class="btn" id="duty-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Eintrag erstellen</button>`:''}`:`${canManageAny&&standbyTimes.length?`<button class="btn" id="auto-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Bereitschaft einteilen</button>`:''}`;
+  const actionsRaw=isDuty?`${canRequestSwap()?`<button class="btn" id="swap-new-btn">${icon('refresh')}Diensttausch</button>`:''}<button class="btn" id="add-workplace">${icon('home')}Arbeitsort</button>${noteTargets().length?`<button class="btn" id="add-note">${icon('edit')}Notiz</button>`:''}${absenceTeams().length?`<button class="btn" id="add-absence">${icon('travel','ic-fill')}Abwesenheit</button>`:''}${canManageAny&&manageableTeams('Dienstplan').some(t=>shiftTypes.some(s=>s.team===t.name))?`<button class="btn" id="duty-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Eintrag erstellen</button>`:''}`:`${canManageAny&&standbyTimes.length?`<button class="btn" id="auto-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Bereitschaft einteilen</button>`:''}`;
  // Mobil: Aktionen im Dienstplan unter einem Button „Aktionen“ zusammenfassen
  const actions=actionsRaw?`<span class="dp-actions">${actionsRaw}</span><button type="button" class="btn dp-actions-toggle" id="dp-actions-toggle" aria-haspopup="dialog">Aktionen${icon('down','dp-act-caret')}</button>`:actionsRaw;
  const sub=isDuty?((currentView==='Monat')?monthName(d):`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}`):(currentView==='Zeitleiste'||currentView==='Woche'?`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}${currentView==='Zeitleiste'?' · Wer hat wann Bereitschaft?':''}`:currentView==='Monat'?`${monthName(d)} · Rotationsübersicht aller Teams`:fmtWithWeekday(d));
@@ -1029,7 +1033,7 @@ async function autoRotation(){
  const d=new Date(currentDate),from=isoDate(new Date(d.getFullYear(),d.getMonth(),1)),to=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));
  const pre=calendarTeams.length?calendarTeams:teamsAvail.map(t=>t.name);
  const dlg=formDialog('Rotation automatisch planen',`${teamDropdown(teamsAvail,pre)}
-
+  <small class="wp-note rot-lead-note">${icon('alert')}Teamleiter werden nicht eingeteilt – sie haben keine Bereitschaft.</small>
   <div class="wp-field"><span class="wp-label">Bereitschaftszeit</span><select name="time" id="rot-time">${standbyTimes.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name)} (${tRange(x)})</option>`).join('')}</select></div>
   <div class="wp-field" id="rot-var-time" hidden><span class="wp-label">Uhrzeit <span class="muted">(variable Bereitschaft)</span></span><div class="wp-range"><label><small>Beginn</small><input type="time" name="vstart" id="rot-vstart"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" name="vend" id="rot-vend"></label></div><small class="wp-note">Gilt für alle Einträge dieser Rotation.</small></div>
   <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Von</small><input type="date" name="from" value="${from}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Bis</small><input type="date" name="to" value="${to}" required></label></div></div>
@@ -1051,7 +1055,7 @@ async function autoRotation(){
  if(dates.length>366){toast('Bitte einen Zeitraum von höchstens 366 Tagen auswählen.');return}
  pushUndo('Rotation');const created=[];
  chosen.forEach(t=>{
-  const members=staff.filter(p=>t.memberIds.includes(p[8])).map(p=>p[0]);if(!members.length)return;
+  const members=rotationMembers(t).map(p=>p[0]);if(!members.length)return;
   if(!keep)assignments=assignments.filter(a=>!(a.kind==='Bereitschaft'&&a.team===t.name&&a.date>=res.from&&a.date<=res.to));
   const prev=assignments.filter(a=>a.kind==='Bereitschaft'&&a.team===t.name&&a.date<res.from).sort((a,b)=>b.date.localeCompare(a.date))[0];
   let idx=prev&&members.includes(prev.employee)?members.indexOf(prev.employee)+1:0,lastKey=null;
@@ -1092,7 +1096,7 @@ async function dutyRotation(){
   <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Von</small><input type="date" name="from" value="${from}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Bis</small><input type="date" name="to" value="${to}" required></label></div></div>
   <div class="wp-field"><span class="wp-label">Wechsel</span><div class="wp-types rot-modes" role="radiogroup" aria-label="Wechsel"><label class="wp-type"><input type="radio" name="mode" value="week" checked><span class="wp-type-card"><span class="wp-type-ic">${icon('cal')}</span><b>Wöchentlich</b><small>Wechsel jeden Montag</small><i class="wp-type-check">${icon('check')}</i></span></label><label class="wp-type"><input type="radio" name="mode" value="day"><span class="wp-type-card"><span class="wp-type-ic">${icon('refresh')}</span><b>Täglich</b><small>Wechsel jeden Tag</small><i class="wp-type-check">${icon('check')}</i></span></label></div></div>
   <label class="check wp-check"><input type="checkbox" name="keep" checked><span><b>Bestehende Einträge behalten</b><small class="muted block">Nur Lücken füllen – bereits geplante Tage bleiben unverändert.</small></span></label>
-  <details class="rot-help"><summary>${icon('alert')}So funktioniert die Rotation</summary><p>Jedes Teammitglied bekommt an jedem Arbeitstag (${dayNames}) einen Dienst; die Dienste wechseln der Reihe nach. Bei Urlaub, Gleittag, Sonderurlaub, Berufsschule oder „Abwesend“ bekommt die Person keinen Dienst, und die Dienste dieses Tages werden unter den Anwesenden neu verteilt, damit jede Schicht gleichmäßig besetzt bleibt. Jeder Dienst wird pro Tag mindestens einmal besetzt; Dienste, die laut Dienstzeiten nur einmal pro Tag vorkommen dürfen, genau einmal. Tage, an denen jemand schon einen Dienst hat, bleiben unverändert.</p></details>`,'Rotation erstellen','Verteilt die Dienste gleichmäßig im Wechsel auf alle Teammitglieder.',{icon:'refresh',cls:'rot-modal'});
+  <details class="rot-help"><summary>${icon('alert')}So funktioniert die Rotation</summary><p>Jedes Teammitglied bekommt an jedem Arbeitstag (${dayNames}) einen Dienst. Die Dienste wechseln fair im Kreis: Ein Dienst, den pro Tag nur eine Person hat, kommt bei derselben Person erst wieder, wenn alle anderen im Team ihn hatten (z. B. bei 5 Personen erst nach 5 Wochen). Teamleiter werden nicht eingeteilt – sie tragen ihre Arbeitszeit selbst ein. Bei Urlaub, Gleittag, Sonderurlaub, Berufsschule oder „Abwesend“ bekommt die Person keinen Dienst, und die Dienste dieses Tages werden unter den Anwesenden neu verteilt, damit jede Schicht gleichmäßig besetzt bleibt. Jeder Dienst wird pro Tag mindestens einmal besetzt; Dienste, die laut Dienstzeiten nur einmal pro Tag vorkommen dürfen, genau einmal. Tage, an denen jemand schon einen Dienst hat, bleiben unverändert.</p></details>`,'Rotation erstellen','Verteilt die Dienste gleichmäßig im Wechsel auf alle Teammitglieder.',{icon:'refresh',cls:'rot-modal'});
  bindDialogTeamDropdown();bindDialogShiftDropdown();const res=await dlg;
  if(!res)return;
  const chosen=teamsAvail.filter(t=>res['team:'+t.name]);if(!chosen.length){toast('Bitte mindestens ein Team wählen.');return}
@@ -1115,7 +1119,13 @@ async function dutyRotation(){
  const dayOff=(date,o)=>isoDate(addDays(new Date(date+'T12:00:00'),o));
  chosen.forEach(t=>{
   const shifts=picked.map(n=>shiftTypes.find(s=>s.team===t.name&&s.name===n)).filter(Boolean);if(!shifts.length){noShift.push(t.name);return}
-  const members=staff.filter(p=>t.memberIds.includes(p[8])).map(p=>p[0]);
+  const members=rotationMembers(t).map(p=>p[0]);
+  /* Faire Rotation: Zyklus so lang wie das Team. Einzeldienste kommen genau einmal im Zyklus vor
+     (z. B. 5 Mitarbeiter → Frühdienst nur alle 5 Wochen wieder), mehrfach besetzbare Dienste füllen
+     die übrigen Plätze gleichmäßig verteilt. Bezugspunkt fest (2024), damit es über Monate fair weiterläuft. */
+  const pattern=(()=>{const n=shifts.length,L=Math.max(members.length,n),multi=shifts.map((sh,j)=>j).filter(j=>shiftMulti(shifts[j])),tgt=new Array(n).fill(1);
+   let rest=L-n;const pool=multi.length?multi:shifts.map((sh,j)=>j);for(let r=0;rest>0;r++,rest--)tgt[pool[r%pool.length]]++;
+   const used=new Array(n).fill(0),out=[];for(let j=0;j<L;j++){let best=-1,bv=-Infinity;for(let k=0;k<n;k++){if(used[k]>=tgt[k])continue;const v=tgt[k]*(j+1)/L-used[k];if(v>bv+1e-9){bv=v;best=k}}used[best]++;out.push(best)}return out})();
   dates.forEach(date=>{const p=period(date),n=shifts.length,cap=k=>shiftMulti(shifts[k])?Infinity:1;
    const fits=(name,sh)=>{const [ns,ne]=timeSpan(sh);return !(duty(name,dayOff(date,-1)).some(a=>timeSpan(a)[1]-1440>ns)||(ne>1440&&duty(name,dayOff(date,1)).some(a=>timeSpan(a)[0]<ne-1440)))};
    const fixed=new Array(n).fill(0),people=[];let dayAbsent=0;
@@ -1123,7 +1133,7 @@ async function dutyRotation(){
     const ex=duty(name,date);
     if(ex.length){const k=shifts.findIndex(sh=>ex.some(a=>a.team===t.name&&a.shift===sh.name));if(k>=0)fixed[k]++;return}// bereits eingeteilt: zählt zur Besetzung
     const away=rotationAbsent(name,date);if(away){absent++;dayAbsent++}
-    people.push({name,pref:((i+p)%n+n)%n,away});
+    people.push({name,pref:pattern[((i+p)%pattern.length+pattern.length)%pattern.length],away});
    });
    /* Verteilung eines Tages:
       1. jeder Dienst wird mindestens einmal besetzt (bevorzugt von Personen, die ihn laut Rotation ohnehin hätten),
@@ -1499,13 +1509,13 @@ const DASH_WIDGETS=[
   render:c=>{const on=new Set(c.teamDuties.map(a=>a.employee)).size,pct=c.memberCount?Math.round(on/c.memberCount*100):0;return statTile({label:'Heute im Dienst',value:`${on}<small> / ${c.memberCount}</small>`,note:`${pct} % Besetzung`,ic:'users'})},action:()=>goView('Dienstplan','Team')},
  {id:'kTeamStandby',title:'Bereitschaft heute',desc:'Bereitschaften deiner Teams heute',size:'tile',lead:true,hidden:true,
   render:c=>{const missing=c.scope.length-new Set(c.teamStandbys.map(a=>a.team)).size;return statTile({label:'Bereitschaft heute',value:c.teamStandbys.length,note:missing>0?`${missing} Team(s) ohne Bereitschaft`:'Alle Teams besetzt',ic:'moon'})},action:()=>goView('Bereitschaft','Woche')},
- {id:'kWorkplace',title:'Büro & Homeoffice',desc:'Deine eingetragenen Büro- und Homeoffice-Tage in diesem Monat · Klick zeigt deinen Dienstplan',size:'half',
+ {id:'kWorkplace',title:'Büro & Homeoffice',desc:'Deine eingetragenen Büro- und Homeoffice-Tage in diesem Monat · Klick zeigt deinen Dienstplan als Monatsansicht',size:'half',
   render:c=>{const m=c.today.slice(0,7),mine=c.mine.filter(a=>a.kind==='Arbeitsort'&&a.date.slice(0,7)===m),office=new Set(mine.filter(a=>a.shift==='Büro').map(a=>a.date)).size,home=new Set(mine.filter(a=>a.shift==='Homeoffice').map(a=>a.date)).size;
    const total=office+home,po=total?Math.round(office/total*100):0;
    return `<div class="stat-card dash-stat wp-card"><div class="wp-head"><span class="stat-label">Büro &amp; Homeoffice</span><span class="wp-month">${icon('cal')}${monthName(new Date())}</span></div>
     <div class="wp-grid"><div class="wp-box office"><span class="wp-ic">${icon('build')}</span><span class="wp-num"><b>${office}</b><small>${office===1?'Tag':'Tage'} Büro</small></span></div><div class="wp-box home"><span class="wp-ic">${icon('home')}</span><span class="wp-num"><b>${home}</b><small>${home===1?'Tag':'Tage'} Homeoffice</small></span></div></div>
     ${total?`<div class="wp-bar" role="img" aria-label="${po} % Büro, ${100-po} % Homeoffice"><i style="width:${po}%"></i></div><div class="wp-legend"><span><i class="o"></i>${po} % Büro</span><span><i class="h"></i>${100-po} % Homeoffice</span></div>`:`<div class="wp-empty">Diesen Monat noch keine Arbeitsorte eingetragen</div>`}</div>`},
-  action:c=>goView('Dienstplan','Woche',{teams:currentUserTeamNames().length?currentUserTeamNames():[],member:c.name})},
+  action:c=>goView('Dienstplan','Monat',{teams:currentUserTeamNames().length?currentUserTeamNames():[],member:c.name})},
  {id:'myDuties',title:'Meine Dienste',desc:'Montag bis Freitag, 5 Tage ab heute',size:'half',render:c=>{
   const days=[];let d=new Date();d.setHours(12,0,0,0);while((d.getDay()+6)%7>4)d=addDays(d,1);
   while(days.length<5){if((d.getDay()+6)%7<5)days.push(isoDate(d));d=addDays(d,1)}
@@ -2006,7 +2016,7 @@ function bindContactTiles(root){
  });
  root.querySelectorAll('[data-fav-employee]').forEach(b=>b.onclick=()=>{const p=staff.find(s=>s[8]===b.dataset.favEmployee);const on=toggleContactFavorite(b.dataset.favEmployee);toast(on?`${p?p[0]:'Kontakt'} zu Favoriten hinzugefügt.`:`${p?p[0]:'Kontakt'} aus Favoriten entfernt.`);renderEmployees()});
  root.querySelectorAll('[data-edit-employee]').forEach(b=>b.onclick=()=>{closeContactDetail();openEmployee(+b.dataset.editEmployee)});
- root.querySelectorAll('[data-remove-employee]').forEach(b=>b.onclick=async()=>{closeContactDetail();const i=+b.dataset.removeEmployee;const removed=staff[i];if(!removed)return;if(removed[8]===currentUserId){toast('Du kannst dich nicht selbst löschen.');return}if(await ask(`Mitarbeiter „${removed[0]}“ wirklich löschen?`)){staff.splice(i,1);teams.forEach(t=>{t.memberIds=t.memberIds.filter(id=>id!==removed[8]);if(t.leaderId===removed[8])t.leaderId='';if(t.deputyId===removed[8])t.deputyId='';});persistStaff();persistTeams();audit('Gelöscht','Kontakte',removed[0]);renderEmployees();toast('Mitarbeiter gelöscht.')}});
+ root.querySelectorAll('[data-remove-employee]').forEach(b=>b.onclick=async()=>{closeContactDetail();const i=+b.dataset.removeEmployee;const removed=staff[i];if(!removed)return;if(removed[8]===currentUserId){toast('Du kannst dich nicht selbst löschen.');return}if(await ask(`Mitarbeiter „${removed[0]}“ wirklich löschen?`)){staff.splice(i,1);teams.forEach(t=>{t.memberIds=t.memberIds.filter(id=>id!==removed[8]);if(t.leaderId===removed[8])t.leaderId='';if(t.deputyId===removed[8])t.deputyId='';});const before=assignments.length;assignments=assignments.filter(a=>a.employee!==removed[0]);const gone=before-assignments.length;persistAssignments();persistStaff();persistTeams();audit('Gelöscht','Kontakte',removed[0],{title:'Mitarbeiter gelöscht',object:removed[0],before:`${gone} Einträge in Dienstplan/Bereitschaft`,after:'entfernt'});renderEmployees();toast(gone?`Mitarbeiter gelöscht – ${gone} ${gone===1?'Eintrag':'Einträge'} in Dienstplan & Bereitschaft entfernt.`:'Mitarbeiter gelöscht.')}});
 }
 let contactFavPage=0,contactFavLayoutKey='';
 function contactFavLayout(){const w=q=>window.matchMedia(q).matches;if(w('(max-width: 520px)'))return{cols:1,rows:2};if(w('(max-width: 860px)'))return{cols:2,rows:2};if(w('(max-width: 1360px)'))return{cols:3,rows:2};return{cols:4,rows:1}}
@@ -2413,12 +2423,12 @@ function setPersonPicker(pp,val){if(typeof pp==='string')pp=document.querySelect
 const SWAP_ROLES=['Mitarbeiter','Deputy','Admin'];
 const SWAP_STATUS={offen:'Offen',angenommen:'Getauscht',abgelehnt:'Abgelehnt',zurückgezogen:'Zurückgezogen',ungültig:'Nicht mehr möglich'};
 const swapSnap=a=>({id:a.id,date:String(a.date),shift:String(a.shift??''),start:String(a.start||''),end:String(a.end||''),team:String(a.team??'')});
-let swaps=(()=>{const v=load('dienstplanSwaps',[]);if(!Array.isArray(v))return [];
+const __ld_swaps=()=>{const v=load('dienstplanSwaps',[]);if(!Array.isArray(v))return [];
  const snapOk=x=>x&&typeof x==='object'&&typeof x.date==='string';
  return v.filter(x=>x&&typeof x==='object'&&x.id&&typeof x.from==='string'&&typeof x.to==='string'&&Object.prototype.hasOwnProperty.call(SWAP_STATUS,x.status)).map(x=>{
   // ältere Anfragen (ein Dienst) in das neue Format übernehmen
   if(!Array.isArray(x.give)){x.give=snapOk(x.a)?[{...x.a,id:x.aId}]:[];x.take=snapOk(x.b)?[{...x.b,id:x.bId}]:[]}
-  x.give=(Array.isArray(x.give)?x.give:[]).filter(snapOk);x.take=(Array.isArray(x.take)?x.take:[]).filter(snapOk);return x}).filter(x=>x.give.length)})();
+  x.give=(Array.isArray(x.give)?x.give:[]).filter(snapOk);x.take=(Array.isArray(x.take)?x.take:[]).filter(snapOk);return x}).filter(x=>x.give.length)};let swaps=__ld_swaps();
 function persistSwaps(){save('dienstplanSwaps',swaps)}
 const swapOpenFor=id=>swaps.find(x=>x.status==='offen'&&[...x.give,...x.take].some(d=>String(d.id)===String(id)));
 const swapEnabled=teamName=>teamSettings(teamByName(teamName)).swap;
@@ -2601,7 +2611,7 @@ const wpHint=(wp,cls='')=>wp?`<span class="wp-hint ${wp.shift==='Homeoffice'?'is
 /* Mobil: Aktionen-Menü im Dienstplan und in der Bereitschaft */
 function openDutyActionsSheet(){
  const src=[...document.querySelectorAll('.dp-actions > button')];if(!src.length)return;
- const desc={'swap-new-btn':'Dienst mit einer Kollegin oder einem Kollegen tauschen','add-workplace':'Homeoffice oder Büro eintragen','add-absence':'Urlaub, Krankenstand & Co. eintragen','duty-rotation':'Dienste im Wechsel automatisch verteilen','auto-rotation':'Bereitschaften im Wechsel automatisch verteilen','add':currentPage==='Bereitschaft'?'Neue Bereitschaft einteilen':'Neuen Dienst einteilen'};
+ const desc={'swap-new-btn':'Dienst mit einer Kollegin oder einem Kollegen tauschen','add-workplace':'Homeoffice oder Büro eintragen','add-note':'Notiz für einen Tag hinterlegen','add-absence':'Urlaub, Krankenstand & Co. eintragen','duty-rotation':'Dienste im Wechsel automatisch verteilen','auto-rotation':'Bereitschaften im Wechsel automatisch verteilen','add':currentPage==='Bereitschaft'?'Neue Bereitschaft einteilen':'Neuen Dienst einteilen'};
  const layer=document.createElement('div');layer.className='modal-backdrop app-dialog dp-sheet-layer';
  layer.innerHTML=`<div class="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="dp-sheet-title"><div class="dp-sheet-grip" aria-hidden="true"></div><div class="dp-sheet-head"><b id="dp-sheet-title">Aktionen</b><button type="button" class="icon-btn" data-sheet-close aria-label="Schließen">×</button></div>
   <div class="dp-sheet-list">${src.map((b,i)=>`<button type="button" class="dp-sheet-item ${b.classList.contains('primary')?'primary':''}" data-sheet-i="${i}"><span class="dp-sheet-ic">${b.querySelector('svg')?.outerHTML||''}</span><span class="dp-sheet-txt"><b>${escapeHtml(b.textContent.trim())}</b><small>${escapeHtml(desc[b.id]||'')}</small></span>${icon('chev','dp-sheet-chev')}</button>`).join('')}</div></div>`;
@@ -2723,14 +2733,14 @@ function administrationPage(){
  if(!canView('Administration'))return `${heading('Administration','Die Teamverwaltung ist für deine Benutzergruppe nicht freigegeben.')}<section class="settings-card"><p>Bitte über das Profilmenü mit einer berechtigten Rolle anmelden.</p></section>`;
  const caps=adminCaps(),mine=adminTeams();
  if(!mine.length)return `${heading('Administration','Hier verwaltest du die Einstellungen deiner Teams.')}<div class="empty-note">Dir ist derzeit kein Team als Teamleitung oder Deputy zugeordnet.</div>`;
- const members=new Set(mine.flatMap(t=>t.memberIds)),withLead=mine.filter(t=>t.leaderId).length,withDeputy=mine.filter(t=>t.deputyId).length,open=mine.filter(t=>!t.leaderId||!t.deputyId).length,swapOn=mine.filter(t=>teamSettings(t).swap).length,selfOn=mine.filter(t=>{const st=teamSettings(t);return st.selfDuty!=='none'||st.selfStandby!=='none'}).length;
+ const members=new Set(mine.flatMap(t=>t.memberIds)),withLead=mine.filter(t=>t.leaderId).length,open=mine.filter(t=>!t.leaderId).length,swapOn=mine.filter(t=>teamSettings(t).swap).length,selfOn=mine.filter(t=>{const st=teamSettings(t);return st.selfDuty!=='none'||st.selfStandby!=='none'}).length;
  const q=adminQuery.toLowerCase();
- const list=mine.filter(t=>{const complete=t.leaderId&&t.deputyId;if(adminFilter==='complete'&&!complete)return false;if(adminFilter==='open'&&complete)return false;if(!q)return true;return t.name.toLowerCase().includes(q)||staff.some(p=>t.memberIds.includes(p[8])&&p[0].toLowerCase().includes(q))});
+ const list=mine.filter(t=>{const complete=!!t.leaderId;if(adminFilter==='complete'&&!complete)return false;if(adminFilter==='open'&&complete)return false;if(!q)return true;return t.name.toLowerCase().includes(q)||staff.some(p=>t.memberIds.includes(p[8])&&p[0].toLowerCase().includes(q))});
  const person=(id,label)=>{const p=staff.find(x=>x[8]===id);return `<div class="ta-person">${p?avatarHtml(p[0],'var(--accent-color)',26):'<span class="pp-none">–</span>'}<span><small>${label}</small><b class="${p?'':'muted'}">${p?escapeHtml(p[0]):'nicht besetzt'}</b></span></div>`};
- const cards=list.map(t=>{const mem=staff.filter(p=>t.memberIds.includes(p[8])),color=teamColor(t),complete=t.leaderId&&t.deputyId;
+ const cards=list.map(t=>{const mem=staff.filter(p=>t.memberIds.includes(p[8])),color=teamColor(t),complete=!!t.leaderId;
   return `<button type="button" class="ta-card" data-open-team="${escapeHtml(t.id)}" style="--team:${color}">
-   <span class="ta-card-top"><span class="ta-mark">${escapeHtml(String(t.name).replace(/^Team\s+/,'').slice(0,2).toUpperCase())}</span><span class="ta-title"><b>${escapeHtml(t.name)}</b><small>${mem.length} ${mem.length===1?'Mitglied':'Mitglieder'}${deptOfTeam(t)?` · ${escapeHtml(deptOfTeam(t).name)}`:''}</small></span><span class="team-status ${complete?'complete':'incomplete'}">${complete?'Vollständig':!t.leaderId?'Teamleitung fehlt':'Deputy fehlt'}</span></span>
-   <span class="ta-people">${person(t.leaderId,'Teamleitung')}${person(t.deputyId,'Deputy')}</span>
+   <span class="ta-card-top"><span class="ta-mark">${escapeHtml(String(t.name).replace(/^Team\s+/,'').slice(0,2).toUpperCase())}</span><span class="ta-title"><b>${escapeHtml(t.name)}</b><small>${mem.length} ${mem.length===1?'Mitglied':'Mitglieder'}${deptOfTeam(t)?` · ${escapeHtml(deptOfTeam(t).name)}`:''}</small></span><span class="team-status ${complete?'complete':'incomplete'}">${complete?'Vollständig':'Teamleitung fehlt'}</span></span>
+   <span class="ta-people one">${person(t.leaderId,'Teamleitung')}</span>
    <span class="ta-badges">${teamRuleBadges(t)}</span>
    <span class="ta-foot"><span class="avatar-stack">${mem.slice(0,7).map(p=>avatarHtml(p[0],color,26)).join('')}${mem.length>7?`<span class="more">+${mem.length-7}</span>`:''}</span><span class="ta-edit">${caps.settings?'Bearbeiten':'Ansehen'}${icon('chev')}</span></span></button>`});
  const cardHtml=t=>cards[list.indexOf(t)];
@@ -2748,7 +2758,7 @@ function administrationPage(){
  return `${heading('Administration',caps.all?(grouped?'Abteilungen, Teams, Verantwortliche und Teamregeln an einem Ort.':'Teams, Verantwortliche, Mitglieder und Teamregeln an einem Ort.'):currentRole==='Abteilungsleiter'?`Deine ${depts.length===1?'Abteilung':'Abteilungen'} mit ${mine.length} Teams.`:`Einstellungen für ${mine.length===1?'dein Team':'deine '+mine.length+' Teams'}.`,`${caps.dept?`<button class="btn" id="create-dept">${icon('build')}Abteilung anlegen</button>`:''}${caps.create?`<button class="btn primary" id="create-team">${icon('plus')}Team anlegen</button>`:''}`)}
  <div class="stats ta-stats">
   <div class="stat-card"><div><div class="stat-label">${caps.all?'Teams':'Deine Teams'}</div><div class="stat-value">${mine.length}</div><div class="stat-note">${members.size} Mitglieder${adminDepartments().length?` · ${adminDepartments().length} ${adminDepartments().length===1?'Abteilung':'Abteilungen'}`:''}</div></div></div>
-  <div class="stat-card"><div><div class="stat-label">Teamleitung &amp; Deputy</div><div class="stat-value">${Math.min(withLead,withDeputy)} / ${mine.length}</div><div class="meter ${open?'warn':''}"><i style="width:${mine.length?(mine.length-open)/mine.length*100:0}%"></i></div></div></div>
+  <div class="stat-card"><div><div class="stat-label">Teamleitung besetzt</div><div class="stat-value">${withLead} / ${mine.length}</div><div class="meter ${open?'warn':''}"><i style="width:${mine.length?(mine.length-open)/mine.length*100:0}%"></i></div></div></div>
   <div class="stat-card"><div><div class="stat-label">Diensttausch aktiv</div><div class="stat-value">${swapOn} / ${mine.length}</div><div class="meter"><i style="width:${mine.length?swapOn/mine.length*100:0}%"></i></div></div></div>
   <div class="stat-card"><div><div class="stat-label">Selbst eintragen</div><div class="stat-value">${selfOn}</div><div class="stat-note">${selfOn===1?'Team erlaubt':'Teams erlauben'} eigene Einträge</div></div></div>
  </div>
@@ -3326,7 +3336,7 @@ const HELP_SECTIONS=[
   {t:'Nur bestimmte Einträge exportieren',when:c=>c.reports,s:['Hake in der Einträge-Tabelle die gewünschten Zeilen an.','Wähle im Export-Dialog „Ausgewählte Einträge“.']}
  ]},
  {id:'administration',page:'Administration',icon:'build',title:'Administration',intro:'Teams, Verantwortliche, Mitglieder und Teamregeln.',items:[
-  {t:'Teams finden',s:['Über das Suchfeld findest du Teams oder Personen.','„Vollständig“ und „Offen“ filtern nach Teams mit bzw. ohne Teamleitung und Deputy.']},
+  {t:'Teams finden',s:['Über das Suchfeld findest du Teams oder Personen.','„Vollständig“ und „Offen“ filtern nach Teams mit bzw. ohne Teamleitung.']},
   {t:'Team anlegen',when:c=>c.adminCaps.create,s:['Klicke auf „Team anlegen“.','Gib den Teamnamen ein, wähle eine Teamfarbe und optional eine Abteilung.','Klicke auf „Team anlegen“ – danach legst du Mitglieder, Teamleitung und Deputy fest.']},
   {t:'Abteilung anlegen',when:c=>c.adminCaps.dept,s:['Klicke auf „Abteilung anlegen“.','Gib Name und Farbe ein, wähle die Abteilungsleitung (Rolle „Abteilungsleiter“) und hake die Teams an.','Klicke auf „Anlegen“.']},
   {t:'Mitglieder, Teamleitung und Deputy festlegen',when:c=>c.adminCaps.structure,s:['Klicke bei einem Team auf „Bearbeiten“.','Im Reiter „Mitglieder“ fügst du Personen hinzu oder entfernst sie.','Im Reiter „Allgemein“ wählst du Teamleitung und Deputy aus den Mitgliedern.','Klicke auf „Speichern“.'],tip:'Ein Deputy kann nur einem Team zugeordnet sein.'},
@@ -3397,7 +3407,52 @@ function bindHelp(){
  if(helpFocus){const el=document.getElementById('help-'+helpFocus);helpFocus='';if(el){if(el.tagName==='DETAILS')el.open=true;setTimeout(()=>el.scrollIntoView({block:'center'}),40);el.classList.add('help-flash');setTimeout(()=>el.classList.remove('help-flash'),1600)}}
 }
 function openHelp(id){helpFocus=id||'';helpQuery='';go('Hilfe')}
+/* ===== Notizen im Dienstplan =====
+   Jeder darf bei sich selbst Notizen eintragen; Admin bei allen, Teamleiter und Deputy bei Mitgliedern ihrer Teams. */
+function canNoteFor(name){const me=currentUserName();if(name&&name===me)return true;if(currentRole==='Admin')return true;
+ if(['Teamleiter','Deputy'].includes(currentRole)){const id=staff.find(p=>p[0]===name)?.[8],mine=currentUserTeamNames();return !!id&&teams.some(t=>mine.includes(t.name)&&t.memberIds.includes(id))}return false}
+function noteTargets(){return staff.filter(p=>canNoteFor(p[0])).sort((a,b)=>(a[8]===currentUserId?-1:b[8]===currentUserId?1:0)||a[0].localeCompare(b[0],'de'))}
+function noteTeamFor(name){const id=staff.find(p=>p[0]===name)?.[8],mine=currentUserTeamNames(),ts=teams.filter(t=>t.memberIds.includes(id));return (ts.find(t=>mine.includes(t.name))||ts[0])?.name||''}
+function noteCard(a,agenda){const can=canNoteFor(a.employee);return `<div class="calendar-assignment note-assignment${agenda?' note-agenda':''}" ${can?`data-note-open="${a.id}" role="button" tabindex="0"`:''} title="Notiz · ${escapeHtml(a.employee)}"><span class="note-indicator">✎ Notiz</span><b>${escapeHtml(a.employee)}</b><span class="note-text">${escapeHtml(a.note||'')}</span><small>${escapeHtml(a.team||'')}${a.author&&a.author!==a.employee?' · von '+escapeHtml(a.author):''}</small></div>`}
+async function openNoteDialog(id,date){
+ const ex=id?assignments.find(a=>a.id===id&&a.kind==='Notiz'):null;if(id&&!ex)return;if(ex&&!canNoteFor(ex.employee)){toast('Diese Notiz darfst du nicht bearbeiten.');return}
+ const targets=noteTargets();if(!targets.length){toast('Du darfst keine Notizen anlegen.');return}
+ const me=currentUserName(),who=ex?ex.employee:(targets.some(p=>p[0]===calendarMemberFilter)?calendarMemberFilter:(targets.find(p=>p[0]===me)||targets[0])[0]);
+ const day=ex?ex.date:(date||isoDate(currentDate||new Date()));
+ const personField=targets.length>1?`<div class="wp-field"><span class="wp-label">Für</span><select name="who" id="note-who">${targets.map(p=>`<option value="${escapeHtml(p[0])}" ${p[0]===who?'selected':''}>${escapeHtml(p[0])}${p[0]===me?' (ich)':''}</option>`).join('')}</select></div>`:`<input type="hidden" name="who" value="${escapeHtml(who)}"><div class="wp-field"><span class="wp-label">Für</span><div class="note-self">${avatarHtml(who,'var(--accent-color)',26)}<b>${escapeHtml(who)}</b><small class="muted">nur bei dir selbst</small></div></div>`;
+ const dlg=formDialog(ex?'Notiz bearbeiten':'Notiz hinzufügen',`${personField}
+  <div class="wp-field"><span class="wp-label">Datum</span><input type="date" name="date" value="${day}" required></div>
+  <div class="wp-field"><span class="wp-label">Notiz</span><textarea name="text" rows="4" maxlength="500" required placeholder="z. B. Arzttermin ab 15 Uhr, Schulung, Übergabe …">${escapeHtml(ex?.note||'')}</textarea><small class="wp-note">Max. 500 Zeichen</small></div>
+  ${ex?`<button type="button" class="btn ghost danger-text note-del" id="note-del">${icon('trash')}Notiz löschen</button>`:''}`,ex?'Speichern':'Notiz speichern','Notizen sehen alle, die diesen Dienstplan sehen.',{icon:'edit'});
+ if(ex)setTimeout(()=>{document.getElementById('note-del')?.addEventListener('click',async()=>{const dl=[...document.querySelectorAll('.app-dialog')].pop();dl?.querySelector('[data-dlg="cancel"]')?.click();
+  if(!await ask(`Notiz von ${ex.employee} am ${fmtIsoDate(ex.date)} wirklich löschen?`))return;assignments=assignments.filter(a=>a.id!==ex.id);persistAssignments();audit('Gelöscht','Dienstplan',`Notiz · ${ex.employee}`,{title:'Notiz gelöscht',object:`${ex.employee} · ${fmtIsoDate(ex.date)}`,before:ex.note,after:''});toast('Notiz gelöscht.');render()})},30);
+ const res=await dlg;if(!res)return;
+ const name=res.who,text=String(res.text||'').trim();if(!text){toast('Bitte einen Text eingeben.');return}if(!validDateInput(res.date)){toast('Bitte ein gültiges Datum wählen.');return}
+ if(!canNoteFor(name)){toast('Für diese Person darfst du keine Notiz anlegen.');return}
+ if(ex){const before=ex.note;Object.assign(ex,{employee:name,team:noteTeamFor(name),date:res.date,note:text.slice(0,500),shift:'Notiz'});persistAssignments();audit('Geändert','Dienstplan',`Notiz · ${name}`,{title:'Notiz geändert',object:`${name} · ${fmtIsoDate(res.date)}`,before,after:ex.note});toast('Notiz gespeichert.')}
+ else{const item={id:makeId(),kind:'Notiz',team:noteTeamFor(name),employee:name,shift:'Notiz',start:'',end:'',date:res.date,note:text.slice(0,500),color:'#e0a800',author:currentUserName()};assignments.push(item);persistAssignments();audit('Erstellt','Dienstplan',`Notiz · ${name}`,{title:'Notiz hinzugefügt',object:`${name} · ${fmtIsoDate(res.date)}`,after:item.note});toast(name===currentUserName()?'Notiz hinzugefügt.':`Notiz für ${name} hinzugefügt.`)}
+ render()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-note-open]');if(!b||e.target.closest('.duty-actions'))return;e.preventDefault();e.stopPropagation();openNoteDialog(b.dataset.noteOpen)},true);
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-note-open]')){e.preventDefault();openNoteDialog(e.target.dataset.noteOpen)}});
+/* ===== Live-Sync: Änderungen aus anderen Fenstern/Tabs sofort übernehmen (storage-Ereignis) ===== */
+const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},
+ dienstplanShiftTypes:()=>{const v=__ld_shiftTypesParse(load('dienstplanShiftTypes',null));if(v)shiftTypes=v},dienstplanStandbyGroups:()=>{standbyGroups=__ld_standbyGroups()},dienstplanStandbyTimes:()=>{standbyTimes=__ld_standbyTimes()},
+ dienstplanSwaps:()=>{swaps=__ld_swaps()},dienstplanNotifications:()=>{notifications=__ld_notifications()},dienstplanRoles:()=>{roles=__ld_roles()},dienstplanPermissions:()=>{permissions=__ld_permissions()},
+ dienstplanAuditLog:()=>{const v=load('dienstplanAuditLog',[]);auditLog=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]},dienstplanExportLog:()=>{const v=load('dienstplanExportLog',[]);exportLog=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]}};
+let dpRemoteQueue=new Set(),dpRemoteTimer=null;
+const dpBusy=()=>!document.getElementById('login-modal')?.hidden||!!document.querySelector('.app-dialog')||[...document.querySelectorAll('.modal-backdrop')].some(m=>!m.hidden)||!!document.querySelector('details.team-dd[open],.team-dd.open')||(document.activeElement&&document.activeElement.closest('#content')&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&document.activeElement.type!=='search')||(typeof dashEditing!=='undefined'&&dashEditing);
+window.dpApplyRemote=keys=>{keys.forEach(k=>{if(DP_REMOTE[k])dpRemoteQueue.add(k)});if(!dpRemoteQueue.size)return;clearTimeout(dpRemoteTimer);
+ const run=()=>{if(dpBusy()){dpRemoteTimer=setTimeout(run,2000);return}const ks=[...dpRemoteQueue];dpRemoteQueue.clear();
+  ks.forEach(k=>{try{DP_REMOTE[k]()}catch(e){console.warn('[Sync] Übernahme fehlgeschlagen',k,e)}});
+  if(currentUserId&&!staff.some(p=>p[8]===currentUserId)){hasSession=false;openLogin();return}
+  updateSignedInUser();refreshNotifications();const y=window.scrollY;render();window.scrollTo(0,y);
+  const vis=ks.filter(k=>!['dienstplanAuditLog','dienstplanExportLog','dienstplanNotifications'].includes(k));if(vis.length)syncFlash()};
+ run()};
+window.addEventListener('storage',e=>{if(e.storageArea===localStorage&&e.key&&DP_REMOTE[e.key])window.dpApplyRemote([e.key])});
+function syncFlash(){let el=document.getElementById('sync-flash');if(!el){el=document.createElement('div');el.id='sync-flash';el.className='sync-flash';el.setAttribute('role','status');document.body.appendChild(el)}
+ el.innerHTML=`${icon('refresh')}<span>Aktualisiert – Änderungen übernommen</span>`;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2600)}
 function render(){
+ if(!window.__leadersChecked){window.__leadersChecked=true;if(autoAssignLeaders())save('dienstplanTeams',teams,true)}
  if(currentPage!=='Dashboard'&&dashEditing){dashEditing=false;dashDraft=null}
  document.body.classList.toggle('settings-mode',currentPage==='Einstellungen');
  document.getElementById('top-avatar')?.classList.toggle('is-current',currentPage==='Einstellungen');
@@ -3425,6 +3480,7 @@ function render(){
  const absenceAdd=document.getElementById('add-absence');if(absenceAdd)absenceAdd.onclick=()=>{bindAbsenceModal();const m=document.getElementById('absence-modal');m.hidden=false;if(!window.matchMedia('(pointer: coarse)').matches)setTimeout(()=>m.querySelector('[data-pp="absence-type"] .pp-btn')?.focus({preventScroll:true}),30)};
  const dpAct=document.getElementById('dp-actions-toggle');if(dpAct)dpAct.onclick=openDutyActionsSheet;
  const swapNew=document.getElementById('swap-new-btn');if(swapNew)swapNew.onclick=()=>openSwapRequest();
+ document.getElementById('add-note')?.addEventListener('click',()=>openNoteDialog(null,isoDate(currentView==='Tag'?currentDate:new Date())));
  const workplaceAdd=document.getElementById('add-workplace'),workplaceModal=document.getElementById('workplace-modal'),workplaceForm=document.getElementById('workplace-form');
  if(workplaceAdd)workplaceAdd.onclick=()=>{const date=isoDate(currentDate);openWorkplaceModal({from:date,to:date})};
  if(workplaceModal&&workplaceForm)bindWorkplaceModal(workplaceModal,workplaceForm);
@@ -3441,10 +3497,10 @@ function render(){
  ['close-day-details','close-day-details-bottom'].forEach(id=>{const b=document.getElementById(id);if(b)b.onclick=closeDayDetails});
  const openDayDetails=date=>{
   buildWpIndex();
-  const entries=assignments.filter(a=>(currentPage==='Bereitschaft'?a.kind==='Bereitschaft':(a.kind==='Dienstplan'||a.kind==='Arbeitsort'||(a.kind==='Bereitschaft'&&canSeeStandbyInDutyPlan(a))))&&a.date===date&&!wpMerged(a)).filter(a=>calTeamOk(a.team)).filter(a=>calendarMemberFilter==='Alle Mitarbeiter'||a.employee===calendarMemberFilter).sort((a,b)=>(a.kind==='Bereitschaft'?-1:0)-(b.kind==='Bereitschaft'?-1:0)||(a.start||'').localeCompare(b.start||''));
+  const entries=assignments.filter(a=>(currentPage==='Bereitschaft'?a.kind==='Bereitschaft':(a.kind==='Dienstplan'||a.kind==='Arbeitsort'||a.kind==='Notiz'||(a.kind==='Bereitschaft'&&canSeeStandbyInDutyPlan(a))))&&a.date===date&&!wpMerged(a)).filter(a=>calTeamOk(a.team)).filter(a=>calendarMemberFilter==='Alle Mitarbeiter'||a.employee===calendarMemberFilter).sort((a,b)=>(a.kind==='Bereitschaft'?-1:0)-(b.kind==='Bereitschaft'?-1:0)||(a.start||'').localeCompare(b.start||''));
   document.getElementById('day-details-title').textContent=fmtWithWeekday(new Date(date+'T12:00:00'));
   document.getElementById('day-details-subtitle').textContent=entries.length+' Einträge';
-  document.getElementById('day-details-list').innerHTML=entries.length?entries.map(a=>`<div class="day-assignment-row"><div class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${a.kind==='Arbeitsort'?'workplace-assignment':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${a.kind==='Bereitschaft'?'<span class="standby-indicator">◷ Bereitschaft</span>':a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b><span>${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}${a.start?' · '+a.start+'–'+a.end:isVariableStandby(a)?' · variabel':''}</span>${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}<small>${escapeHtml(a.team)}${a.groupName?' · '+escapeHtml(a.groupName):''}</small><details class="duty-actions"><summary aria-label="Aktionen">⋯</summary><div class="duty-actions-menu">${a.isAbsence||a.kind==='Arbeitsort'?'':`<button type="button" data-edit-duty="${a.id}">Bearbeiten</button>`}${canSwapDuty(a)?`<button type="button" data-swap-duty="${a.id}">${icon('refresh')}Dienst tauschen</button>`:''}${wpFor(a)?`<button type="button" data-edit-wp="${wpFor(a).id}">Arbeitsort ändern</button><button type="button" data-delete-duty="${wpFor(a).id}">Arbeitsort entfernen</button>`:''}<button type="button" class="danger-text" data-delete-duty="${a.id}">Löschen</button></div></details></div></div>`).join(''):'<div class="empty-note">Für diesen Tag sind keine Einträge vorhanden.</div>';
+  document.getElementById('day-details-list').innerHTML=entries.length?entries.map(a=>a.kind==='Notiz'?`<div class="day-assignment-row">${noteCard(a)}</div>`:`<div class="day-assignment-row"><div class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${a.kind==='Arbeitsort'?'workplace-assignment':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${a.kind==='Bereitschaft'?'<span class="standby-indicator">◷ Bereitschaft</span>':a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b><span>${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}${a.start?' · '+a.start+'–'+a.end:isVariableStandby(a)?' · variabel':''}</span>${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}<small>${escapeHtml(a.team)}${a.groupName?' · '+escapeHtml(a.groupName):''}</small><details class="duty-actions"><summary aria-label="Aktionen">⋯</summary><div class="duty-actions-menu">${a.isAbsence||a.kind==='Arbeitsort'?'':`<button type="button" data-edit-duty="${a.id}">Bearbeiten</button>`}${canSwapDuty(a)?`<button type="button" data-swap-duty="${a.id}">${icon('refresh')}Dienst tauschen</button>`:''}${wpFor(a)?`<button type="button" data-edit-wp="${wpFor(a).id}">Arbeitsort ändern</button><button type="button" data-delete-duty="${wpFor(a).id}">Arbeitsort entfernen</button>`:''}<button type="button" class="danger-text" data-delete-duty="${a.id}">Löschen</button></div></details></div></div>`).join(''):'<div class="empty-note">Für diesen Tag sind keine Einträge vorhanden.</div>';
   dayModal.hidden=false;bindDutyActions(dayModal);
  };
  content.querySelectorAll('[data-open-day]').forEach(b=>b.onclick=e=>{e.stopPropagation();openDayDetails(b.dataset.openDay)});
