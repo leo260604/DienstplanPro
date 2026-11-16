@@ -6456,8 +6456,8 @@ function limitDateInputs(){document.querySelectorAll('input[type=date]').forEach
    Ohne URL/Key unten läuft die App wie bisher nur im Browser.
    Tabellen anlegen: supabase/schema.sql im Supabase SQL Editor ausführen.
 ===================================================================== */
-const DP_SUPABASE_URL='';       // z. B. https://abcdefgh.supabase.co
-const DP_SUPABASE_ANON_KEY='';  // Project Settings → API → anon public
+const DP_SUPABASE_URL='https://ejkydgsovcfpqplvnpmb.supabase.co';
+const DP_SUPABASE_ANON_KEY='sb_publishable_S8nyOS8XBqNULQ0LHpTmmg_nEcvv06p';  // Publishable Key (darf öffentlich sein)
 
 (function(){
  const LS=window.localStorage,origSet=Storage.prototype.setItem,origRemove=Storage.prototype.removeItem;
@@ -6500,7 +6500,8 @@ const DP_SUPABASE_ANON_KEY='';  // Project Settings → API → anon public
  /* ---------------- REST-Aufrufe (PostgREST) ---------------- */
  const enabled=!!(DP_SUPABASE_URL&&DP_SUPABASE_ANON_KEY);
  const base=DP_SUPABASE_URL.replace(/\/+$/,'')+'/rest/v1/';
- const hdr=(extra={})=>({apikey:DP_SUPABASE_ANON_KEY,Authorization:'Bearer '+DP_SUPABASE_ANON_KEY,'Content-Type':'application/json',...extra});
+ // Neue Keys (sb_publishable_…) nur im apikey-Header senden – im Authorization-Header lehnt Supabase sie ab. Alte anon-Keys (JWT) zusätzlich als Bearer.
+ const hdr=(extra={})=>({apikey:DP_SUPABASE_ANON_KEY,...(DP_SUPABASE_ANON_KEY.startsWith('sb_')?{}:{Authorization:'Bearer '+DP_SUPABASE_ANON_KEY}),'Content-Type':'application/json',...extra});
  async function req(method,path,body,prefer){
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),method==='GET'?12000:30000);let r;
   try{r=await fetch(base+path,{method,headers:hdr(prefer?{Prefer:prefer}:{}),body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:ctl.signal})}
