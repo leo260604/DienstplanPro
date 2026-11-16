@@ -934,8 +934,8 @@ function teamDropdown(list,pre,opt={}){
   <div class="dlg-dd-list">${list.map(t=>`<label class="check" data-q="${escapeHtml(t.name.toLowerCase())}"><input type="checkbox" name="team:${escapeHtml(t.name)}" data-dd-team="${escapeHtml(t.name)}" ${pre.includes(t.name)?'checked':''}><i class="dot" style="--c:${teamColor(t)}"></i><span>${escapeHtml(t.name)}</span><small>${t.memberIds.length}</small></label>`).join('')}<div class="team-dd-empty" hidden>Kein Team gefunden</div></div><div class="team-dd-foot" hidden><span class="dd-count"></span><button type="button" class="link-btn dd-clear">Auswahl aufheben</button></div></div></details></div>`;
 }
 /* Team-Mehrfachauswahl in Dialogen (Rotation automatisch planen) */
-function bindDialogTeamDropdown(){
- const layer=[...document.querySelectorAll('.app-dialog')].pop(),dd=layer?.querySelector('.team-dd');if(!dd)return;
+function bindDialogTeamDropdown(root){
+ const layer=root||[...document.querySelectorAll('.app-dialog')].pop(),dd=layer?.querySelector('.team-dd');if(!dd)return;
  const boxes=[...dd.querySelectorAll('[data-dd-team]')],all=dd.querySelector('[data-dd-all]'),text=dd.querySelector('.team-dd-text');
  const update=()=>{const sel=boxes.filter(b=>b.checked).map(b=>b.dataset.ddTeam);
   text.textContent=!sel.length?(dd.dataset.emptyLabel||'Team auswählen …'):sel.length===boxes.length&&boxes.length>1?`${dd.dataset.allLabel||'Alle meine Teams'} (${sel.length})`:sel.length>2?`${sel.slice(0,2).join(', ')} +${sel.length-2}`:sel.join(', ');
@@ -964,7 +964,7 @@ function floatDialogDetails(layer,dd,all){
  const filter=()=>{if(!q)return;const v=q.value.trim().toLowerCase();let n=0;dd.querySelectorAll('.dlg-dd-list .check').forEach(l=>{const hit=!v||l.dataset.q.includes(v);l.classList.toggle('q-miss',!hit);if(hit&&!l.hidden)n++});dd.querySelector('.team-dd-empty').hidden=n>0;if(all)all.closest('label').hidden=!!v};
  if(q){q.addEventListener('input',filter);q.addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault()})}
  dd.addEventListener('toggle',()=>{if(dd.open){if(q){q.value='';filter()}place();if(q&&!window.matchMedia('(pointer: coarse)').matches)q.focus({preventScroll:true})}});
- layer.querySelector('form')?.addEventListener('scroll',()=>{if(dd.open)dd.open=false},{passive:true});window.addEventListener('resize',place);
+ [layer.querySelector('form'),layer.querySelector('.modal')].filter((x,i,a)=>x&&a.indexOf(x)===i).forEach(x=>x.addEventListener('scroll',()=>{if(dd.open)dd.open=false},{passive:true}));window.addEventListener('resize',place);
 }
 /* Rotation (Dienstplan): Dienste im Wechsel als Mehrfachauswahl-Dropdown */
 function bindDialogShiftDropdown(){
@@ -1925,7 +1925,7 @@ function contactsPage(){
  <section class="panel contact-fav-panel"><div class="panel-head"><h2>${icon('star','fav-head-ic')} Meine Favoriten</h2></div><div id="contact-favorites"></div></section>
  <section class="panel contact-results-panel" id="contact-results-panel" hidden><div class="panel-head"><h2>${icon('search','res-head-ic')} Suchergebnisse</h2><span class="contact-count" id="contact-count"></span></div><div id="employee-rows" class="contact-results"></div></section>
  <div class="modal-backdrop" id="contact-detail-modal" hidden><div class="modal contact-detail-modal" role="dialog" aria-modal="true" aria-label="Kontakt"><div class="panel-head"><h2>Kontakt</h2><button class="icon-btn" id="close-contact-detail" type="button" aria-label="Schließen">×</button></div><div class="contact-detail-body"></div></div></div>
- <div class="modal-backdrop" id="employee-modal" hidden><div class="modal"><div class="panel-head"><h2 id="employee-modal-title">Mitarbeiter hinzufügen</h2><button class="icon-btn" id="close-employee" type="button" aria-label="Schließen">×</button></div><form id="employee-form"><input type="hidden" id="employee-index"><label>Vor- und Nachname<input id="employee-name" required placeholder="Max Mustermann"></label><label>Benutzerrolle<select id="employee-role" required>${roles.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('')}</select></label><div class="photo-row"><div class="employee-photo-preview" id="employee-photo-preview"><span>Foto</span></div><label class="btn" for="employee-photo">Profilbild wählen</label><input id="employee-photo" type="file" accept="image/*" hidden></div><fieldset class="team-checks"><legend>Teams zuordnen</legend><div id="employee-team" class="check-grid"></div></fieldset><label>E-Mail<input type="email" id="employee-email" placeholder="name@example.at"></label><label>Bereitschaftsnummer<input id="employee-phone" placeholder="+43 660 …"></label><label>Teams-Telefonnummer<input id="employee-teams-phone" placeholder="+43 …"></label><div class="btn-row modal-actions"><button type="button" class="btn" id="cancel-employee">Abbrechen</button><button type="submit" class="btn primary">Speichern</button></div></form></div></div>`;
+ <div class="modal-backdrop" id="employee-modal" hidden><div class="modal"><div class="panel-head"><h2 id="employee-modal-title">Mitarbeiter hinzufügen</h2><button class="icon-btn" id="close-employee" type="button" aria-label="Schließen">×</button></div><form id="employee-form"><input type="hidden" id="employee-index"><label>Vor- und Nachname<input id="employee-name" required placeholder="Max Mustermann"></label><label>Benutzerrolle<select id="employee-role" required>${roles.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('')}</select></label><div class="photo-row"><div class="employee-photo-preview" id="employee-photo-preview"><span>Foto</span></div><label class="btn" for="employee-photo">Profilbild wählen</label><input id="employee-photo" type="file" accept="image/*" hidden></div><div id="employee-team" class="employee-team-field"></div><label>E-Mail<input type="email" id="employee-email" placeholder="name@example.at"></label><label>Bereitschaftsnummer<input id="employee-phone" placeholder="+43 660 …"></label><label>Teams-Telefonnummer<input id="employee-teams-phone" placeholder="+43 …"></label><div class="btn-row modal-actions"><button type="button" class="btn" id="cancel-employee">Abbrechen</button><button type="submit" class="btn primary">Speichern</button></div></form></div></div>`;
 }
 const loadFavMap=()=>{const m=load('dienstplanFavorites',{});return m&&typeof m==='object'&&!Array.isArray(m)?m:{}};
 function contactFavorites(){const ids=loadFavMap()[currentUserId];return Array.isArray(ids)?ids.filter(id=>staff.some(s=>s[8]===id)):[]}
@@ -2010,7 +2010,8 @@ function openEmployee(i){
  document.getElementById('employee-name').value=s?s[0]:'';
  document.getElementById('employee-role').value=s?(s[10]||'Mitarbeiter'):'Mitarbeiter';
  const memberships=s?teams.filter(t=>t.memberIds.includes(s[8])).map(t=>t.name):[];
- document.getElementById('employee-team').innerHTML=teamNames().map(t=>`<label class="check"><input type="checkbox" value="${escapeHtml(t)}" ${memberships.includes(t)?'checked':''}><span>${escapeHtml(t)}</span></label>`).join('');
+ document.getElementById('employee-team').innerHTML=teams.length?teamDropdown(teams,memberships,{label:'Teams zuordnen',allLabel:'Alle Teams',empty:'Teams auswählen …'}):'<div class="wp-field"><span class="wp-label">Teams zuordnen</span><small class="muted">Es sind noch keine Teams angelegt.</small></div>';
+ bindDialogTeamDropdown(document.getElementById('employee-modal'));
  document.getElementById('employee-email').value=s?(s[6]||''):'';
  document.getElementById('employee-phone').value=s?(s[7]||''):'';document.getElementById('employee-teams-phone').value=s?(s[11]||''):'';
  employeePhotoData=s?(s[9]||''):'';document.getElementById('employee-photo-preview').innerHTML=employeePhotoData?`<img src="${escapeHtml(employeePhotoData)}" alt="Profilbild-Vorschau">`:'<span>Foto</span>';document.getElementById('employee-photo').value='';
@@ -2041,7 +2042,7 @@ function bindContacts(){
   const name=document.getElementById('employee-name').value.trim(),index=document.getElementById('employee-index').value;
   if(!name){toast('Bitte einen Mitarbeiternamen eingeben.');return}
   if(staff.some((s,i)=>s[0].toLowerCase()===name.toLowerCase()&&String(i)!==index)){toast('Ein Mitarbeiter mit diesem Namen existiert bereits.');return}
-  const selectedTeams=[...document.querySelectorAll('#employee-team input:checked')].map(o=>o.value);
+  const selectedTeams=[...document.querySelectorAll('#employee-team [data-dd-team]:checked')].map(o=>o.dataset.ddTeam);
   const old=index!==''?staff[Number(index)]:null;
   const item=[name,initials(name),old?.[2]||'Noch nicht eingeteilt',old?.[3]||'—',old?.[4]||'blue',selectedTeams[0]||'',document.getElementById('employee-email').value.trim(),document.getElementById('employee-phone').value.trim(),old?.[8]||makeId(),employeePhotoData,document.getElementById('employee-role').value,document.getElementById('employee-teams-phone').value.trim()];
   if(old&&old[0]!==name){assignments.forEach(a=>{if(a.employee===old[0])a.employee=name});persistAssignments();}
