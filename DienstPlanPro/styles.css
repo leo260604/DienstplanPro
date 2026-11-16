@@ -2333,3 +2333,11 @@ button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline
 .sb-team-more+.sb-team-names{margin-left:6px}
 .pill.sb-all-teams{background:color-mix(in srgb,var(--accent-color) 14%,var(--surface));color:var(--accent-color);font-weight:700}
 .sb-team-note{margin-top:-6px}.sb-team-note.bad{color:var(--red,#d14343)}
+/* Team-Auswahl in Dialogen (Rotation, Bereitschaftszeit): wie Team-Filter im Dienstplan */
+.dlg-team-dd .team-dd-panel input[type=checkbox]{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0;flex:none;border:1.5px solid var(--line-strong,var(--line));border-radius:5px;background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;transition:background .12s,border-color .12s}
+.dlg-team-dd .team-dd-panel input[type=checkbox]:checked{background:var(--accent-color) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--accent-color)}
+.dlg-team-dd .team-dd-panel input[type=checkbox]:focus-visible{outline:0;box-shadow:0 0 0 3px var(--accent-ring)}
+.dlg-team-dd .team-dd-panel .team-dd-all{background:var(--surface-2);font-weight:700;border-bottom:1px solid var(--line);border-radius:9px 9px 0 0;margin-bottom:4px!important}
+.dlg-team-dd .team-dd-panel .team-dd-all>span{font-weight:700}
+.dlg-team-dd .team-dd-foot{position:sticky;bottom:-6px;margin:4px -6px -6px;padding:9px 12px;background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 14px 14px}
+.dlg-team-dd .team-dd-foot[hidden]{display:none}

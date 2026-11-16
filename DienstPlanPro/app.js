@@ -931,7 +931,7 @@ function teamDropdown(list,pre,opt={}){
  return `<div class="wp-field"><span class="wp-label">${escapeHtml(opt.label||'Teams')}</span><details class="team-dd dlg-team-dd" data-all-label="${escapeHtml(allLabel)}" data-empty-label="${escapeHtml(opt.empty||'Team auswählen …')}"><summary><span class="pp-team dlg-dd-ic">${icon('users')}</span><span class="team-dd-text"></span>${icon('down')}</summary><div class="team-dd-panel">
   ${list.length>5?`<label class="team-dd-search">${icon('search')}<input type="search" class="dlg-dd-q" placeholder="Team suchen …" autocomplete="off"></label>`:''}
   ${list.length>1?`<label class="check team-dd-all"><input type="checkbox" data-dd-all><span>${escapeHtml(allLabel)}</span></label>`:''}
-  <div class="dlg-dd-list">${list.map(t=>`<label class="check" data-q="${escapeHtml(t.name.toLowerCase())}"><input type="checkbox" name="team:${escapeHtml(t.name)}" data-dd-team="${escapeHtml(t.name)}" ${pre.includes(t.name)?'checked':''}><i class="dot" style="--c:${teamColor(t)}"></i><span>${escapeHtml(t.name)}</span><small>${t.memberIds.length}</small></label>`).join('')}<div class="team-dd-empty" hidden>Kein Team gefunden</div></div></div></details></div>`;
+  <div class="dlg-dd-list">${list.map(t=>`<label class="check" data-q="${escapeHtml(t.name.toLowerCase())}"><input type="checkbox" name="team:${escapeHtml(t.name)}" data-dd-team="${escapeHtml(t.name)}" ${pre.includes(t.name)?'checked':''}><i class="dot" style="--c:${teamColor(t)}"></i><span>${escapeHtml(t.name)}</span><small>${t.memberIds.length}</small></label>`).join('')}<div class="team-dd-empty" hidden>Kein Team gefunden</div></div><div class="team-dd-foot" hidden><span class="dd-count"></span><button type="button" class="link-btn dd-clear">Auswahl aufheben</button></div></div></details></div>`;
 }
 /* Team-Mehrfachauswahl in Dialogen (Rotation automatisch planen) */
 function bindDialogTeamDropdown(){
@@ -940,11 +940,13 @@ function bindDialogTeamDropdown(){
  const update=()=>{const sel=boxes.filter(b=>b.checked).map(b=>b.dataset.ddTeam);
   text.textContent=!sel.length?(dd.dataset.emptyLabel||'Team auswählen …'):sel.length===boxes.length&&boxes.length>1?`${dd.dataset.allLabel||'Alle meine Teams'} (${sel.length})`:sel.length>2?`${sel.slice(0,2).join(', ')} +${sel.length-2}`:sel.join(', ');
   text.classList.toggle('muted',!sel.length);const ic=dd.querySelector('.dlg-dd-ic');if(ic)ic.style.setProperty('--c',sel.length===1?teamColor(teamByName(sel[0])):'var(--accent-color)');
-  if(all){all.checked=sel.length===boxes.length;all.indeterminate=sel.length>0&&sel.length<boxes.length}
+  if(all){all.checked=sel.length===boxes.length&&boxes.length>0;all.indeterminate=false}
+  const foot=dd.querySelector('.team-dd-foot');if(foot){foot.hidden=!sel.length;foot.querySelector('.dd-count').textContent=`${sel.length} ausgewählt`}
   // Dienste anzeigen, die es in den gewählten Teams gibt
   layer.querySelectorAll('[data-shift-teams]').forEach(l=>{const ts=l.dataset.shiftTeams.split('|');l.hidden=sel.length>0&&!ts.some(x=>sel.includes(x))});layer.dispatchEvent(new Event('dd-teams'))};
  boxes.forEach(b=>b.addEventListener('change',update));
  if(all)all.addEventListener('change',()=>{boxes.forEach(b=>b.checked=all.checked);update()});
+ dd.querySelector('.dd-clear')?.addEventListener('click',e=>{e.preventDefault();boxes.forEach(b=>b.checked=false);update()});
  floatDialogDetails(layer,dd,all);
  update();
 }
@@ -971,7 +973,7 @@ function bindDialogShiftDropdown(){
  const update=()=>{const vis=boxes.filter(b=>!b.closest('label').hidden),sel=vis.filter(b=>b.checked).map(b=>b.name.slice(6));
   text.textContent=!sel.length?'Dienste auswählen …':sel.length===vis.length&&vis.length>1?`Alle Dienste (${sel.length})`:sel.length>2?`${sel.slice(0,2).join(', ')} +${sel.length-2}`:sel.join(', ');
   text.classList.toggle('muted',!sel.length);
-  if(all){all.checked=sel.length===vis.length&&vis.length>0;all.indeterminate=sel.length>0&&sel.length<vis.length}
+  if(all){all.checked=sel.length===vis.length&&vis.length>0;all.indeterminate=false}
   const empty=dd.querySelector('.dlg-shift-none');if(empty)empty.hidden=vis.length>0};
  boxes.forEach(b=>b.addEventListener('change',update));
  if(all)all.addEventListener('change',()=>{boxes.forEach(b=>{if(!b.closest('label').hidden)b.checked=all.checked});update()});
