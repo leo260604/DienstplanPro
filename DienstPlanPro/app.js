@@ -1081,7 +1081,8 @@ async function dutyRotation(){
  const pre=calendarTeams.length?calendarTeams.filter(n=>teamsAvail.some(t=>t.name===n)):teamsAvail.map(t=>t.name);
  const names=[...new Set(shiftTypes.filter(s=>teamsAvail.some(t=>t.name===s.team)).map(s=>s.name))];
  const shiftLabel=n=>{const x=shiftTypes.find(s=>s.name===n&&teamsAvail.some(t=>t.name===s.team));return x?`${escapeHtml(n)} <small class="muted">${tRange(x)}${shiftMulti(x)?'':' · 1× pro Tag'}</small>`:escapeHtml(n)};
- const dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'].slice(0,dutyDays).join(', ');
+ const ROT_DAYS=5;// Dienst-Rotation: immer nur Montag bis Freitag (unabhängig von der Kalenderansicht)
+ const dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'].slice(0,ROT_DAYS).join(', ');
  const dlg=formDialog('Rotation automatisch planen',`${teamDropdown(teamsAvail,pre)}
 
   <div class="wp-field"><span class="wp-label">Dienste im Wechsel <span class="muted">(in dieser Reihenfolge)</span></span><details class="team-dd dlg-team-dd dlg-shift-dd"><summary><span class="pp-team dlg-dd-ic">${icon('clock')}</span><span class="team-dd-text"></span>${icon('down')}</summary><div class="team-dd-panel">
@@ -1098,7 +1099,7 @@ async function dutyRotation(){
  const picked=names.filter(n=>res['shift:'+n]);if(!picked.length){toast('Bitte mindestens einen Dienst wählen.');return}
  if(!validDateInput(res.from)||!validDateInput(res.to)){toast(DATE_RANGE_MSG);return}
  if(res.to<res.from){toast('Das Enddatum darf nicht vor dem Startdatum liegen.');return}
- const dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1)){if(dates.length>366)break;if((c.getDay()+6)%7<dutyDays)dates.push(isoDate(c))}
+ const dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1)){if(dates.length>366)break;if((c.getDay()+6)%7<ROT_DAYS)dates.push(isoDate(c))}
  if(Math.round((new Date(res.to+'T12:00:00')-new Date(res.from+'T12:00:00'))/86400000)+1>366){toast('Bitte einen Zeitraum von höchstens 366 Tagen auswählen.');return}
  if(!dates.length){toast('Im gewählten Zeitraum liegen keine Arbeitstage.');return}
  const keep=!!res.keep,inRange=a=>a.kind==='Dienstplan'&&!a.isAbsence&&a.date>=res.from&&a.date<=res.to&&chosen.some(t=>t.name===a.team);
