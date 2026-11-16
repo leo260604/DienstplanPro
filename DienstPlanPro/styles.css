@@ -2404,3 +2404,9 @@ body.dark-mode .sso-btn:hover{background:#3a3a3a}
 .login-demo .login-demo-chev{transition:transform .2s}
 .login-demo[open] .login-demo-chev{transform:rotate(180deg)}
 .login-demo>form{padding:0 12px 12px}
+/* Supabase: Ladeanzeige beim Start */
+#dp-sync-loader{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:var(--bg,#f4f6f8)}
+.dp-sync-box{display:grid;justify-items:center;gap:8px;color:var(--ink,#1c2430);font:inherit}
+.dp-sync-box b{font-size:15px}.dp-sync-box small{font-size:12.5px;color:var(--muted,#6b7785)}
+.dp-sync-spin{width:28px;height:28px;border-radius:50%;border:3px solid color-mix(in srgb,var(--accent-color,#14a1a9) 25%,transparent);border-top-color:var(--accent-color,#14a1a9);animation:dp-spin .8s linear infinite}
+@keyframes dp-spin{to{transform:rotate(360deg)}}

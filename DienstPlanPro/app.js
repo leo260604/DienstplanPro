@@ -1741,7 +1741,7 @@ function settings(){
    ${currentRole==='Admin'?`<section class="settings-card link-admin" id="link-admin"><div class="panel-head"><div><h2>${icon('external')}Links &amp; Weiterleitungen</h2><p class="sub">Ziele der Link-Kacheln im Dashboard. Nur Admins sehen und ändern diesen Bereich.</p></div></div>
   <div class="link-row"><span class="link-ic">${icon('external')}</span><div class="link-txt"><b>Mein Porsche Cockpit</b><small>Kachel „Ich@Porsche“ · Übersicht: Homeoffice- &amp; Bürotage</small>${cockpitLink.url?`<a href="${escapeHtml(cockpitLink.url)}" target="_blank" rel="noopener noreferrer" class="link-url">${escapeHtml(cockpitLink.url)}</a><small class="muted">Zuletzt geändert von ${escapeHtml(cockpitLink.by||'—')}${cockpitLink.at?' am '+escapeHtml(fmtWithWeekday(new Date(cockpitLink.at))):''}</small>`:'<span class="pill amber">Noch kein Link hinterlegt</span>'}</div>
   <div class="btn-row">${cockpitLink.url?`<button type="button" class="btn small" id="cockpit-link-test">${icon('external')}Öffnen</button>`:''}<button type="button" class="btn small primary" id="cockpit-link-edit">${icon('edit')}${cockpitLink.url?'Ändern':'Link festlegen'}</button></div></div></section>`:''}
-   <section class="settings-card" id="set-data"><h2>Daten &amp; Sicherung</h2><p class="sub">Alle Daten liegen lokal in diesem Browser. Sichere sie regelmäßig.</p>
+   <section class="settings-card" id="set-data"><h2>Daten &amp; Sicherung</h2><p class="sub">${window.DPSync?.enabled?'Alle Daten werden in der Datenbank (Supabase) gespeichert; dieser Browser hält eine Kopie. Eine Sicherung als Datei ist trotzdem sinnvoll.':'Alle Daten liegen lokal in diesem Browser. Sichere sie regelmäßig.'}</p>
     <div class="info-box">${icon('download')}Letzte Sicherung: <b>${localStorage.getItem('dienstplanLastBackup')?fmtDateTime(+localStorage.getItem('dienstplanLastBackup')):'noch nie'}</b> · Speicher belegt: ${(used/1048576).toLocaleString(LOC(),{maximumFractionDigits:1})} MB von ~5 MB</div>
     ${used>=STORAGE_LIMIT*0.8?`<div class="info-box warn">${icon('alert')}Der Browserspeicher ist zu ${Math.round(used/STORAGE_LIMIT*100)} % belegt. Archiviere alte Einträge, damit neue Einträge weiter gespeichert werden können.</div>`:''}
     <div class="btn-row"><button class="btn primary" id="backup-export">Sicherung herunterladen (.json)</button><label class="btn" for="backup-import">Sicherung einspielen</label><input type="file" id="backup-import" accept="application/json,.json" hidden>${currentRole==='Admin'?'<button class="btn danger push-right" id="reset-demo">Demo-Daten zurücksetzen</button>':''}</div>
@@ -1800,7 +1800,7 @@ function bindSettings(){
    const check=validateBackup(String(reader.result||''));
    if(!check.ok){toast('Die Datei ist keine gültige DienstPlan-Sicherung. '+check.reason+' Deine Daten wurden nicht verändert.');return}
    const info=check.info;
-   if(!await ask(`Sicherung einspielen?${info.date?' Stand: '+info.date+'.':''} Enthalten: ${info.staff} Mitarbeitende, ${info.teams} Teams, ${info.entries} Einträge. Die aktuellen Daten in diesem Browser werden ersetzt.`,'Einspielen'))return;
+   if(!await ask(`Sicherung einspielen?${info.date?' Stand: '+info.date+'.':''} Enthalten: ${info.staff} Mitarbeitende, ${info.teams} Teams, ${info.entries} Einträge. ${window.DPSync?.enabled?'Achtung: Die Daten in der Datenbank werden ersetzt – für alle Nutzer.':'Die aktuellen Daten in diesem Browser werden ersetzt.'}`,'Einspielen'))return;
    // Aktuellen Stand merken, damit bei einem Fehler nichts verloren geht
    const before=Object.keys(localStorage).filter(k=>k.startsWith('dienstplan')).map(k=>[k,localStorage.getItem(k)]);
    try{before.forEach(([k])=>localStorage.removeItem(k));check.entries.forEach(([k,v])=>localStorage.setItem(k,v));location.reload();}
@@ -1821,7 +1821,7 @@ function bindSettings(){
   const keep=new Set(old.map(a=>a.id));assignments=assignments.filter(a=>!keep.has(a.id));undoStack=[];
   persistAssignments();audit('Gelöscht','Dienstplan',`${old.length} Einträge vor dem ${fmt(cut)} archiviert`,{title:'Alte Einträge archiviert'});
   toast(`${old.length} Einträge archiviert.`);render()};
- const reset=document.getElementById('reset-demo');if(reset)reset.onclick=async()=>{if(!await ask('Alle Daten in diesem Browser löschen und die Demo-Daten neu erzeugen?'))return;Object.keys(localStorage).filter(k=>k.startsWith('dienstplan')&&!['dienstplanTheme','dienstplanAccentColor','dienstplanLang','dienstplanDateFormat','dienstplanFontScale','dienstplanCompact'].includes(k)).forEach(k=>localStorage.removeItem(k));location.reload();};
+ const reset=document.getElementById('reset-demo');if(reset)reset.onclick=async()=>{if(!await ask(window.DPSync?.enabled?'Alle Daten in der Datenbank löschen und die Demo-Daten neu erzeugen? Das betrifft alle Nutzer.':'Alle Daten in diesem Browser löschen und die Demo-Daten neu erzeugen?'))return;Object.keys(localStorage).filter(k=>k.startsWith('dienstplan')&&!['dienstplanTheme','dienstplanAccentColor','dienstplanLang','dienstplanDateFormat','dienstplanFontScale','dienstplanCompact'].includes(k)).forEach(k=>localStorage.removeItem(k));location.reload();};
 }
 
 /* ------------------------------------------------------------------
