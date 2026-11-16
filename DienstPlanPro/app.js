@@ -983,16 +983,21 @@ async function autoRotation(){
  const dlg=formDialog('Rotation automatisch planen',`${teamDropdown(teamsAvail,pre)}
 
   <div class="wp-field"><span class="wp-label">Bereitschaftszeit</span><select name="time" id="rot-time">${standbyTimes.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name)} (${tRange(x)})</option>`).join('')}</select></div>
+  <div class="wp-field" id="rot-var-time" hidden><span class="wp-label">Uhrzeit <span class="muted">(variable Bereitschaft)</span></span><div class="wp-range"><label><small>Beginn</small><input type="time" name="vstart" id="rot-vstart"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" name="vend" id="rot-vend"></label></div><small class="wp-note">Gilt für alle Einträge dieser Rotation.</small></div>
   <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Von</small><input type="date" name="from" value="${from}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Bis</small><input type="date" name="to" value="${to}" required></label></div></div>
   <div class="wp-field"><span class="wp-label">Wechsel</span><div class="wp-types rot-modes" role="radiogroup" aria-label="Wechsel"><label class="wp-type"><input type="radio" name="mode" value="week" checked><span class="wp-type-card"><span class="wp-type-ic">${icon('cal')}</span><b>Wöchentlich</b><small>Wechsel jeden Montag</small><i class="wp-type-check">${icon('check')}</i></span></label><label class="wp-type"><input type="radio" name="mode" value="day"><span class="wp-type-card"><span class="wp-type-ic">${icon('refresh')}</span><b>Täglich</b><small>Wechsel jeden Tag</small><i class="wp-type-check">${icon('check')}</i></span></label></div></div>
   <label class="check wp-check"><input type="checkbox" name="keep" checked><span><b>Bestehende Einträge behalten</b><small class="muted block">Nur Lücken füllen – bereits geplante Tage bleiben unverändert.</small></span></label>
   <small class="wp-note rot-note">${icon('alert')}<span>Die Reihenfolge setzt dort fort, wo die letzte Bereitschaft vor dem Zeitraum endete. Ganztägig abwesende Personen werden für diesen Tag automatisch vertreten.</span></small>`,'Rotation erstellen','Verteilt die Bereitschaft gleichmäßig auf alle Teammitglieder.',{icon:'refresh',cls:'rot-modal'});
  fancySelect(document.getElementById('rot-time'),{kind:'shift',placeholder:'Bereitschaftszeit auswählen',meta:o=>{const x=standbyTimes.find(y=>String(y.id)===o.value);const g=x&&standbyGroups.find(gr=>gr.id===x.groupId);return x?{label:x.name,sub:`${tRange(x,' – ')}${g?' · '+g.name:''}`,icon:'moon'}:{}}});
+ {const rt=document.getElementById('rot-time'),box=document.getElementById('rot-var-time'),sync=()=>{const x=standbyTimes.find(y=>String(y.id)===rt.value);box.hidden=!isVariableStandby(x)};rt.addEventListener('change',sync);sync();
+  box.closest('.app-dialog')?.addEventListener('submit',e=>{const x=standbyTimes.find(y=>String(y.id)===rt.value);if(!isVariableStandby(x))return;const a=document.getElementById('rot-vstart'),b=document.getElementById('rot-vend');if(!a.value||!b.value||a.value===b.value){e.preventDefault();e.stopPropagation();toast(!a.value||!b.value?`${x.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`:'Beginn und Ende dürfen nicht gleich sein.');(a.value?b:a).focus()}},true)}
  bindDialogTeamDropdown();const res=await dlg;
  if(!res)return;
  const chosen=teamsAvail.filter(t=>res['team:'+t.name]);if(!chosen.length){toast('Bitte mindestens ein Team wählen.');return}
  if(res.to<res.from){toast('Das Enddatum darf nicht vor dem Startdatum liegen.');return}
  const st=standbyTimes.find(x=>String(x.id)===res.time),group=standbyGroups.find(g=>g.id===st?.groupId);if(!st)return;
+ const rotVar=isVariableStandby(st),rotStart=rotVar?res.vstart:st.start,rotEnd=rotVar?res.vend:st.end;
+ if(rotVar&&(!/^\d\d:\d\d$/.test(rotStart||'')||!/^\d\d:\d\d$/.test(rotEnd||'')||rotStart===rotEnd)){toast(`${st.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`);return}
  const keep=!!res.keep,dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1))dates.push(isoDate(c));
  if(dates.length>366){toast('Bitte einen Zeitraum von höchstens 366 Tagen auswählen.');return}
  pushUndo('Rotation');const created=[];
@@ -1007,7 +1012,7 @@ async function autoRotation(){
    if(assignments.some(a=>a.kind==='Bereitschaft'&&a.team===t.name&&a.date===date))return;
    let who=null;for(let k=0;k<members.length;k++){const cand=members[(idx+k)%members.length];if(!fullDayAbsent(cand,date)&&!assignments.some(a=>a.kind==='Bereitschaft'&&a.employee===cand&&a.date===date)){who=cand;break}}
    if(!who)return;
-   const item={id:makeId(),kind:'Bereitschaft',team:t.name,employee:who,shift:st.name,groupId:group?.id||'',groupName:group?.name||'',start:st.start,end:st.end,color:t.standbyColor||'#159da8',date};
+   const item={id:makeId(),kind:'Bereitschaft',team:t.name,employee:who,shift:st.name,groupId:group?.id||'',groupName:group?.name||'',start:rotStart,end:rotEnd,color:t.standbyColor||'#159da8',date};
    assignments.push(item);created.push(item);
   });
  });
@@ -1280,12 +1285,12 @@ async function openStandbyTime(id,groupId){
  const grp=$('sbt-group'),typ=$('sbt-type'),rangeF=$('sbt-range-field'),name=$('sbt-name'),st=$('sbt-start'),en=$('sbt-end'),col=$('sbt-color'),pick=$('sbt-color-pick'),head=layer.querySelector('.wp-head-icon');
  if(typeof fancySelect==='function')fancySelect(grp,{kind:'dept',placeholder:'Gruppe wählen',meta:o=>{const n=standbyTimes.filter(t=>t.groupId===o.value).length;return{pic:'shift',icon:'sliders',color:'var(--accent-color)',sub:`${n} Zeitfenster`}}});
  const isVar=()=>typ.value==='variabel';
- if(typeof fancySelect==='function')fancySelect(typ,{kind:'shift',placeholder:'Art wählen',meta:o=>o.value==='variabel'?{label:'Variabel',sub:'Ohne feste Uhrzeit',icon:'refresh',color:'#9b69c8'}:{label:'Fix',sub:'Mit fester Uhrzeit (Beginn – Ende)',icon:'clock',color:'var(--accent-color)'}});
+ if(typeof fancySelect==='function')fancySelect(typ,{kind:'shift',placeholder:'Art wählen',meta:o=>o.value==='variabel'?{label:'Variabel',sub:'Uhrzeit wird beim Einteilen eingegeben',icon:'refresh',color:'#9b69c8'}:{label:'Fix',sub:'Mit fester Uhrzeit (Beginn – Ende)',icon:'clock',color:'var(--accent-color)'}});
  const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}if(standbyTimes.some(t=>t.id!==id&&t.groupId===grp.value&&t.name.toLowerCase()===v.toLowerCase()))return 'In dieser Gruppe gibt es bereits ein Zeitfenster mit diesem Namen.';return ''};
  const upd=()=>{const pr=problem(),c=col.value,vr=isVar(),s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s;
   rangeF.hidden=vr;
   $('sbt-dur').textContent=vr?'Variable Bereitschaft':st.value&&en.value&&st.value!==en.value?fmtHours(durationHours(st.value,en.value))+(over?' · über Mitternacht':''):'Uhrzeit eingeben';
-  const m=$('sbt-msg');m.textContent=pr&&pr!=='empty'&&(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0)?pr:(vr?'Ohne feste Uhrzeit – sie wird beim Einteilen festgelegt oder bleibt offen.':!st.value||!en.value?'Bei fixer Bereitschaft sind Beginn und Ende Pflicht.':over?`Endet am Folgetag um ${en.value} Uhr.`:'Innerhalb eines Tages.');m.classList.toggle('bad',!!pr&&pr!=='empty'&&!!(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0));
+  const m=$('sbt-msg');m.textContent=pr&&pr!=='empty'&&(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0)?pr:(vr?'Ohne feste Uhrzeit – sie wird erst beim Einteilen eingegeben.':!st.value||!en.value?'Bei fixer Bereitschaft sind Beginn und Ende Pflicht.':over?`Endet am Folgetag um ${en.value} Uhr.`:'Innerhalb eines Tages.');m.classList.toggle('bad',!!pr&&pr!=='empty'&&!!(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0));
   $('sbt-scale').classList.toggle('is-variable',vr);$('sbt-scale').innerHTML=!vr&&st.value&&en.value&&st.value!==en.value?(e>s?[[s,e]]:[[s,24],[0,e]]).map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join(''):'';
   head.style.background=c;head.style.boxShadow=`0 6px 16px -6px ${c}`;head.style.color='#fff';
   layer.querySelectorAll('.shift-color-presets .color-swatch[data-color]').forEach(b=>b.classList.toggle('active',b.dataset.color.toLowerCase()===c.toLowerCase()));
@@ -2112,16 +2117,18 @@ function bindDutyModal(){
   shift.innerHTML=types.length?'<option value="">Bitte auswählen</option>'+types.map(x=>`<option value="${x.id}">${escapeHtml(x.name)} (${tRange(x)})</option>`).join(''):`<option value="">${currentPage==='Bereitschaft'?'Keine Bereitschaftszeiten für diese Gruppe angelegt':'Keine Dienstzeiten für dieses Team angelegt'}</option>`;
   updateTimeFields();
  }
- function updateTimeFields(){const source=currentPage==='Bereitschaft'?standbyTimes:shiftTypes;const service=source.find(x=>String(x.id)===String(shift.value));if(timeBox)timeBox.hidden=!service;if(timeHint)timeHint.hidden=!service;if(service){startTime.value=service.start||'';endTime.value=service.end||'';}if(timeHint)timeHint.textContent=service&&isVariableStandby(service)?'Variable Bereitschaft – Uhrzeit optional. Leer lassen, wenn sie offen bleibt.':'Die Uhrzeiten gelten nur für diesen Eintrag und ändern die hinterlegte Dienstzeit nicht.';updateDutySummary()}
+ function updateTimeFields(){const source=currentPage==='Bereitschaft'?standbyTimes:shiftTypes;const service=source.find(x=>String(x.id)===String(shift.value));if(timeBox)timeBox.hidden=!service;if(timeHint)timeHint.hidden=!service;if(service){startTime.value=service.start||'';endTime.value=service.end||'';}if(timeHint)timeHint.textContent=service&&isVariableStandby(service)?'Variable Bereitschaft – bitte Beginn und Ende für diesen Eintrag eingeben.':'Die Uhrzeiten gelten nur für diesen Eintrag und ändern die hinterlegte Dienstzeit nicht.';if(timeBox)timeBox.classList.toggle('needs-time',!!service&&isVariableStandby(service));updateDutySummary()}
  function updateDutySummary(){const sum=document.getElementById('duty-summary');if(!sum)return;const sb=currentPage==='Bereitschaft';
   const person=staff[Number(employee.value)],service=(sb?standbyTimes:shiftTypes).find(x=>String(x.id)===String(shift.value));
   const f=document.getElementById('duty-date-from').value,t=document.getElementById('duty-date-to').value||f;
   if(!person||employee.value===''||!service){sum.classList.remove('warn');sum.innerHTML=`<span class="wp-sum-ic">${icon(sb?'moon':'cal')}</span><div><b>${!person||employee.value===''?'Mitarbeiter auswählen':sb?'Bereitschaftszeit auswählen':'Dienst auswählen'}</b><small>Danach Zeitraum festlegen und speichern.</small></div>`;return}
   if(!f||t<f){sum.classList.add('warn');sum.innerHTML=`${icon('alert')}<div><b>Das Enddatum liegt vor dem Startdatum.</b></div>`;return}
   let n=0,skip=0;const multi=t!==f;for(let c=new Date(f+'T12:00:00');isoDate(c)<=t&&n+skip<=366;c=addDays(c,1)){if(multi&&!sb&&(c.getDay()+6)%7>=dutyDays)skip++;else n++}
-  const st=startTime.value||service.start,en=endTime.value||service.end,varT=sb&&(!st||!en),mins=varT?0:Math.round(durationHours(st,en)*60)-(sb?0:LUNCH_MIN),net=mins>0?` · ${Math.floor(mins/60)} Std.${mins%60?' '+mins%60+' Min.':''}${sb?'':' netto'}`:'';
+  const st=startTime.value||service.start,en=endTime.value||service.end,varT=sb&&(!st||!en);
+  if(varT){sum.classList.add('warn');sum.innerHTML=`${icon('alert')}<div><b>Uhrzeit eingeben</b><small>${escapeHtml(service.name)} ist eine variable Bereitschaft – Beginn und Ende sind Pflicht.</small></div>`;return}
+  const mins=Math.round(durationHours(st,en)*60)-(sb?0:LUNCH_MIN),net=mins>0?` · ${Math.floor(mins/60)} Std.${mins%60?' '+mins%60+' Min.':''}${sb?'':' netto'}`:'';
   sum.classList.toggle('warn',!n);
-  sum.innerHTML=!n?`${icon('alert')}<div><b>Im gewählten Zeitraum liegen keine Arbeitstage.</b></div>`:`<span class="wp-sum-ic">${icon(sb?'moon':'cal')}</span><div><b>${editingDutyId?'Eintrag ändern':`${n} ${n===1?'Eintrag':'Einträge'}`} · ${escapeHtml(service.name)}</b><small>${escapeHtml(person[0])} · ${varT?'variabel':st+'–'+en}${net} · ${fmtIsoDate(f)}${multi?' – '+fmtIsoDate(t):''}${skip?` · ${skip} ${skip===1?'freier Tag':'freie Tage'} ausgelassen`:''}</small></div>`}
+  sum.innerHTML=!n?`${icon('alert')}<div><b>Im gewählten Zeitraum liegen keine Arbeitstage.</b></div>`:`<span class="wp-sum-ic">${icon(sb?'moon':'cal')}</span><div><b>${editingDutyId?'Eintrag ändern':`${n} ${n===1?'Eintrag':'Einträge'}`} · ${escapeHtml(service.name)}</b><small>${escapeHtml(person[0])} · ${st}–${en}${net} · ${fmtIsoDate(f)}${multi?' – '+fmtIsoDate(t):''}${skip?` · ${skip} ${skip===1?'freier Tag':'freie Tage'} ausgelassen`:''}</small></div>`}
  shift.onchange=updateTimeFields;
  const sbPage=currentPage==='Bereitschaft';
  fancySelect(team,{kind:'team',search:'Team suchen …',placeholder:'Team auswählen'});
@@ -2162,8 +2169,8 @@ function bindDutyModal(){
   if(editingDutyId!==null&&dates.length>1){toast('Beim Bearbeiten bitte nur einen Tag wählen.');return}
   const variableSb=currentPage==='Bereitschaft'&&isVariableStandby(service);
   const customStart=startTime?.value||(variableSb?'':service.start),customEnd=endTime?.value||(variableSb?'':service.end);
-  if(variableSb?(!customStart!==!customEnd):(!customStart||!customEnd)){toast(variableSb?'Bitte Beginn und Ende angeben – oder beide leer lassen.':'Bitte Beginn und Ende festlegen.');return}
-  if(variableSb&&customStart&&customStart===customEnd){toast('Beginn und Ende dürfen nicht gleich sein.');return}
+  if(!customStart||!customEnd){toast(variableSb?`${service.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`:'Bitte Beginn und Ende festlegen.');(customStart?endTime:startTime)?.focus();return}
+  if(variableSb&&customStart===customEnd){toast('Beginn und Ende dürfen nicht gleich sein.');return}
   if(currentPage!=='Bereitschaft'&&customStart===customEnd){toast('Beginn und Ende dürfen nicht gleich sein.');return}
   const group=currentPage==='Bereitschaft'?standbyGroups.find(g=>g.id===standbyGroup?.value):null;
   for(const date of dates){const conflicts=assignments.filter(a=>a.employee===person[0]&&a.date===date&&String(a.id)!==String(editingDutyId));
@@ -2184,7 +2191,7 @@ function bindDutyModal(){
   if(wasEditing){const existing=assignments.find(a=>String(a.id)===String(editingDutyId));if(!existing){toast('Der Eintrag wurde nicht gefunden.');return}Object.assign(existing,additions[0],{id:existing.id});}
   else assignments.push(...additions);
   try{persistAssignments();}catch(err){assignments=previousAssignments;toast('Speichern im Browser nicht möglich.');console.error(err);return}
-  audit(wasEditing?'Geändert':'Erstellt',currentPage,`${person[0]} · ${service.name} ${customStart?customStart+'–'+customEnd:'variabel'} · ${fmt(startDate)}${dates.length>1?' – '+fmt(endDate)+' ('+dates.length+' Tage)':''}`);
+  audit(wasEditing?'Geändert':'Erstellt',currentPage,`${person[0]} · ${service.name} ${customStart}–${customEnd} · ${fmt(startDate)}${dates.length>1?' – '+fmt(endDate)+' ('+dates.length+' Tage)':''}`);
   if(!wasEditing)createAssignmentNotifications(additions);editingDutyId=null;
   modal.hidden=true;toast(wasEditing?'Eintrag wurde aktualisiert.':(dates.length===1&&!skipped?'Eintrag wurde erfolgreich angelegt.':`${dates.length} ${dates.length===1?'Eintrag wurde':'Einträge wurden'} angelegt${skipped?` (${skipped} ${skipped===1?'freier Tag':'freie Tage'} ausgelassen)`:''}.`));render();
  };
