@@ -2481,3 +2481,8 @@ body.dark-mode .tn-chip{color:#f3c843;background:color-mix(in srgb,#e0a800 22%,v
 /* Mehrere Tage per Ziehen markieren: keine Browser-Textmarkierung */
 body.dp-range-dragging,body.dp-range-dragging *{-webkit-user-select:none!important;user-select:none!important}
 body.dp-range-dragging{cursor:cell}
+/* Dienstplan: Uhrzeit neben dem Dienst statt darunter */
+.calendar-assignment>.ca-shift-row{display:flex;align-items:baseline;gap:4px;min-width:0;white-space:nowrap}
+.ca-shift-row .ca-shift-name{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ca-shift-row .ca-time-inline{flex:none;font-variant-numeric:tabular-nums;font-weight:600;opacity:.9}
+
