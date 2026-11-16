@@ -2285,3 +2285,43 @@ button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline
 .sb-time-modal .shift-color-presets{display:grid;grid-template-columns:repeat(7,30px);justify-content:start;align-items:center;gap:10px 12px}
 .sb-time-modal .shift-color-presets .color-swatch{width:30px;height:30px;margin:0;padding:0}
 .fmt-modal{width:min(520px,100%)}
+/* Hilfe */
+.help-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.help-search{flex:1;max-width:560px}
+.help-rights{padding:14px 18px!important;margin-bottom:16px}
+.help-rights-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.help-rights-head b{font-size:14px}
+.help-rights-list{display:flex;flex-wrap:wrap;gap:7px}
+.help-right{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:650;border:1px solid var(--line);background:var(--surface-2)}
+.help-right em{font-style:normal;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px}
+.help-right.edit em{background:color-mix(in srgb,var(--accent-color) 16%,var(--surface));color:var(--accent-color)}
+.help-right.read em{background:var(--surface-3);color:var(--muted)}
+.help-layout{display:grid;gap:14px}
+.help-toc{display:flex;flex-wrap:wrap;gap:7px}
+.help-toc-item{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;white-space:nowrap}
+.help-toc-item .ic{width:15px;height:15px;color:var(--muted)}
+.help-toc-item small{font-size:11px;color:var(--muted);font-weight:700;background:var(--surface-2);border-radius:999px;padding:0 6px}
+.help-toc-item:hover{border-color:color-mix(in srgb,var(--accent-color) 45%,var(--line))}.help-toc-item:hover .ic{color:var(--accent-color)}
+.help-main{display:grid;gap:16px;min-width:0}
+.help-sec{margin:0!important;scroll-margin-top:80px}
+.help-sec-head{display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.help-mark{width:40px;height:40px;border-radius:11px;background:color-mix(in srgb,var(--accent-color) 14%,var(--surface));color:var(--accent-color);box-shadow:none}
+.help-mark .ic{width:20px;height:20px}
+.help-sec-txt{flex:1;min-width:180px}.help-sec-txt h2{margin:0;font-size:17px}.help-sec-txt .sub{margin:2px 0 0}
+.help-mode{font-weight:700}.help-mode.edit{background:color-mix(in srgb,var(--accent-color) 14%,var(--surface));color:var(--accent-color)}
+.help-open .ic{width:14px;height:14px;transform:rotate(180deg)}
+.help-items{display:grid;gap:8px}
+.help-item{border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color .15s,box-shadow .2s}
+.help-item[open]{border-color:color-mix(in srgb,var(--accent-color) 40%,var(--line))}
+.help-item summary{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none;font-weight:650;font-size:14px}
+.help-item summary::-webkit-details-marker{display:none}
+.help-q{flex:1}
+.help-chev{width:16px;height:16px;color:var(--muted);transition:transform .2s}
+.help-item[open] .help-chev{transform:rotate(180deg);color:var(--accent-color)}
+.help-steps{margin:0;padding:0 16px 12px 38px;display:grid;gap:6px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.help-steps li::marker{color:var(--accent-color);font-weight:800}
+.help-tip{display:flex;gap:8px;align-items:flex-start;margin:0 14px 14px;padding:9px 12px;border-radius:10px;background:color-mix(in srgb,var(--accent-color) 9%,var(--surface));font-size:12.5px;color:var(--ink)}
+.help-tip .ic{width:15px;height:15px;color:var(--accent-color);flex:none;margin-top:1px}
+.help-flash{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-color) 45%,transparent)}
+@media (max-width:700px){.help-toc{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.help-toc-item{flex:none}}
+@media (max-width:700px){.help-top{flex-wrap:wrap}.help-search{max-width:none}.help-sec-head .help-open{margin-left:54px}}
