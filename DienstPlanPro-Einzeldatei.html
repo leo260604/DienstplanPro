@@ -2549,6 +2549,97 @@ body.dp-range-dragging{cursor:cell}
 .tc-msg .ic,.tc-msg svg{width:14px;height:14px;flex:none;color:#b07d00;margin-top:1px}
 .tc-dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin:0 4px 0 2px;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
 @media (min-width:701px){.sb-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Kalender passt in die Fensterhöhe (Seite scrollt nicht) */
+@media(min-width:901px){
+  body.cal-fit .calendar-card{min-height:0}
+  body.cal-fit .calendar-card>.calendar-scroll{min-height:0;overflow:hidden}
+  body.cal-fit .calendar-scroll>.week-grid{min-height:0;grid-template-rows:auto minmax(0,1fr)}
+  body.cal-fit .calendar-scroll>.month-grid{min-height:0;grid-auto-rows:minmax(0,1fr)}
+  body.cal-fit .week-day-cell,body.cal-fit .month-cell{min-height:0;overflow:hidden}
+  body.cal-fit .calendar-scroll>.team-matrix-scroll,body.cal-fit .calendar-scroll>.tn-wrap,body.cal-fit .calendar-scroll>.day-assignment-list{min-height:0;overflow:auto}
+}
+@media(min-width:901px){
+  body.cal-tight.cal-fit .month-cell .calendar-assignment{padding:3px 6px;margin-bottom:2px}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment :is(small,.standby-indicator,.workplace-indicator,.conflict-indicator,.absence-note,.ca-time,.wp-hint,.swap-pill,.ca-time-inline,.note-chip){display:none}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment b{display:inline;font-size:12px}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment .ca-shift{display:inline;margin-left:4px;font-size:11px}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment .duty-actions{display:none}
+}
+@media(min-width:901px){
+  body.cal-tight.cal-fit .month-cell{padding:3px 5px}
+  body.cal-tight.cal-fit .month-cell>.date{margin-bottom:1px;font-size:12px;line-height:16px}
+  body.cal-tight.cal-fit .month-cell .calendar-more{padding:1px 7px;font-size:11px;line-height:15px;margin-top:1px}
+}
+@media(min-width:901px){
+  body.cal-fit .week-day-cell>*,body.cal-fit .month-cell>*{flex-shrink:0}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment{display:flex;align-items:baseline;gap:5px;white-space:nowrap;overflow:hidden;min-height:0}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment>b{display:block;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment .ca-shift,body.cal-tight.cal-fit .month-cell .calendar-assignment .ca-shift-name{display:block;margin:0;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 0;opacity:.8}
+}
+@media(min-width:901px){
+  /* „+ x weitere“ immer unten unter den Einträgen */
+  body.cal-fit .month-cell .calendar-more{margin-top:auto;padding:1px 7px;font-size:11px;line-height:16px}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment{padding:1px 6px;line-height:16px;margin-bottom:2px}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment b{font-size:11.5px}
+}
+@media(min-width:901px){
+  body.cal-tight.cal-fit .month-cell.today>.date{width:18px;height:18px;font-size:11px;line-height:18px;margin-bottom:1px}
+}
+@media(min-width:901px){
+  body.cal-tight.cal-fit .month-cell .calendar-more{padding:0 7px;line-height:15px}
+  body.cal-tight.cal-fit .month-cell .calendar-assignment{margin-bottom:1px}
+}
+/* Team-Ansicht (Dienstplan): alle Felder gleich hoch, Dienst + Bereitschaft je zur Hälfte */
+@media(min-width:701px){
+  .view-team .tm-row:not(.tm-head):not(.tm-team) .tm-cell{height:68px;min-height:68px;gap:4px;overflow:hidden}
+  .view-team .tm-cell>.calendar-assignment,.view-team .tm-cell>.note-assignment,.view-team .tm-cell>.tm-add{flex:1 1 0;min-height:0;display:flex;flex-direction:column;justify-content:center}
+  .view-team .tm-cell>.tm-add{flex-direction:row;align-items:center;justify-content:center}
+  .view-team .tm-cell .calendar-assignment{overflow:hidden;box-sizing:border-box}
+  .view-team .tm-cell .standby-indicator{display:none}
+  .view-team .tm-cell .standby-assignment .ca-shift-name::before,.view-team .tm-cell .standby-assignment>.ca-shift:not(.ca-shift-row)::before{content:'◷ ';font-weight:800}
+  .view-team .tm-cell .calendar-assignment .duty-actions{top:50%;transform:translateY(-50%)}
+}
+@media(min-width:701px){
+  .view-team .tm-row:not(.tm-head):not(.tm-team) .tm-cell{position:relative}
+  .view-team .tm-cell>.tm-note-add{position:absolute;left:5px;right:5px;bottom:5px;height:26px;min-height:0;z-index:1;background:var(--surface)}
+}
+@media(min-width:701px){
+  .view-team .tm-row:not(.tm-head):not(.tm-team) .tm-cell{display:grid;grid-auto-rows:minmax(0,1fr);align-content:stretch}
+}
+/* Team-Ansicht (Dienstplan) besser lesbar: alles auf einen Blick */
+@media(min-width:701px){
+  .view-team .tm-row{grid-template-columns:190px repeat(var(--cols),minmax(140px,1fr))}
+  .view-team .tm-row:not(.tm-head):not(.tm-team) .tm-cell{height:76px;min-height:76px}
+  .view-team .tm-cell .calendar-assignment{padding:4px 8px;justify-content:center}
+  .view-team .tm-cell .calendar-assignment .ca-shift-row{display:flex;flex-wrap:nowrap;gap:5px;align-items:baseline;min-width:0;font-size:12px}
+  .view-team .tm-cell .calendar-assignment .ca-shift-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 1 auto}
+  .view-team .tm-cell .calendar-assignment .ca-time-inline{flex:0 0 auto;white-space:nowrap;font-weight:600;opacity:.9}
+  /* nur ein Eintrag: Name groß, Uhrzeit darunter */
+  .view-team .tm-cell>.calendar-assignment:first-child:last-child .ca-shift-row{flex-direction:column;align-items:flex-start;gap:1px}
+  .view-team .tm-cell>.calendar-assignment:first-child:last-child .ca-shift-name{font-size:13px;font-weight:750;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .view-team .tm-cell>.calendar-assignment:first-child:last-child .ca-time-inline{font-size:12px}
+  /* „⋯“ nur beim Darüberfahren, damit der Text Platz hat */
+  @media(hover:hover){
+    .view-team .tm-cell .calendar-assignment .duty-actions{opacity:0;transition:opacity .12s}
+    .view-team .tm-cell .calendar-assignment:hover .duty-actions,.view-team .tm-cell .calendar-assignment:focus-within .duty-actions,.view-team .tm-cell .duty-actions[open]{opacity:1}
+    .view-team .tm-cell .calendar-assignment:hover{padding-right:24px}
+  }
+}
+@media(min-width:701px){
+  .view-team .tm-row:not(.tm-head):not(.tm-team) .tm-cell{height:84px;min-height:84px}
+  .view-team .tm-cell .calendar-assignment{padding:2px 8px}
+  .view-team .tm-cell .calendar-assignment .ca-shift-row{flex-direction:column;align-items:flex-start;gap:0;line-height:14px}
+  .view-team .tm-cell .calendar-assignment .ca-shift-name{font-size:11.5px;max-width:100%}
+  .view-team .tm-cell .calendar-assignment .ca-time-inline{font-size:11px;line-height:13px}
+}
+/* Team-Ansicht: eigene Reihenfolge der Mitarbeiter per Drag & Drop */
+.tm-person.tm-draggable{cursor:grab;position:relative}
+.tm-person.tm-draggable:active{cursor:grabbing}
+.tm-grip{color:var(--muted);font-size:13px;letter-spacing:-3px;margin-right:2px;opacity:.35;transition:opacity .12s;user-select:none}
+.tm-row:hover .tm-grip{opacity:1}
+.tm-person.mo-dragging{opacity:.45}
+.tm-person.mo-before{box-shadow:inset 0 3px 0 var(--accent-color)}
+.tm-person.mo-after{box-shadow:inset 0 -3px 0 var(--accent-color)}
 
 </style>
 </head>
@@ -2825,7 +2916,7 @@ Object.assign(EN,{
 'Bereitschaftsstunden je Team':'On-call hours per team','Einträge':'Entries','Dienststunden':'Duty hours','Bereitschaftsstunden':'On-call hours','Abwesenheitstage':'Absence days',
 'im gewählten Zeitraum':'in selected period','Auswahl exportieren':'Export selection','Auswahl aufheben':'Clear selection','Diese Woche':'This week','Dieser Monat':'This month','Letzter Monat':'Last month',
 'Alle exportieren (CSV)':'Export all (CSV)','Auswertungen erstellen und Dienst- und Bereitschaftsdaten exportieren.':'Create reports and export duty and on-call data.','Keine Einträge für diese Filter gefunden.':'No entries found for these filters.',
-'Arbeitsort':'Work location','Alle Mitarbeiter':'All employees','Std.':'Hrs.','Uhrzeit':'Time','Art':'Type','0 Einträge':'0 entries','Tipp: Bereitschaft auf eine andere Person ziehen = Tausch/Vertretung · „+“ = einteilen · „Lücke“ anklicken = Tag besetzen · Strg Z = rückgängig':'Tip: drag an on-call duty to another person = swap/cover · “+” = assign · click “Gap” = staff the day · Ctrl Z = undo','Neue Dienste in meinen Teams':'New duties in my teams','Abwesenheiten in meinen Teams':'Absences in my teams','Sprache geändert.':'Language changed.','Mein Konto':'My account','Profilbild ändern':'Change profile picture','Profilbild entfernen':'Remove profile picture','Tippe auf das Symbol, um ein Profilbild hochzuladen.':'Tap the icon to upload a profile picture.','Profilbild gespeichert.':'Profile picture saved.','Profilbild entfernt.':'Profile picture removed.','Bitte eine Bilddatei wählen.':'Please choose an image file.','Das Bild konnte nicht gelesen werden.':'The image could not be read.','Konto':'Account','Konto & Benachrichtigungen':'Account & notifications','Über dein Profilbild oben rechts':'Via your profile picture at the top right','Darstellung der Einträge':'Entry display','Bereitschaftsnummer':'On-call number','Zurück zum Dashboard':'Back to dashboard','Zurück':'Back','Erweitert':'Expanded','Kompakt = Monatsansicht mit „+X weitere“ · Erweitert = Monatsansicht zeigt alle Einträge':'Compact = month view with “+X more” · Expanded = month view shows all entries','Kompakt':'Compact','Standard':'Standard','Alle anzeigen':'Show all','Kompakt = mehr Einträge pro Tag sichtbar · Alle anzeigen = Monatsansicht ohne „+X weitere“':'Compact = more entries visible per day · Show all = month view without “+X more”','Türkis':'Turquoise','Navy Blau':'Navy blue','Blau':'Blue','Nicht angemeldet.':'Not signed in.','Schließen':'Close','Lücke':'Gap','Unbesetzt – jetzt einteilen':'Unstaffed – assign now','＋ Bereitschaft':'＋ On-call','Wer hat wann Bereitschaft?':'Who is on call when?','Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.':'Read-only – your role may not make changes.','Keine Berechtigung zum Exportieren. Der Versuch wurde protokolliert.':'No permission to export. The attempt was logged.'
+'Arbeitsort':'Work location','Alle Mitarbeiter':'All employees','Std.':'Hrs.','Uhrzeit':'Time','Art':'Type','0 Einträge':'0 entries','Tipp: Bereitschaft auf eine andere Person ziehen = Tausch/Vertretung · „+“ = einteilen · „Lücke“ anklicken = Tag besetzen · Strg Z = rückgängig':'Tip: drag an on-call duty to another person = swap/cover · “+” = assign · click “Gap” = staff the day · Ctrl Z = undo','Neue Dienste in meinen Teams':'New duties in my teams','Abwesenheiten in meinen Teams':'Absences in my teams','Sprache geändert.':'Language changed.','Mein Konto':'My account','Profilbild ändern':'Change profile picture','Profilbild entfernen':'Remove profile picture','Tippe auf das Symbol, um ein Profilbild hochzuladen.':'Tap the icon to upload a profile picture.','Profilbild gespeichert.':'Profile picture saved.','Profilbild entfernt.':'Profile picture removed.','Bitte eine Bilddatei wählen.':'Please choose an image file.','Das Bild konnte nicht gelesen werden.':'The image could not be read.','Konto':'Account','Konto & Benachrichtigungen':'Account & notifications','Über dein Profilbild oben rechts':'Via your profile picture at the top right','Darstellung der Einträge':'Entry display','Bereitschaftsnummer':'On-call number','Zurück zum Dashboard':'Back to dashboard','Zurück':'Back','Erweitert':'Expanded','Kompakt = Woche/Monat passen ins Fenster, Rest als „+ X weitere“ · Erweitert = alle Einträge anzeigen (Seite scrollt)':'Compact = week/month fit the window, the rest as “+ X more” · Expanded = show all entries (page scrolls)','Kompakt':'Compact','Standard':'Standard','Alle anzeigen':'Show all','Kompakt = mehr Einträge pro Tag sichtbar · Alle anzeigen = Monatsansicht ohne „+X weitere“':'Compact = more entries visible per day · Show all = month view without “+X more”','Türkis':'Turquoise','Navy Blau':'Navy blue','Blau':'Blue','Nicht angemeldet.':'Not signed in.','Schließen':'Close','Lücke':'Gap','Unbesetzt – jetzt einteilen':'Unstaffed – assign now','＋ Bereitschaft':'＋ On-call','Wer hat wann Bereitschaft?':'Who is on call when?','Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.':'Read-only – your role may not make changes.','Keine Berechtigung zum Exportieren. Der Versuch wurde protokolliert.':'No permission to export. The attempt was logged.'
 });
 EN_RX.push([/^Bereitschaftsnummer (.+) in Microsoft Teams anrufen$/,'Call on-call number $1 in Microsoft Teams'],[/^(.+) \(Teams Anruf\)$/,'$1 (Teams call)'],[/^(.+) zu Favoriten hinzugefügt\.$/,'$1 added to favourites.'],[/^(.+) aus Favoriten entfernt\.$/,'$1 removed from favourites.'],[/^(\d+) Treffer$/,'$1 results'],
  [/^(\d+) % Büro$/,'$1 % office'],[/^(\d+) % Homeoffice$/,'$1 % home office'],
@@ -3439,6 +3530,15 @@ function currentUserTeamNames(){
 function canSeeStandbyInDutyPlan(a){if(['Admin','Abteilungsleiter'].includes(currentRole))return true;return currentUserTeamNames().includes(a.team)}
 
 let calendarTeams=[],onlyConflicts=false;
+/* Eigene Reihenfolge der Mitarbeiter je Team (pro angemeldetem Benutzer gespeichert) */
+let memberOrderAll=load('dienstplanMemberOrder',{});
+const memberOrderOf=teamId=>((memberOrderAll[currentUserId]||{})[teamId])||[];
+function orderedMembers(t){const ord=memberOrderOf(t.id),list=staff.filter(p=>t.memberIds.includes(p[8]));const ix=p=>{const i=ord.indexOf(p[8]);return i<0?1e6+list.indexOf(p):i};return list.slice().sort((a,b)=>ix(a)-ix(b))}
+function moveMember(teamId,staffId,dir){const t=teams.find(x=>x.id===teamId);if(!t)return;const ids=orderedMembers(t).map(p=>p[8]),i=ids.indexOf(staffId),j=i+dir;if(i<0||j<0||j>=ids.length)return;[ids[i],ids[j]]=[ids[j],ids[i]];memberOrderAll[currentUserId]={...(memberOrderAll[currentUserId]||{}),[teamId]:ids};save('dienstplanMemberOrder',memberOrderAll);render()}
+function memberRankMap(){const m=new Map();let k=0;teams.filter(t=>calTeamOk(t.name)).concat(teams).forEach(t=>orderedMembers(t).forEach(p=>{if(!m.has(p[0]))m.set(p[0],k++)}));return m}
+/* Team-/Mitarbeiterfilter getrennt für Dienstplan und Bereitschaft */
+let calFiltersPage={},calFilterLast=null;
+const calFilterSnap=()=>JSON.stringify([calendarTeams,calendarTeamFilter,calendarMemberFilter]);
 const calTeamOk=team=>!calendarTeams.length||calendarTeams.includes(team);
 let calendarTeamFilter='Alle Teams',calendarMemberFilter='Alle Mitarbeiter',mobileCalendarFiltersOpen=false;
 let reportFrom='',reportTo='';
@@ -3802,7 +3902,7 @@ document.getElementById('login-form').onsubmit=e=>{
  currentUserId=user[8];currentRole=role;hasSession=true;
  save('dienstplanDemoSession',{userId:currentUserId,role:currentRole});
  updateSignedInUser();
- calendarTeams=currentUserTeamNames().slice(0,1);calendarTeamFilter=calendarTeams[0]||'Alle Teams';calendarMemberFilter='Alle Mitarbeiter';
+ calendarTeams=currentUserTeamNames().slice(0,1);calendarTeamFilter=calendarTeams[0]||'Alle Teams';calendarMemberFilter='Alle Mitarbeiter';calFiltersPage={};calFilterLast=null;
  currentPage=allowedPages().includes('Dashboard')?'Dashboard':(allowedPages()[0]||'Einstellungen');window.scrollTo(0,0);
  refreshNotifications();
  document.getElementById('login-modal').hidden=true;
@@ -3865,7 +3965,7 @@ function colorWithAlpha(hex,alpha){
    Kalender: Dienstplan & Bereitschaft
 ------------------------------------------------------------------ */
 // Wie viele Einträge pro Tag direkt sichtbar sind, hängt von der Bildschirmhöhe ab (große Monitore zeigen mehr).
-function entryLimit(){const h=window.innerHeight||800;if(currentView==='Woche')return Math.max(4,Math.floor((h-330)/68));if(currentView==='Monat'){const weeks=Math.ceil((new Date(currentDate.getFullYear(),currentDate.getMonth()+1,0).getDate()+6)/7);return Math.max(2,Math.floor(((h-330)/weeks-34)/50))}return 99}
+function entryLimit(){const fk=currentPage+'|'+currentView+'|'+innerWidth+'x'+innerHeight;if(window.__calFit&&window.__calFit.key===fk&&window.__calFit.limit>=1)return window.__calFit.limit;const h=window.innerHeight||800;if(currentView==='Woche')return Math.max(4,Math.floor((h-330)/68));if(currentView==='Monat'){const weeks=Math.ceil((new Date(currentDate.getFullYear(),currentDate.getMonth()+1,0).getDate()+6)/7);return Math.max(2,Math.floor(((h-330)/weeks-34)/50))}return 99}
 let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if((currentPage==='Dienstplan'||currentPage==='Bereitschaft')&&!document.querySelector('.modal-backdrop:not([hidden])'))render()},250)});
 function calDays(){return currentPage==='Bereitschaft'?7:dutyDays}
 /* Konflikte: Dienst + ganztägige Abwesenheit oder überlappende untertägige Abwesenheit am selben Tag */
@@ -3922,16 +4022,18 @@ function calendar(){
  const noteSelfShown=(()=>{const id=staff.find(p=>p[0]===noteSelf)?.[8];return !!id&&teams.some(t=>calTeamOk(t.name)&&t.memberIds.includes(id))})();
  const hasOwnEntry=date=>(byDate[date]||[]).some(a=>(a.kind==='Notiz'?noteEmp(a):a.employee)===noteSelf);
  const ownNoteField=(date,cls='')=>noteSelfShown?(hasOwnEntry(date)?'':noteAddField(date,noteSelf,cls)):((byDate[date]||[]).length?'':noteAddField(date,'',cls));
+ const rankMap=memberRankMap();
  const dayEntries=date=>{const list=[],seen=new Set();(byDate[date]||[]).forEach(a=>{if(a.kind!=='Notiz'){list.push(a);return}const k=noteKeyOf(a);if(noteHost[k]||seen.has(k))return;seen.add(k);list.push({kind:'NotizGruppe',id:'ng|'+k,employee:a.employee,team:a.team,date:a.date,notes:notesBy[k]})});
+  if(isDuty){const rk=e=>rankMap.has(e)?rankMap.get(e):1e6;return list.sort((a,b)=>(a.kind==='NotizGruppe'?1:0)-(b.kind==='NotizGruppe'?1:0)||rk(a.employee)-rk(b.employee)||String(a.employee).localeCompare(String(b.employee))||(a.kind==='Bereitschaft'?1:0)-(b.kind==='Bereitschaft'?1:0)||(a.start||'').localeCompare(b.start||''))}
   return list.sort((a,b)=>(a.kind==='NotizGruppe'?1:0)-(b.kind==='NotizGruppe'?1:0)||(a.kind==='Bereitschaft'?-1:0)-(b.kind==='Bereitschaft'?-1:0)||(a.start||'').localeCompare(b.start||''))};
  const movable=a=>!a.isAbsence&&a.kind!=='Arbeitsort'&&canEditEntry(a.team,a.employee,areaOf(a))||(a.kind==='Arbeitsort'&&managesTeam(a.team,'Dienstplan'));
  const actionsMenu=a=>`<details class="duty-actions"><summary aria-label="Dienstaktionen" title="Dienstaktionen">⋯</summary><div class="duty-actions-menu">${currentPage==='Dienstplan'&&canNoteFor(a.employee)?`<button type="button" data-note-add="${escapeHtml(a.employee+'|'+a.date)}">${icon('chat')}Notiz hinzufügen</button>`:''}${a.isAbsence||a.kind==='Arbeitsort'?'':`<button type="button" data-edit-duty="${a.id}">${icon('edit')}Bearbeiten</button>`}${canSwapDuty(a)?`<button type="button" data-swap-duty="${a.id}">${icon('refresh')}Dienst tauschen</button>`:''}${wpFor(a)?`<button type="button" data-edit-wp="${wpFor(a).id}">Arbeitsort ändern</button><button type="button" data-delete-duty="${wpFor(a).id}">Arbeitsort entfernen</button>`:''}<button type="button" class="danger-text" data-delete-duty="${a.id}">${icon('trash')}Löschen</button></div></details>`;
- const dayCard=a=>a.kind==='NotizGruppe'?noteStub(a):a.kind==='Notiz'?noteCard(a):`<div class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment ':''}${a.isAbsence?'absence-assignment ':''}${a.kind==='Arbeitsort'?'workplace-assignment ':''}${conflicts.has(a.id)?'conflict ':''}" ${a.kind==='Bereitschaft'?`data-sb-open="${a.id}" tabindex="0"`:''} ${movable(a)?`draggable="true" data-drag-id="${a.id}"`:''} title="${escapeHtml(a.employee)} · ${escapeHtml(a.shift)}${conflicts.has(a.id)?' · Konflikt':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${conflicts.has(a.id)&&!a.isAbsence?'<span class="conflict-indicator">⚠ Konflikt</span>':''}${a.kind==='Bereitschaft'?(currentPage==='Bereitschaft'?'':'<span class="standby-indicator">◷ Bereitschaft</span>'):a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b>${isDuty&&!a.isAbsence&&(a.start&&a.end||isVariableStandby(a))?`<span class="ca-shift ca-shift-row"><span class="ca-shift-name">${escapeHtml(a.shift)}</span><span class="ca-time-inline">(${a.start&&a.end?tRange(a):'variabel'})</span></span>`:`<span class="ca-shift">${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}</span>${a.start&&a.end?`<span class="ca-time">${tRange(a)}</span>`:(isVariableStandby(a)?'<span class="ca-time">variabel</span>':'')}`}${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}${noteFoot(`<small>${escapeHtml(a.team)}${a.groupName&&currentPage!=='Bereitschaft'?' · '+escapeHtml(a.groupName):''}</small>`,noteChipFor(a))}${actionsMenu(a)}</div>`;
+ const dayCard=a=>a.kind==='NotizGruppe'?noteStub(a):a.kind==='Notiz'?noteCard(a):`<div class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment ':''}${a.isAbsence?'absence-assignment ':''}${a.kind==='Arbeitsort'?'workplace-assignment ':''}${conflicts.has(a.id)?'conflict ':''}" ${a.kind==='Bereitschaft'?`data-sb-open="${a.id}" tabindex="0"`:''} title="${escapeHtml(a.employee)} · ${escapeHtml(a.shift)}${conflicts.has(a.id)?' · Konflikt':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${conflicts.has(a.id)&&!a.isAbsence?'<span class="conflict-indicator">⚠ Konflikt</span>':''}${a.kind==='Bereitschaft'?(currentPage==='Bereitschaft'?'':'<span class="standby-indicator">◷ Bereitschaft</span>'):a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b>${isDuty&&!a.isAbsence&&(a.start&&a.end||isVariableStandby(a))?`<span class="ca-shift ca-shift-row"><span class="ca-shift-name">${escapeHtml(a.shift)}</span><span class="ca-time-inline">(${a.start&&a.end?tRange(a):'variabel'})</span></span>`:`<span class="ca-shift">${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}</span>${a.start&&a.end?`<span class="ca-time">${tRange(a)}</span>`:(isVariableStandby(a)?'<span class="ca-time">variabel</span>':'')}`}${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}${noteFoot(`<small>${escapeHtml(a.team)}</small>`,noteChipFor(a))}${actionsMenu(a)}</div>`;
  const dayStack=date=>{const entries=dayEntries(date);
-  if(currentView==='Monat'&&expandedMonthView)return entries.map(dayCard).join('');
+  if((currentView==='Monat'||currentView==='Woche')&&expandedMonthView)return entries.map(dayCard).join('');
   const limit=entryLimit(),shown=entries.slice(0,limit),remaining=entries.length-shown.length;
   return shown.map(dayCard).join('')+(remaining>0?`<button type="button" class="calendar-more" data-open-day="${date}" aria-label="${remaining} weitere Einträge am ${date} anzeigen">+${remaining} weitere</button>`:'');};
- const agendaCard=a=>a.kind==='NotizGruppe'?noteStub(a,true):a.kind==='Notiz'?noteCard(a,true):`<div class="mobile-agenda-card ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${conflicts.has(a.id)?'conflict':''}" ${a.kind==='Bereitschaft'?`data-sb-open="${a.id}" tabindex="0"`:''} style="--shift-color:${shiftHexColor(assignmentColor(a))}"><div class="mobile-agenda-time">${a.start||(isVariableStandby(a)?'Var.':'—')}<small>${a.end||''}</small></div><div class="mobile-agenda-content">${a.kind==='Bereitschaft'?(currentPage==='Bereitschaft'?'':'<span class="standby-indicator">◷ Bereitschaft</span>'):''}<b>${a.kind==='Arbeitsort'?escapeHtml(a.shift)+' (Arbeitsort)':escapeHtml(a.shift)}</b><span>${escapeHtml(a.employee)}</span>${wpHint(wpFor(a))}${swapPill(a)}${noteFoot(`<small>${escapeHtml(a.team)}${a.groupName&&currentPage!=='Bereitschaft'?' · '+escapeHtml(a.groupName):''}</small>`,noteChipFor(a))}</div>${actionsMenu(a)}</div>`;
+ const agendaCard=a=>a.kind==='NotizGruppe'?noteStub(a,true):a.kind==='Notiz'?noteCard(a,true):`<div class="mobile-agenda-card ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${conflicts.has(a.id)?'conflict':''}" ${a.kind==='Bereitschaft'?`data-sb-open="${a.id}" tabindex="0"`:''} style="--shift-color:${shiftHexColor(assignmentColor(a))}"><div class="mobile-agenda-time">${a.start||(isVariableStandby(a)?'Var.':'—')}<small>${a.end||''}</small></div><div class="mobile-agenda-content">${a.kind==='Bereitschaft'?(currentPage==='Bereitschaft'?'':'<span class="standby-indicator">◷ Bereitschaft</span>'):''}<b>${a.kind==='Arbeitsort'?escapeHtml(a.shift)+' (Arbeitsort)':escapeHtml(a.shift)}</b><span>${escapeHtml(a.employee)}</span>${wpHint(wpFor(a))}${swapPill(a)}${noteFoot(`<small>${escapeHtml(a.team)}</small>`,noteChipFor(a))}</div>${actionsMenu(a)}</div>`;
  const todayIso=isoDate(new Date());
  const shownTeams=teams.filter(t=>calTeamOk(t.name));
  let body='';
@@ -3959,15 +4061,16 @@ function calendar(){
   const dates=Array.from({length:n},(_,i)=>isoDate(addDays(ws,i)));
   let rows='';
   shownTeams.forEach(t=>{
-   const allMembers=staff.filter(p=>t.memberIds.includes(p[8]));
+   const allMembers=orderedMembers(t);
    let members=calendarMemberFilter==='Alle Mitarbeiter'?allMembers:allMembers.filter(p=>p[0]===calendarMemberFilter);
    if(onlyConflicts)members=members.filter(p=>dates.some(date=>dayEntries(date).some(a=>a.employee===p[0])));
    if(!members.length)return;
    const color=teamColor(t),manage=canManageTeam(t.name)&&canEdit(editArea);
-   if(isDuty||shownTeams.length>1)rows+=`<div class="tm-row tm-team"><div class="tm-name"><i class="dot" style="--c:${color}"></i><b>${escapeHtml(t.name)}</b><small>${allMembers.length} Mitarbeiter</small></div>${dates.map(date=>{if(!isDuty){const sb=sbOn(t,date);return sb?`<div class="tm-cov tm-cov-blank ${date===todayIso?'today':''}"></div>`:`<div class="tm-cov ${date===todayIso?'today':''}">${manage?`<button type="button" class="sb-gap" data-gap-team="${escapeHtml(t.name)}" data-gap-from="${date}" data-gap-to="${date}" title="Unbesetzt – jetzt einteilen">${icon('alert')}Lücke</button>`:`<span class="sb-gap">${icon('alert')}Lücke</span>`}</div>`}const c=allMembers.filter(p=>assignments.some(a=>a.date===date&&a.employee===p[0]&&a.kind==='Dienstplan'&&!a.isAbsence)).length;const pct=allMembers.length?Math.round(c/allMembers.length*100):0;return `<div class="tm-cov ${date===todayIso?'today':''}"><span class="cov-bar"><i style="width:${pct}%" class="${pct>=80?'ok':pct>=50?'mid':'low'}"></i></span>${c}/${allMembers.length}</div>`}).join('')}</div>`;
+   if(shownTeams.length>1)rows+=`<div class="tm-row tm-team"><div class="tm-name"><i class="dot" style="--c:${color}"></i><b>${escapeHtml(t.name)}</b><small>${allMembers.length} Mitarbeiter</small></div>${dates.map(date=>{if(!isDuty){const sb=sbOn(t,date);return sb?`<div class="tm-cov tm-cov-blank ${date===todayIso?'today':''}"></div>`:`<div class="tm-cov ${date===todayIso?'today':''}">${manage?`<button type="button" class="sb-gap" data-gap-team="${escapeHtml(t.name)}" data-gap-from="${date}" data-gap-to="${date}" title="Unbesetzt – jetzt einteilen">${icon('alert')}Lücke</button>`:`<span class="sb-gap">${icon('alert')}Lücke</span>`}</div>`}const c=allMembers.filter(p=>assignments.some(a=>a.date===date&&a.employee===p[0]&&a.kind==='Dienstplan'&&!a.isAbsence)).length;const pct=allMembers.length?Math.round(c/allMembers.length*100):0;return `<div class="tm-cov ${date===todayIso?'today':''}"><span class="cov-bar"><i style="width:${pct}%" class="${pct>=80?'ok':pct>=50?'mid':'low'}"></i></span>${c}/${allMembers.length}</div>`}).join('')}</div>`;
    members.forEach(p=>{
     const idx=staff.indexOf(p),role=t.leaderId===p[8]?'Teamleiter':t.deputyId===p[8]?'Deputy':'Mitarbeiter',hrs=isDuty?weekHoursOf(p[0],ws):sbHours(p[0]);
-    rows+=`<div class="tm-row"><div class="tm-name tm-person">${avatarHtml(p[0],color,32)}<div><b>${escapeHtml(p[0])}</b><small>${role} · ${isDuty?`${hrs.toLocaleString(LOC(),{maximumFractionDigits:1})} h/Woche`:`◷ ${dates.filter(dt=>assignments.some(a=>a.kind==='Bereitschaft'&&a.employee===p[0]&&a.date===dt)).length} Tage`}</small></div></div>${dates.map(date=>{const items=dayEntries(date).filter(a=>a.employee===p[0]);return `<div class="tm-cell ${date===todayIso?'today':''}" data-drop-date="${date}" data-drop-emp="${escapeHtml(p[0])}" data-drop-team="${escapeHtml(t.name)}">${items.map(dayCard).join('')}${items.length?'':noteAddField(date,p[0],'tm-note-add')}${(manage||(p[8]===currentUserId&&selfEditAllowed(t.name,editArea)))&&!onlyConflicts&&!items.some(isWorkItem)&&(isDuty||!sbOn(t,date))?`<button type="button" class="tm-add" data-quick-add="${date}" data-team="${escapeHtml(t.name)}" data-emp="${idx}" title="${isDuty?'Dienst':'Bereitschaft'} für ${escapeHtml(p[0])} am ${date} anlegen" aria-label="${isDuty?'Dienst':'Bereitschaft'} anlegen">+</button>`:''}</div>`}).join('')}</div>`;
+    const ord=isDuty&&currentView==='Team'&&allMembers.length>1;
+    rows+=`<div class="tm-row"><div class="tm-name tm-person ${ord?'tm-draggable':''}" ${ord?`draggable="true" data-mo-drag="${escapeHtml(t.id+'|'+p[8])}" title="Ziehen, um die Reihenfolge zu ändern"`:''}>${ord?'<span class="tm-grip" aria-hidden="true">⋮⋮</span>':''}${avatarHtml(p[0],color,32)}<div><b>${escapeHtml(p[0])}</b><small>${role} · ${isDuty?`${hrs.toLocaleString(LOC(),{maximumFractionDigits:1})} h/Woche`:`◷ ${dates.filter(dt=>assignments.some(a=>a.kind==='Bereitschaft'&&a.employee===p[0]&&a.date===dt)).length} Tage`}</small></div></div>${dates.map(date=>{const items=dayEntries(date).filter(a=>a.employee===p[0]);return `<div class="tm-cell ${date===todayIso?'today':''}" data-drop-date="${date}" data-drop-emp="${escapeHtml(p[0])}" data-drop-team="${escapeHtml(t.name)}">${items.map(dayCard).join('')}${items.length?'':noteAddField(date,p[0],'tm-note-add')}${(manage||(p[8]===currentUserId&&selfEditAllowed(t.name,editArea)))&&!onlyConflicts&&!items.some(isWorkItem)&&(isDuty||!sbOn(t,date))?`<button type="button" class="tm-add" data-quick-add="${date}" data-team="${escapeHtml(t.name)}" data-emp="${idx}" title="${isDuty?'Dienst':'Bereitschaft'} für ${escapeHtml(p[0])} am ${date} anlegen" aria-label="${isDuty?'Dienst':'Bereitschaft'} anlegen">+</button>`:''}</div>`}).join('')}</div>`;
    });
   });
   body=`<div class="team-matrix-scroll"><div class="team-matrix" style="--cols:${n}"><div class="tm-row tm-head"><div class="tm-name">Mitarbeiter</div>${dates.map((date,i)=>`<div class="${date===todayIso?'today':''}">${WEEKDAYS[i]}<b>${fmtShort(new Date(date+'T12:00:00'))}</b>${tnHead(date,'tn-tm')}</div>`).join('')}</div>${rows||`<div class="empty-note">${onlyConflicts?'Keine Konflikte in dieser Woche. 🎉':'Keine Mitarbeiter für diesen Filter.'}</div>`}</div></div>`;
@@ -3978,7 +4081,7 @@ function calendar(){
   const tileFor=items=>{const duty=items.find(a=>a.kind==='Dienstplan'&&!a.isAbsence),abs=items.find(a=>a.isAbsence),sb=items.find(a=>a.kind==='Bereitschaft'),wp=items.find(a=>a.kind==='Arbeitsort')||(duty&&wpFor(duty));const main=abs||duty;let html='';if(main){legendMap.set(abbr(main),main.shift);html=`<span class="mt-tile ${abs?'is-absence':''} ${conflicts.has(main.id)?'is-conflict':''}" style="--shift-color:${shiftHexColor(assignmentColor(main))}">${escapeHtml(abbr(main))}</span>`}else if(!sb)html='<span class="mt-empty"></span>';if(sb){html+=`<i class="mt-sb" style="--c:${shiftHexColor(assignmentColor(sb))}" title="Bereitschaft"></i>`;if(!main)html=`<span class="mt-tile is-standby" style="--shift-color:${shiftHexColor(assignmentColor(sb))}">◷</span>`+html}if(wp&&wp.shift==='Homeoffice')html+='<i class="mt-ho" title="Homeoffice">⌂</i>';const nt=items.find(a=>a.kind==='Notiz');if(nt)html+=`<i class="mt-note" title="Notizen anzeigen" data-notes-open="${escapeHtml(noteKeyOf(nt))}">✎</i>`;return html};
   let mWeek='',mDay='';
   shownTeams.forEach(t=>{
-   const allMembers=staff.filter(p=>t.memberIds.includes(p[8]));
+   const allMembers=orderedMembers(t);
    const members=calendarMemberFilter==='Alle Mitarbeiter'?allMembers:allMembers.filter(p=>p[0]===calendarMemberFilter);
    if(!members.length)return;
    const color=teamColor(t),manage=canManageTeam(t.name)&&canEdit(editArea);
@@ -4008,7 +4111,7 @@ function calendar(){
   ${calendarMemberFilter!=='Alle Mitarbeiter'||calendarTeams.length||onlyConflicts?`<button type="button" class="link-btn" id="reset-calendar-filters">Filter zurücksetzen</button>`:''}
   <div class="legend push-right"><span><i class="dot" style="--c:#3974c6"></i>Dienst</span><span><i class="lg-standby"></i>Bereitschaft</span><span><i class="lg-absence">Abw.</i>Abwesenheit</span><span>${icon('home')}Homeoffice</span></div>
  </div>`;
- const tip=isDuty&&canAdd?`<div class="cal-tip"><span>Tipp: Einträge per Drag &amp; Drop verschieben · ${currentView==='Team'?'„+“ in leerer Zelle = Dienst anlegen':'Mehrere Tage per Ziehen markieren = Arbeitsort'} · Strg Z = rückgängig</span>${undoStack.length?`<button type="button" class="btn small" id="undo-btn">${icon('undo')}Rückgängig (${undoStack.length})</button>`:''}</div>`:(!isDuty&&canAdd?`<div class="cal-tip"><span>${currentView==='Zeitleiste'?'Tipp: Bereitschaft auf eine andere Person ziehen = Tausch/Vertretung · „+“ = einteilen · „Lücke“ anklicken = Tag besetzen · Strg Z = rückgängig':''}</span>${undoStack.length?`<button type="button" class="btn small" id="undo-btn">${icon('undo')}Rückgängig (${undoStack.length})</button>`:''}</div>`:'');
+ const tip=isDuty&&canAdd?`<div class="cal-tip"><span>Tipp: ${currentView==='Team'?'„+“ in leerer Zelle = Dienst anlegen':'Mehrere Tage per Ziehen markieren = Arbeitsort'} · Strg Z = rückgängig</span>${undoStack.length?`<button type="button" class="btn small" id="undo-btn">${icon('undo')}Rückgängig (${undoStack.length})</button>`:''}</div>`:(!isDuty&&canAdd?`<div class="cal-tip"><span>${currentView==='Zeitleiste'?'Tipp: „+“ = einteilen · „Lücke“ anklicken = Tag besetzen · Strg Z = rückgängig':''}</span>${undoStack.length?`<button type="button" class="btn small" id="undo-btn">${icon('undo')}Rückgängig (${undoStack.length})</button>`:''}</div>`:'');
  const controls=`<div class="calendar-toolbar"><div class="calendar-nav"><button class="btn" id="prev" aria-label="Zurück">‹</button><strong>${range}</strong><button class="btn" id="next" aria-label="Weiter">›</button><button class="btn" id="today">Heute</button></div><div class="view-switch">${views.map(v=>`<button data-view="${v}" class="${currentView===v?'active':''}">${v}</button>`).join('')}</div></div>`;
  return `${heading(title,sub,actions)}${nowBlock}
  <div class="calendar-shell ${!isDuty?'panel standby-shell':''}">${controls}${filterbar}<div class="calendar-card ${currentView==='Monat'?'month-compact-card':''} view-${currentView.toLowerCase()}"><div class="calendar-scroll">${body}</div></div>${tip}</div>
@@ -4378,17 +4481,7 @@ function bindCalendarExtras(){
  const dr=document.getElementById('duty-rotation');if(dr)dr.onclick=dutyRotation;
  content.querySelectorAll('[data-gap-team]').forEach(b=>b.onclick=()=>{openDutyModalFor({team:b.dataset.gapTeam,date:b.dataset.gapFrom});document.getElementById('duty-date-to').value=b.dataset.gapTo});
  content.querySelectorAll('[data-swap-team]').forEach(b=>b.onclick=()=>swapStandby(b.dataset.swapTeam,b.dataset.swapIds.split(',').filter(Boolean)));
- // Drag & Drop: Einträge auf einen anderen Tag (oder in der Team-Ansicht zu einer anderen Person) ziehen
- let dragId=null;
- content.querySelectorAll('[data-drag-id]').forEach(el=>{
-  el.addEventListener('dragstart',e=>{dragId=el.dataset.dragId;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',dragId)}catch(_){}el.classList.add('dragging');content.classList.add('is-dragging')});
-  el.addEventListener('dragend',()=>{el.classList.remove('dragging');content.classList.remove('is-dragging');content.querySelectorAll('.drop-hover').forEach(x=>x.classList.remove('drop-hover'))});
- });
- content.querySelectorAll('[data-drop-date]').forEach(cell=>{
-  cell.addEventListener('dragover',e=>{if(!dragId)return;e.preventDefault();e.dataTransfer.dropEffect='move';cell.classList.add('drop-hover')});
-  cell.addEventListener('dragleave',e=>{if(!cell.contains(e.relatedTarget))cell.classList.remove('drop-hover')});
-  cell.addEventListener('drop',e=>{e.preventDefault();cell.classList.remove('drop-hover');const id=dragId;dragId=null;if(id)moveAssignment(id,cell.dataset.dropDate,cell.dataset.dropEmp)});
- });
+
 }
 
 /* ------------------------------------------------------------------
@@ -4653,7 +4746,7 @@ const DASH_WIDGETS=[
   const runs=standbyRuns(c.mine.filter(a=>a.kind==='Bereitschaft'&&a.date>=isoDate(addDays(new Date(),-31))).sort((a,b)=>a.date.localeCompare(b.date)));
   const cur=runs.find(r=>r.from<=c.today&&r.to>=c.today),next=runs.find(r=>r.from>c.today);
   const range=r=>r.from===r.to?fmtShortWd(dashDay(r.from)):`${fmtShortWd(dashDay(r.from))} – ${fmtShortWd(dashDay(r.to))}`;
-  const block=(r,label,cls)=>{const a=r.items.find(x=>x.date===c.today)||r.items[0];return `<div class="dash-sb ${cls}"><div class="dash-sb-label">${label}</div><b>${range(r)}</b><small>${escapeHtml(r.team)} · ${tRange(a)}${a.groupName&&currentPage!=='Bereitschaft'?' · '+escapeHtml(a.groupName):''}</small></div>`};
+  const block=(r,label,cls)=>{const a=r.items.find(x=>x.date===c.today)||r.items[0];return `<div class="dash-sb ${cls}"><div class="dash-sb-label">${label}</div><b>${range(r)}</b><small>${escapeHtml(r.team)} · ${tRange(a)}</small></div>`};
   const html=(cur?block(cur,'Du hast Bereitschaft','is-now'):'')+(next?block(next,`Nächste Bereitschaft · ${inDaysText(daysUntil(next.from))}`,''):'')||'<div class="employee-empty">Keine Bereitschaft geplant.</div>';
   return `<section class="panel dash-panel dash-standby"><div class="panel-head"><h2>Meine Bereitschaften</h2><button class="btn" data-go="Bereitschaft">Bereitschaft öffnen</button></div>${html}</section>`}},
  {id:'teamToday',title:'Heute im Dienst (Teams)',desc:'Liste aller Dienste deiner Teams heute',size:'half',lead:true,render:c=>{
@@ -4887,7 +4980,7 @@ function settings(){
     <div class="setting-row"><div><b>Standardansicht Dienstplan</b><small>Beim Öffnen anzeigen</small></div>${seg('def-dienstplan',[['Tag','Tag'],['Woche','Woche'],['Monat','Monat'],['Team','Team']],defaults.Dienstplan||'Woche')}</div>
     <div class="setting-row"><div><b>Standardansicht Bereitschaft</b><small>Beim Öffnen anzeigen</small></div>${seg('def-bereitschaft',[['Woche','Woche'],['Monat','Monat'],['Zeitleiste','Zeitleiste']],defaults.Bereitschaft||'Monat')}</div>
     <div class="setting-row"><div><b>Wochenende im Dienstplan</b><small>Welche Tage Woche, Monat und Team-Ansicht zeigen. Bereitschaft zeigt immer Mo–So.</small></div>${seg('duty-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],dutyDays)}</div>
-    <div class="setting-row"><div><b>Darstellung der Einträge</b><small>Kompakt = Monatsansicht mit „+X weitere“ · Erweitert = Monatsansicht zeigt alle Einträge</small></div>${seg('entry-density',[['compact','Kompakt'],['expanded','Erweitert']],expandedMonthView?'expanded':'compact')}</div>
+    <div class="setting-row"><div><b>Darstellung der Einträge</b><small>Kompakt = Woche/Monat passen ins Fenster, Rest als „+ X weitere“ · Erweitert = alle Einträge anzeigen (Seite scrollt)</small></div>${seg('entry-density',[['compact','Kompakt'],['expanded','Erweitert']],expandedMonthView?'expanded':'compact')}</div>
    </section>
    <section class="settings-card" id="set-look"><h2>Darstellung</h2><p class="sub">Änderungen werden sofort als Vorschau übernommen.</p>
     <div class="theme-cards">${preview('light','Hell')}${preview('dark','Dunkel')}${preview('system','System')}</div>
@@ -6679,6 +6772,52 @@ function openStandbyContact(id){
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-sb-open]');if(!b||e.target.closest('.duty-actions,a,button:not([data-sb-open]),input,select,label'))return;if(document.body.classList.contains('dp-range-dragging'))return;e.preventDefault();openStandbyContact(b.dataset.sbOpen)});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-sb-open]')){e.preventDefault();openStandbyContact(e.target.dataset.sbOpen)}});
+function calTargetHeight(card){const c=document.getElementById('content'),main=c&&c.parentElement;const pf=c.style.flex,pm=c.style.minHeight;c.style.flex='none';c.style.minHeight='0';
+ let bottom=0;[...(main?main.children:[])].forEach(e=>{if(e.offsetParent||getComputedStyle(e).position==='sticky'){const r=e.getBoundingClientRect();if(r.height)bottom=Math.max(bottom,r.bottom+window.scrollY)}});
+ const h=card.getBoundingClientRect().height;c.style.flex=pf;c.style.minHeight=pm;return Math.floor(h+(window.innerHeight-bottom)-2)}
+function growCalendar(){const card=document.querySelector('#content .calendar-card');if(!card)return;const rows={};document.querySelectorAll('#content .week-day-cell,#content .month-cell').forEach(c=>{if(!c.offsetParent)return;const k=Math.round(c.getBoundingClientRect().top),o=c.scrollHeight-c.clientHeight;if(o>0)rows[k]=Math.max(rows[k]||0,o)});const allRows=new Set([...document.querySelectorAll('#content .week-day-cell,#content .month-cell')].filter(c=>c.offsetParent).map(c=>Math.round(c.getBoundingClientRect().top))).size||1,extra=Math.ceil(Math.max(0,...Object.values(rows))*allRows);if(extra>0)card.style.height=(card.offsetHeight+extra+2)+'px'}
+/* ===== Kalender an die Fensterhöhe anpassen (Seite ohne Scrollen, Rest als „+ x weitere“) ===== */
+let calFitBusy=false,calFitTimer=null;
+function fitCalendar(){
+ const card=document.querySelector('#content .calendar-card');document.body.classList.toggle('cal-fit',false);{const fk0=currentPage+'|'+currentView+'|'+innerWidth+'x'+innerHeight;document.body.classList.toggle('cal-tight',!!(window.__calFit&&window.__calFit.key===fk0&&window.__calFit.tight&&currentView==='Monat'&&!expandedMonthView))}
+ if(!card||!['Dienstplan','Bereitschaft'].includes(currentPage)||window.innerWidth<901)return;
+ if(currentPage==='Dienstplan'&&currentView==='Team'){card.style.height='';return} // Team-Ansicht: alle Mitarbeiter ohne inneres Scrollen
+ card.style.height='';card.style.minHeight='';
+ const fillView=!(expandedMonthView&&(currentView==='Monat'||currentView==='Woche'));
+ if(!fillView)return;
+ document.body.classList.add('cal-fit');
+ const tgt=calTargetHeight(card);if(tgt<280){document.body.classList.remove('cal-fit','cal-tight');window.__calFit=null;if(window.__calFitWasOn){window.__calFitWasOn=false;if(!calFitBusy){calFitBusy=true;render();calFitBusy=false}}return}window.__calFitWasOn=true;card.style.height=tgt+'px';card.style.minHeight='0';
+ if(currentView!=='Woche'&&currentView!=='Monat')return;
+ // Platz pro Tag messen und passende Anzahl Einträge bestimmen
+ const cells=[...card.querySelectorAll(currentView==='Woche'?'.week-day-cell':'.month-cell:not(.is-blank)')].filter(c=>c.offsetParent);if(!cells.length)return;
+ const cardsEls=[...card.querySelectorAll('.week-day-cell .calendar-assignment,.month-cell .calendar-assignment')].filter(e=>e.offsetParent);
+ const cs=cardsEls.length?cardsEls.slice(0,20).reduce((t,e)=>{const st=getComputedStyle(e);return t+e.offsetHeight+parseFloat(st.marginTop)+parseFloat(st.marginBottom)},0)/Math.min(20,cardsEls.length):(currentView==='Woche'?68:30);
+ let avail=Infinity;cells.forEach(c=>{const st=getComputedStyle(c);let used=parseFloat(st.paddingTop)+parseFloat(st.paddingBottom);[...c.children].forEach(ch=>{if(!ch.matches('.calendar-assignment,.calendar-more')){const s2=getComputedStyle(ch);used+=ch.offsetHeight+parseFloat(s2.marginTop)+parseFloat(s2.marginBottom)}});avail=Math.min(avail,c.clientHeight-used)});
+ const moreEl=card.querySelector('.calendar-more'),moreH=moreEl?moreEl.offsetHeight+4:24,limit=Math.max(1,Math.floor((avail-moreH)/cs)),fk=currentPage+'|'+currentView+'|'+innerWidth+'x'+innerHeight;
+ const sel=currentView==='Woche'?'.week-day-cell':'.month-cell:not(.is-blank)';
+ const clipped=()=>[...document.querySelectorAll('#content '+sel)].some(c=>c.offsetParent&&c.scrollHeight>c.clientHeight+1);
+ const rer=l=>{window.__calFit={key:fk,limit:l,tight:document.body.classList.contains('cal-tight')};calFitBusy=true;const y=window.scrollY;render();fitCalendarSizeOnly();window.scrollTo(0,y);calFitBusy=false};
+ if(calFitBusy)return;
+ if(!window.__calFit||window.__calFit.key!==fk){rer(limit+1)}
+ let l=window.__calFit.limit,guard=0;while(l>1&&clipped()&&guard++<12){l--;rer(l)}
+ // Monat: passt kein ganzer Eintrag hinein → kompakte Einträge (nur Name + Zeit) verwenden
+ if(currentView==='Monat'&&l<=1&&clipped()&&!document.body.classList.contains('cal-tight')){document.body.classList.add('cal-tight');window.__calFit.tight=true;let t=3;rer(t);guard=0;while(t>1&&clipped()&&guard++<12){t--;rer(t)}}
+ // passt selbst ein Eintrag nicht hinein → Kalender darf höher werden (mind. 1 Eintrag bleibt sichtbar)
+ if(clipped())growCalendar();
+}
+/* Reihenfolge per Drag & Drop (Team-Ansicht) */
+let moDrag=null;
+const moClear=()=>document.querySelectorAll('.mo-before,.mo-after,.mo-dragging').forEach(x=>x.classList.remove('mo-before','mo-after','mo-dragging'));
+document.addEventListener('dragstart',e=>{const el=e.target.closest&&e.target.closest('[data-mo-drag]');if(!el)return;const [tid,sid]=el.dataset.moDrag.split('|');moDrag={tid,sid};el.classList.add('mo-dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',sid)}catch(_){}});
+document.addEventListener('dragover',e=>{if(!moDrag)return;const el=e.target.closest('[data-mo-drag]');if(!el||el.dataset.moDrag.split('|')[0]!==moDrag.tid)return;e.preventDefault();e.dataTransfer.dropEffect='move';const r=el.getBoundingClientRect(),after=e.clientY>r.top+r.height/2;document.querySelectorAll('.mo-before,.mo-after').forEach(x=>x.classList.remove('mo-before','mo-after'));if(el.dataset.moDrag.split('|')[1]!==moDrag.sid)el.classList.add(after?'mo-after':'mo-before')});
+document.addEventListener('drop',e=>{if(!moDrag)return;const el=e.target.closest('[data-mo-drag]');const d=moDrag;moDrag=null;if(!el){moClear();return}e.preventDefault();const [tid,sid]=el.dataset.moDrag.split('|');const after=el.classList.contains('mo-after');moClear();if(tid!==d.tid||sid===d.sid)return;reorderMember(tid,d.sid,sid,after)});
+document.addEventListener('dragend',()=>{moDrag=null;moClear()});
+function reorderMember(teamId,moveId,targetId,after){const t=teams.find(x=>x.id===teamId);if(!t)return;const ids=orderedMembers(t).map(p=>p[8]).filter(x=>x!==moveId);let i=ids.indexOf(targetId);if(i<0)return;ids.splice(after?i+1:i,0,moveId);memberOrderAll[currentUserId]={...(memberOrderAll[currentUserId]||{}),[teamId]:ids};save('dienstplanMemberOrder',memberOrderAll);render()}
+{const _r0=render;render=function(){if(['Dienstplan','Bereitschaft'].includes(currentPage)){if(calFilterLast!==currentPage){const prev=calFilterLast&&calFiltersPage[calFilterLast];const explicit=prev&&prev!==calFilterSnap();if(!explicit){const st=calFiltersPage[currentPage];if(st){[calendarTeams,calendarTeamFilter,calendarMemberFilter]=JSON.parse(st)}else if(calFilterLast){calendarTeams=currentUserTeamNames().slice(0,1);calendarTeamFilter=calendarTeams[0]||'Alle Teams';calendarMemberFilter='Alle Mitarbeiter'}}calFilterLast=currentPage}}
+ const out=_r0.apply(this,arguments);if(['Dienstplan','Bereitschaft'].includes(currentPage))calFiltersPage[currentPage]=calFilterSnap();return out}}
+{const _render=render;render=function(){_render.apply(this,arguments);if(!calFitBusy)requestAnimationFrame(fitCalendar);else fitCalendarSizeOnly()}}
+function fitCalendarSizeOnly(){const card=document.querySelector('#content .calendar-card');if(!card||window.innerWidth<901||!document.body.classList.contains('cal-fit'))return;card.style.height='';card.style.height=Math.max(280,calTargetHeight(card))+'px';card.style.minHeight='0'}
+let calFitW=window.innerWidth,calFitH=window.innerHeight;window.addEventListener('resize',()=>{clearTimeout(calFitTimer);calFitTimer=setTimeout(()=>{const was=calFitW>=901,now=window.innerWidth>=901,changed=calFitW!==window.innerWidth||calFitH!==window.innerHeight;calFitW=window.innerWidth;calFitH=window.innerHeight;if(changed&&(was||now)&&['Dienstplan','Bereitschaft'].includes(currentPage)&&!document.querySelector('.modal-backdrop.open,dialog[open]')&&!(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))render()},150)});
 /* ===== Live-Sync: Änderungen aus anderen Fenstern/Tabs sofort übernehmen (storage-Ereignis) ===== */
 const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},dienstplanTeamNotes:()=>{teamNotes=__ld_teamNotes()},dienstplanFeatures:()=>{features=__ld_features()},
  dienstplanShiftTypes:()=>{const v=__ld_shiftTypesParse(load('dienstplanShiftTypes',null));if(v)shiftTypes=v},dienstplanStandbyGroups:()=>{standbyGroups=__ld_standbyGroups()},dienstplanStandbyTimes:()=>{standbyTimes=__ld_standbyTimes()},
@@ -6749,7 +6888,7 @@ function render(){
   entries.forEach(a=>{if(a.kind!=='Notiz'&&dNotes[noteKeyOf(a)]&&!dHost[noteKeyOf(a)])dHost[noteKeyOf(a)]=a});
   const dList=entries.filter(a=>{if(a.kind!=='Notiz')return true;const k=noteKeyOf(a);if(dHost[k]||dSeen.has(k))return false;dSeen.add(k);return true});
   const dChip=a=>{const k=noteKeyOf(a);return currentPage==='Dienstplan'&&dHost[k]===a?noteChip(k,dNotes[k].length):''};
-  document.getElementById('day-details-list').innerHTML=dList.length?dList.map(a=>a.kind==='Notiz'?`<div class="day-assignment-row">${noteCard(a)}</div>`:`<div class="day-assignment-row"><div ${a.kind==='Bereitschaft'?`data-sb-open="${a.id}"`:''} class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${a.kind==='Arbeitsort'?'workplace-assignment':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${a.kind==='Bereitschaft'?(currentPage==='Bereitschaft'?'':'<span class="standby-indicator">◷ Bereitschaft</span>'):a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b><span>${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}${a.start?' · '+a.start+'–'+a.end:isVariableStandby(a)?' · variabel':''}</span>${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}${noteFoot(`<small>${escapeHtml(a.team)}${a.groupName&&currentPage!=='Bereitschaft'?' · '+escapeHtml(a.groupName):''}</small>`,dChip(a))}<details class="duty-actions"><summary aria-label="Aktionen">⋯</summary><div class="duty-actions-menu">${currentPage==='Dienstplan'&&canNoteFor(a.employee)?`<button type="button" data-note-add="${escapeHtml(a.employee+'|'+a.date)}">${icon('chat')}Notiz hinzufügen</button>`:''}${a.isAbsence||a.kind==='Arbeitsort'?'':`<button type="button" data-edit-duty="${a.id}">${icon('edit')}Bearbeiten</button>`}${canSwapDuty(a)?`<button type="button" data-swap-duty="${a.id}">${icon('refresh')}Dienst tauschen</button>`:''}${wpFor(a)?`<button type="button" data-edit-wp="${wpFor(a).id}">Arbeitsort ändern</button><button type="button" data-delete-duty="${wpFor(a).id}">Arbeitsort entfernen</button>`:''}<button type="button" class="danger-text" data-delete-duty="${a.id}">${icon('trash')}Löschen</button></div></details></div></div>`).join(''):'<div class="empty-note">Für diesen Tag sind keine Einträge vorhanden.</div>';
+  document.getElementById('day-details-list').innerHTML=dList.length?dList.map(a=>a.kind==='Notiz'?`<div class="day-assignment-row">${noteCard(a)}</div>`:`<div class="day-assignment-row"><div ${a.kind==='Bereitschaft'?`data-sb-open="${a.id}"`:''} class="calendar-assignment ${a.kind==='Bereitschaft'?'standby-assignment':''} ${a.isAbsence?'absence-assignment':''} ${a.kind==='Arbeitsort'?'workplace-assignment':''}" style="--shift-color:${shiftHexColor(assignmentColor(a))}">${a.kind==='Bereitschaft'?(currentPage==='Bereitschaft'?'':'<span class="standby-indicator">◷ Bereitschaft</span>'):a.kind==='Arbeitsort'?`<span class="workplace-indicator">⌂ ${escapeHtml(a.shift)}</span>`:''}<b>${escapeHtml(a.employee)}</b><span>${a.isAbsence?'Abwesenheit: ':''}${escapeHtml(a.shift)}${a.start?' · '+a.start+'–'+a.end:isVariableStandby(a)?' · variabel':''}</span>${wpHint(wpFor(a))}${swapPill(a)}${a.note?`<div class="absence-note"><span class="absence-note-label">Bemerkung</span><span>${escapeHtml(a.note)}</span></div>`:''}${noteFoot(`<small>${escapeHtml(a.team)}</small>`,dChip(a))}<details class="duty-actions"><summary aria-label="Aktionen">⋯</summary><div class="duty-actions-menu">${currentPage==='Dienstplan'&&canNoteFor(a.employee)?`<button type="button" data-note-add="${escapeHtml(a.employee+'|'+a.date)}">${icon('chat')}Notiz hinzufügen</button>`:''}${a.isAbsence||a.kind==='Arbeitsort'?'':`<button type="button" data-edit-duty="${a.id}">${icon('edit')}Bearbeiten</button>`}${canSwapDuty(a)?`<button type="button" data-swap-duty="${a.id}">${icon('refresh')}Dienst tauschen</button>`:''}${wpFor(a)?`<button type="button" data-edit-wp="${wpFor(a).id}">Arbeitsort ändern</button><button type="button" data-delete-duty="${wpFor(a).id}">Arbeitsort entfernen</button>`:''}<button type="button" class="danger-text" data-delete-duty="${a.id}">${icon('trash')}Löschen</button></div></details></div></div>`).join(''):'<div class="empty-note">Für diesen Tag sind keine Einträge vorhanden.</div>';
   dayModal.hidden=false;bindDutyActions(dayModal);
  };
  content.querySelectorAll('[data-open-day]').forEach(b=>b.onclick=e=>{e.stopPropagation();openDayDetails(b.dataset.openDay)});
