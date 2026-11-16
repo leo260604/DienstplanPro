@@ -2478,3 +2478,6 @@ body.dark-mode .tn-chip{color:#f3c843;background:color-mix(in srgb,#e0a800 22%,v
 .tn-chip:not(.tn-more) span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:auto}
 .tn-tm{width:100%}.tn-tm .tn-chip{width:100%}
 .tn-month .tn-chip:not(.tn-more) span{-webkit-line-clamp:1;display:block;white-space:nowrap}
+/* Mehrere Tage per Ziehen markieren: keine Browser-Textmarkierung */
+body.dp-range-dragging,body.dp-range-dragging *{-webkit-user-select:none!important;user-select:none!important}
+body.dp-range-dragging{cursor:cell}

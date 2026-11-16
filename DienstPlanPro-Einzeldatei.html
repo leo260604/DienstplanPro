@@ -2486,6 +2486,9 @@ body.dark-mode .tn-chip{color:#f3c843;background:color-mix(in srgb,#e0a800 22%,v
 .tn-chip:not(.tn-more) span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:auto}
 .tn-tm{width:100%}.tn-tm .tn-chip{width:100%}
 .tn-month .tn-chip:not(.tn-more) span{-webkit-line-clamp:1;display:block;white-space:nowrap}
+/* Mehrere Tage per Ziehen markieren: keine Browser-Textmarkierung */
+body.dp-range-dragging,body.dp-range-dragging *{-webkit-user-select:none!important;user-select:none!important}
+body.dp-range-dragging{cursor:cell}
 
 </style>
 </head>
@@ -6558,6 +6561,7 @@ async function openTeamNoteDialog(id,date){
  else{const n={id:makeId(),team,date:res.date,text,author:currentUserName(),created:new Date().toISOString()};teamNotes.push(n);persistTeamNotes();audit('Erstellt','Dienstplan',`Teamnotiz · ${team}`,{title:'Teamnotiz hinzugefügt',object:`${team} · ${fmtIsoDate(res.date)}`,after:text});toast(`Teamnotiz für ${team} hinzugefügt.`)}
  render()}
 document.addEventListener('click',e=>{const o=e.target.closest('[data-tn-open]'),a=e.target.closest('[data-tn-add]');if(!o&&!a)return;e.preventDefault();e.stopPropagation();if(o)openTeamNotesPopup(o.dataset.tnOpen);else openTeamNoteDialog(null,a.dataset.tnAdd)},true);
+document.addEventListener('selectstart',e=>{if(document.body.classList.contains('dp-range-dragging'))e.preventDefault()});
 /* ===== Live-Sync: Änderungen aus anderen Fenstern/Tabs sofort übernehmen (storage-Ereignis) ===== */
 const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},dienstplanTeamNotes:()=>{teamNotes=__ld_teamNotes()},
  dienstplanShiftTypes:()=>{const v=__ld_shiftTypesParse(load('dienstplanShiftTypes',null));if(v)shiftTypes=v},dienstplanStandbyGroups:()=>{standbyGroups=__ld_standbyGroups()},dienstplanStandbyTimes:()=>{standbyTimes=__ld_standbyTimes()},
@@ -6634,12 +6638,16 @@ function render(){
   let dragStart=null,dragEnd=null,dragging=false;
   const cells=[...content.querySelectorAll('[data-calendar-day]')];
   const clearDrag=()=>cells.forEach(c=>c.classList.remove('workplace-range-selected'));
+  // Während des Ziehens keine Browser-Textmarkierung zulassen
+  const lockSel=on=>{document.body.classList.toggle('dp-range-dragging',on);if(on)window.getSelection()?.removeAllRanges()};
   cells.forEach(cell=>{
-   cell.addEventListener('pointerdown',e=>{if(e.button!==0||e.pointerType==='touch'||e.target.closest('button,details,a,input,select,[draggable="true"]'))return;dragStart=cell.dataset.calendarDay;dragEnd=dragStart;dragging=true;clearDrag();cell.classList.add('workplace-range-selected');});
+   cell.addEventListener('pointerdown',e=>{if(e.button!==0||e.pointerType==='touch'||e.target.closest('button,details,a,input,select,[draggable="true"]'))return;e.preventDefault();dragStart=cell.dataset.calendarDay;dragEnd=dragStart;dragging=true;lockSel(true);clearDrag();cell.classList.add('workplace-range-selected');});
    cell.addEventListener('pointerenter',()=>{if(!dragging)return;dragEnd=cell.dataset.calendarDay;clearDrag();const a=dragStart<dragEnd?dragStart:dragEnd,b=dragStart>dragEnd?dragStart:dragEnd;cells.forEach(c=>{const x=c.dataset.calendarDay;if(x>=a&&x<=b)c.classList.add('workplace-range-selected')})});
-   cell.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;const from=dragStart<dragEnd?dragStart:dragEnd,to=dragStart>dragEnd?dragStart:dragEnd;clearDrag();if(from!==to)openWorkplaceModal({from,to,type:'Homeoffice'});dragStart=dragEnd=null;});
+   cell.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;lockSel(false);const from=dragStart<dragEnd?dragStart:dragEnd,to=dragStart>dragEnd?dragStart:dragEnd;clearDrag();if(from!==to)openWorkplaceModal({from,to,type:'Homeoffice'});dragStart=dragEnd=null;});
   });
-  document.addEventListener('pointerup',()=>{if(dragging){dragging=false;clearDrag()}},{once:true});
+  const endDrag=()=>{if(dragging){dragging=false;clearDrag()}lockSel(false)};
+  if(window.__dpEndDrag){document.removeEventListener('pointerup',window.__dpEndDrag);document.removeEventListener('pointercancel',window.__dpEndDrag)}
+  window.__dpEndDrag=endDrag;document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
  }
  if(window.matchMedia('(max-width: 700px)').matches){
   content.querySelectorAll('[data-calendar-day]').forEach(cell=>cell.addEventListener('click',e=>{if(e.target.closest('button,details,a,input,select'))return;openDayDetails(cell.dataset.calendarDay);}));
