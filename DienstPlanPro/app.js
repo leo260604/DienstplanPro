@@ -652,7 +652,7 @@ document.getElementById('login-form').onsubmit=e=>{
  save('dienstplanDemoSession',{userId:currentUserId,role:currentRole});
  updateSignedInUser();
  calendarTeams=currentUserTeamNames().slice(0,1);calendarTeamFilter=calendarTeams[0]||'Alle Teams';calendarMemberFilter='Alle Mitarbeiter';
- if(!allowedPages().includes(currentPage))currentPage=allowedPages()[0]||'Einstellungen';
+ currentPage=allowedPages().includes('Dashboard')?'Dashboard':(allowedPages()[0]||'Einstellungen');window.scrollTo(0,0);
  refreshNotifications();
  document.getElementById('login-modal').hidden=true;
  toast('Angemeldet als '+user[0]+' · '+role);
