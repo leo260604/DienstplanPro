@@ -2533,3 +2533,11 @@ body.dp-range-dragging{cursor:cell}
 .mobile-agenda-card .note-chip svg,.mobile-agenda-card .note-chip svg *{width:16px;height:16px}
 .calendar-assignment .ca-foot .note-chip{margin-right:-22px}
 .mobile-agenda-card .ca-foot .note-chip{margin-right:-32px}
+/* Teamfarben: vergebene Farben gesperrt, Hinweis bei automatischer Anpassung */
+.te-swatch.taken{cursor:not-allowed;opacity:.38;box-shadow:0 0 0 1px var(--line);filter:saturate(.7)}
+.te-swatch.taken .ic{opacity:.95;width:13px;height:13px}
+.tc-msg{display:flex;align-items:flex-start;gap:6px;margin-top:6px;padding:7px 9px;border-radius:9px;background:color-mix(in srgb,#e0a800 12%,var(--surface));border:1px solid color-mix(in srgb,#e0a800 35%,var(--line));color:var(--ink)}
+.tc-msg[hidden]{display:none}
+.tc-msg .ic,.tc-msg svg{width:14px;height:14px;flex:none;color:#b07d00;margin-top:1px}
+.tc-dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin:0 4px 0 2px;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+@media (min-width:701px){.sb-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}

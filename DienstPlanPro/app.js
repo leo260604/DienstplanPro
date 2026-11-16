@@ -378,6 +378,10 @@ function applyRoleNavigation(){
  document.querySelectorAll('#main-nav .nav-item').forEach(b=>{let c=b.querySelector('.nav-count');const v=counts[b.dataset.page];if(v===undefined){if(c)c.remove();return}if(!c){c=document.createElement('span');c.className='nav-count';b.appendChild(c)}c.textContent=v});
 }
 let defaults=load('dienstplanDefaults',{Dienstplan:'Woche',Bereitschaft:'Monat'});
+// Funktionen, die der Admin für alle ein- oder ausblenden kann
+const __ld_features=()=>{const v=load('dienstplanFeatures',{});return v&&typeof v==='object'&&!Array.isArray(v)?v:{}};
+let features=__ld_features();
+const featureOn=k=>features[k]!==false;
 const __ld_shiftTypesParse=v=>Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&typeof x.name==='string'&&typeof x.team==='string').map(x=>({...x,start:/^\d\d:\d\d$/.test(x.start)?x.start:'08:00',end:/^\d\d:\d\d$/.test(x.end)?x.end:'16:00'})):null;let shiftTypes=__ld_shiftTypesParse(load('dienstplanShiftTypes',null))||[
  {id:1,team:'Team Nord',name:'1A Dienst',start:'06:00',end:'14:12',color:'blue'},
  {id:2,team:'Team Nord',name:'2A Dienst',start:'14:00',end:'22:12',color:'green'},
@@ -738,7 +742,7 @@ function shiftHexColor(value){
  const map={blue:'#3974c6',green:'#24966b',amber:'#e09a2d',red:'#dc6475',purple:'#9b69c8',teal:(localStorage.getItem('dienstplanAccentColor')==='navy'?'#004d7d':'#159da8')};
  return map[value]||(/^#[0-9a-f]{6}$/i.test(value||'')?value:'#3974c6');
 }
-function assignmentColor(a){if(a.isAbsence)return '#d69b38';return a.kind==='Bereitschaft'?(teamByName(a.team)?.standbyColor||a.color||'#159da8'):(a.color||'blue')}
+function assignmentColor(a){if(a.isAbsence)return '#d69b38';if(a.kind==='Bereitschaft'){const t=teamByName(a.team);return t?teamColor(t):(a.color||'#159da8')}return a.color||'blue'}
 function colorWithAlpha(hex,alpha){
  if(document.body.classList.contains('dark-mode')&&alpha<=.15)alpha=.34;
  const c=shiftHexColor(hex);const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
@@ -878,7 +882,7 @@ function calendar(){
  }
  const managerWorkplace=['Admin','Teamleiter','Abteilungsleiter'].includes(currentRole);
  const canAdd=entryTeams().length>0,canManageAny=manageableTeams().length>0;
-  const actionsRaw=isDuty?`<button class="btn" id="add-workplace">${icon('home')}Arbeitsort</button>${absenceTeams().length?`<button class="btn" id="add-absence">${icon('travel','ic-fill')}Abwesenheit</button>`:''}${canManageAny&&manageableTeams('Dienstplan').some(t=>shiftTypes.some(s=>s.team===t.name))?`<button class="btn" id="duty-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Eintrag erstellen</button>`:''}`:`${canManageAny&&standbyTimes.length?`<button class="btn" id="auto-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Bereitschaft einteilen</button>`:''}`;
+  const actionsRaw=isDuty?`<button class="btn" id="add-workplace">${icon('home')}Arbeitsort</button>${absenceTeams().length?`<button class="btn" id="add-absence">${icon('travel','ic-fill')}Abwesenheit</button>`:''}${featureOn('rotationDuty')&&canManageAny&&manageableTeams('Dienstplan').some(t=>shiftTypes.some(s=>s.team===t.name))?`<button class="btn" id="duty-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Eintrag erstellen</button>`:''}`:`${featureOn('rotationStandby')&&canManageAny&&standbyTimes.length?`<button class="btn" id="auto-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Bereitschaft einteilen</button>`:''}`;
  // Mobil: Aktionen im Dienstplan unter einem Button „Aktionen“ zusammenfassen
  const actions=actionsRaw?`<span class="dp-actions">${actionsRaw}</span><button type="button" class="btn dp-actions-toggle" id="dp-actions-toggle" aria-haspopup="dialog">Aktionen${icon('down','dp-act-caret')}</button>`:actionsRaw;
  const sub=isDuty?((currentView==='Monat')?monthName(d):`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}`):(currentView==='Zeitleiste'||currentView==='Woche'?`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}${currentView==='Zeitleiste'?' · Wer hat wann Bereitschaft?':''}`:currentView==='Monat'?`${monthName(d)} · Rotationsübersicht aller Teams`:fmtWithWeekday(d));
@@ -1293,32 +1297,25 @@ function standbyManagementPage(){
  const admin=standbyTimesEditable(),colorTeams=standbyColorTeams(),listTeams=standbyListTeams();
  const timeCount=standbyTimes.length,varCount=standbyTimes.filter(isVariableStandby).length,cover=standbyCoverage();
  const covered=teams.filter(t=>standbyTimes.some(x=>standbyTimeForTeam(x,t.name))).length;
- const sub=admin?'Bereitschaftszeiten je Team und Teamfarben – unabhängig von den regulären Dienstzeiten.'
-  :colorTeams.length?`Bereitschaftsfarbe für ${colorTeams.length===1?'dein Team':'deine '+colorTeams.length+' Teams'} festlegen. Bereitschaftszeiten legt die Administration fest.`
-  :'Bereitschaftszeiten und Teamfarben im Überblick.';
+ const sub=admin?'Bereitschaftszeiten je Team – unabhängig von den regulären Dienstzeiten. Bereitschaften verwenden die Teamfarbe.'
+  :'Bereitschaftszeiten im Überblick. Bereitschaften verwenden die Teamfarbe.';
  const actions=admin?`<button class="btn primary" id="sb-new-time">${icon('plus')}Bereitschaftszeit anlegen</button>`:'';
  const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Teams</th><th class="hide-sm scale-head"><span>00</span><span>12</span><span>24</span></th>${admin?'<th>Aktionen</th>':''}</tr>`;
  const sorted=[...standbyTimes].sort((a,b)=>isVariableStandby(a)-isVariableStandby(b)||(a.start||'').localeCompare(b.start||'')||a.name.localeCompare(b.name,'de'));
  const rows=sorted.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]],vari=isVariableStandby(t);
   return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
- const colorCards=listTeams.map(t=>{const c=standbyHex(t),ed=colorTeams.includes(t),n=(t.memberIds||[]).length;
-  const inner=`<span class="ta-mark" style="--team:${c}">${standbyBadge(t)}</span><span class="sb-color-txt"><b>${escapeHtml(t.name)}</b><small><span class="sb-color-hex"><i style="background:${c}"></i>${escapeHtml(c.toLowerCase())}</span> · ${n} ${n===1?'Mitglied':'Mitglieder'}</small></span>${ed?`<span class="sb-color-edit">Ändern${icon('chev')}</span>`:''}`;
-  return ed?`<button type="button" class="sb-color-card" data-sb-color="${escapeHtml(t.id)}" style="--team:${c}" aria-label="Bereitschaftsfarbe für ${escapeHtml(t.name)} ändern">${inner}</button>`:`<div class="sb-color-card" style="--team:${c}">${inner}</div>`}).join('');
  return `${heading('Bereitschaft verwalten',sub,actions)}
- ${!admin&&!colorTeams.length?`<div class="readonly-note">${icon('eye')}Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>`:''}
+ ${!admin?`<div class="readonly-note">${icon('eye')}Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>`:''}
  <div class="stats sb-stats">
   <div class="stat-card"><div><div class="stat-label">Bereitschaftszeiten</div><div class="stat-value">${timeCount}</div><div class="stat-note">${timeCount-varCount} fix · ${varCount} variabel</div></div></div>
   <div class="stat-card"><div><div class="stat-label">Teams mit Bereitschaft</div><div class="stat-value">${covered} / ${teams.length}</div><div class="meter ${covered<teams.length?'warn':''}"><i style="width:${teams.length?covered/teams.length*100:0}%"></i></div></div></div>
   <div class="stat-card"><div><div class="stat-label">Tagesabdeckung</div><div class="stat-value">${Math.round(cover*10)/10} / 24 Std.</div><div class="meter ${cover<24?'warn':''}"><i style="width:${Math.min(100,cover/24*100)}%"></i></div></div></div>
-  <div class="stat-card"><div><div class="stat-label">${admin||!colorTeams.length?'Teamfarben':'Deine Teams'}</div><div class="stat-value">${listTeams.length}</div><div class="stat-note">${colorTeams.length?(admin?'Farben bearbeitbar':'Farbe bearbeitbar'):'mit Bereitschaftsfarbe'}</div></div></div>
  </div>
  <section class="panel flush sb-times-panel">
   <div class="panel-toolbar sb-toolbar"><div><h2>Bereitschaftszeiten</h2><p class="sub">${admin?'Jede Bereitschaftszeit steht nur den ausgewählten Teams zur Verfügung.':'Welche Bereitschaftszeit welches Team hat. Änderungen nimmt die Administration vor.'}</p></div><span class="pill push-right">${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
   ${timeCount?`<div class="table-wrap borderless shift-times-table-wrap"><table class="sb-times-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`
    :`<div class="empty-note sb-empty">${admin?`Noch keine Bereitschaftszeiten. Lege die erste an und wähle die Teams, die sie haben sollen.<div><button class="btn primary" type="button" id="sb-new-time-empty">${icon('plus')}Bereitschaftszeit anlegen</button></div>`:'Es sind noch keine Bereitschaftszeiten angelegt.'}</div>`}
- </section>
- <section class="panel sb-colors-panel"><div class="panel-head"><div><h2>Bereitschaftsfarben</h2><p class="sub">${colorTeams.length&&!admin?'Diese Farbe wird für alle Bereitschaftseinträge deines Teams verwendet.':'Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.'}</p></div></div>
-  ${listTeams.length?`<div class="sb-color-grid">${colorCards}</div>`:'<div class="empty-note">Es sind noch keine Teams angelegt.</div>'}</section>`;
+ </section>`;
 }
 /* Teams einer Bereitschaftszeit: ohne teamIds gilt sie für alle Teams (auch später angelegte) */
 const standbyTimeAllTeams=t=>!Array.isArray(t?.teamIds);
@@ -1767,7 +1764,7 @@ function settings(){
  const tog=(id,on)=>`<button type="button" class="toggle ${on?'on':''}" id="${id}" role="switch" aria-checked="${on}"></button>`;
  const theme=localStorage.getItem('dienstplanTheme')||'light',acc=localStorage.getItem('dienstplanAccentColor')||'turquoise',fs=localStorage.getItem('dienstplanFontScale')||'normal',compact=localStorage.getItem('dienstplanCompact')==='1';
  const used=Object.keys(localStorage).filter(k=>k.startsWith('dienstplan')).reduce((s,k)=>s+(localStorage.getItem(k)||'').length,0);
- const sections=[['set-cal','cal','Kalender'],['set-look','sun','Darstellung'],['set-lang','grid','Sprache & Datum'],...(currentRole==='Admin'?[['link-admin','external','Links']]:[]),['set-data','download','Daten & Sicherung']];
+ const sections=[['set-cal','cal','Kalender'],['set-look','sun','Darstellung'],['set-lang','grid','Sprache & Datum'],...(currentRole==='Admin'?[['set-feat','spark','Funktionen'],['link-admin','external','Links']]:[]),['set-data','download','Daten & Sicherung']];
  const preview=(k,label)=>`<button type="button" class="theme-card ${theme===k?'active':''}" data-theme="${k}"><span class="theme-prev ${k}"><i></i><span><i></i><i></i><i></i></span></span><span class="theme-card-foot"><b>${label}</b>${theme===k?'<em>Aktiv</em>':''}</span></button>`;
  const dfOpts=['dmy','iso','mdy','long'].map(k=>{const keep=dateFormat;dateFormat=k;const ex=fmt(new Date(2026,11,31));dateFormat=keep;const label={dmy:LANG==='en'?'DD.MM.YYYY':'TT.MM.JJJJ',iso:LANG==='en'?'YYYY-MM-DD':'JJJJ-MM-TT',mdy:LANG==='en'?'MM/DD/YYYY':'MM/TT/JJJJ',long:LANG==='en'?'Written out':'Ausgeschrieben'}[k];return `<option value="${k}" ${dateFormat===k?'selected':''}>${label}  ·  ${ex}</option>`}).join('');
  return `${heading('Einstellungen','Arbeitsumgebung, Darstellung und Daten anpassen.')}
@@ -1790,6 +1787,10 @@ function settings(){
     <div class="setting-row"><div><b>Datumsformat</b><small>So werden Datumswerte in der App und in Exporten angezeigt.</small></div><select class="form-select" id="date-format-select" data-no-translate>${dfOpts}</select></div>
     <div class="date-preview"><span>Beispiel:</span> <b>${escapeHtml(fmtWithWeekday(new Date()))}</b></div>
    </section>
+   ${currentRole==='Admin'?`<section class="settings-card" id="set-feat"><h2>Funktionen</h2><p class="sub">Gilt für alle Benutzer. Nur Admins sehen und ändern diesen Bereich.</p>
+    <div class="setting-row"><div><b>„Rotation automatisch planen“ im Dienstplan</b><small>Button oben im Dienstplan anzeigen</small></div>${tog('feat-rot-duty',featureOn('rotationDuty'))}</div>
+    <div class="setting-row"><div><b>„Rotation automatisch planen“ in der Bereitschaft</b><small>Button oben in der Bereitschaft anzeigen</small></div>${tog('feat-rot-sb',featureOn('rotationStandby'))}</div>
+   </section>`:''}
    ${currentRole==='Admin'?`<section class="settings-card link-admin" id="link-admin"><div class="panel-head"><div><h2>${icon('external')}Links &amp; Weiterleitungen</h2><p class="sub">Ziele der Link-Kacheln im Dashboard. Nur Admins sehen und ändern diesen Bereich.</p></div></div>
   <div class="link-row"><span class="link-ic">${icon('external')}</span><div class="link-txt"><b>Mein Porsche Cockpit</b><small>Kachel „Ich@Porsche“ · Übersicht: Homeoffice- &amp; Bürotage</small>${cockpitLink.url?`<a href="${escapeHtml(cockpitLink.url)}" target="_blank" rel="noopener noreferrer" class="link-url">${escapeHtml(cockpitLink.url)}</a><small class="muted">Zuletzt geändert von ${escapeHtml(cockpitLink.by||'—')}${cockpitLink.at?' am '+escapeHtml(fmtWithWeekday(new Date(cockpitLink.at))):''}</small>`:'<span class="pill amber">Noch kein Link hinterlegt</span>'}</div>
   <div class="btn-row">${cockpitLink.url?`<button type="button" class="btn small" id="cockpit-link-test">${icon('external')}Öffnen</button>`:''}<button type="button" class="btn small primary" id="cockpit-link-edit">${icon('edit')}${cockpitLink.url?'Ändern':'Link festlegen'}</button></div></div></section>`:''}
@@ -1832,6 +1833,8 @@ function bindSettings(){
  const saved=()=>toast('Einstellungen gespeichert.');
  segBind('def-dienstplan',v=>{defaults.Dienstplan=v;save('dienstplanDefaults',defaults);saved()});
  segBind('def-bereitschaft',v=>{defaults.Bereitschaft=v;save('dienstplanDefaults',defaults);saved()});
+ const featBind=(id,k,label)=>togBind(id,on=>{if(currentRole!=='Admin')return;features={...features,[k]:on};save('dienstplanFeatures',features);audit('Geändert','Einstellungen',`${label}: ${on?'eingeblendet':'ausgeblendet'}`,{title:'Funktion geändert',object:label,before:on?'aus':'an',after:on?'an':'aus'});toast(on?'Button wird angezeigt.':'Button ist ausgeblendet.')});
+ featBind('feat-rot-duty','rotationDuty','„Rotation automatisch planen“ (Dienstplan)');featBind('feat-rot-sb','rotationStandby','„Rotation automatisch planen“ (Bereitschaft)');
  segBind('duty-days',v=>{dutyDays=Number(v)||6;localStorage.setItem('dienstplanDutyDays',String(dutyDays));saved()});
  segBind('entry-density',v=>{expandedMonthView=v==='expanded';localStorage.setItem('dienstplanExpandedMonthView',expandedMonthView?'1':'0');saved()});
  content.querySelectorAll('.theme-card').forEach(b=>b.onclick=()=>{applyTheme(b.dataset.theme);render()});
@@ -2794,13 +2797,13 @@ function bindAdministration(){
 async function openCreateTeam(){
  if(!adminCaps().create)return;
  if(teams.length>=MAX_TEAMS){toast(`Es sind maximal ${MAX_TEAMS} Teams möglich.`);return}
- const used=new Set(teams.map(t=>teamColor(t).toLowerCase())),color0=TEAM_COLORS.find(c=>!used.has(c.toLowerCase()))||TEAM_COLORS[0];
+ const color0=freeTeamColors(null,1)[0]||distinctTeamColor(TEAM_COLORS[0],null);
  const depts=adminDepartments();
  const dlg=formDialog('Neues Team anlegen',`
   <div class="wp-field"><label class="wp-label" for="nt-name">Teamname</label>
    <div class="nt-input"><span class="nt-input-ic">${icon('users')}</span><input id="nt-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Team Ost" required><span class="nt-count" id="nt-count">0/60</span></div>
    <small class="wp-note nt-msg" id="nt-msg">Der Name erscheint im Dienstplan, in der Bereitschaft und in den Filtern.</small></div>
-  <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${TEAM_COLORS.map(c=>`<button type="button" class="te-swatch ${c===color0?'on':''}" style="--c:${c}" data-color="${c}" aria-label="Farbe ${c}">${icon('check')}</button>`).join('')}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="nt-color-pick" value="${color0}"><span>Eigene</span></label></div><input type="hidden" name="color" id="nt-color" value="${color0}"></div>
+  <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${teamColorSwatches(color0,null)}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="nt-color-pick" value="${color0}"><span>Eigene</span></label></div><input type="hidden" name="color" id="nt-color" value="${color0}"><small class="wp-note tc-msg" id="nt-color-msg" hidden></small><small class="wp-note">Jede Farbe gibt es nur einmal – angezeigt werden nur freie Farben.</small></div>
   ${depts.length?`<div class="wp-field"><span class="wp-label">Abteilung <span class="muted">(optional)</span></span><select id="nt-dept" name="dept"><option value="">Keine Abteilung</option>${depts.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.name)}</option>`).join('')}</select></div>`:''}
   <div class="wp-summary nt-preview" id="nt-preview"></div>`,'Team anlegen','Danach legst du Mitglieder, Teamleitung und Deputy fest.',{icon:'users',cls:'nt-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=id=>layer.querySelector('#'+id);
@@ -2813,14 +2816,15 @@ async function openCreateTeam(){
   const d=dept&&departments.find(x=>x.id===dept.value);
   prev.innerHTML=`<span class="nt-badge" style="--c:${c}">${escapeHtml((v||'T').replace(/^Team\s+/i,'').slice(0,2).toUpperCase()||'T')}</span><div><b>${escapeHtml(v||'Neues Team')}</b><small>0 Mitglieder${d?' · '+escapeHtml(d.name):''} · ${teams.length+1} von ${MAX_TEAMS} Teams</small></div>`;
   layer.querySelector('button[type=submit]').disabled=!!pr};
- const setColor=c=>{col.value=c;pick.value=c;layer.querySelectorAll('.te-swatch').forEach(b=>b.classList.toggle('on',b.dataset.color.toLowerCase()===c.toLowerCase()));upd()};
- layer.querySelectorAll('.te-swatch').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=()=>setColor(pick.value);
+ const cmsg=$('nt-color-msg');
+ const setColor=(c,check=true)=>{let fixed=c;if(check){fixed=distinctTeamColor(c,null);cmsg.hidden=fixed===c.toLowerCase();if(!cmsg.hidden)cmsg.innerHTML=tcNote(c,fixed,null)}c=fixed;col.value=c;pick.value=c;layer.querySelectorAll('.te-swatch').forEach(b=>b.classList.toggle('on',b.dataset.color.toLowerCase()===c.toLowerCase()));upd()};
+ layer.querySelectorAll('.te-swatch').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=()=>setColor(pick.value,false);pick.onchange=()=>setColor(pick.value);
  name.oninput=upd;dept?.addEventListener('change',upd);upd();
  layer.addEventListener('submit',e=>{if(problem()){e.preventDefault();e.stopPropagation();name.focus()}},true);
  setTimeout(()=>name.focus(),30);
  const res=await dlg;if(!res)return;
  const nm=res.name.trim().slice(0,60);if(!nm||teams.some(t=>t.name.toLowerCase()===nm.toLowerCase()))return;
- const c=/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#14A1A9';
+ const c=distinctTeamColor(/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#14A1A9',null);
  const t={id:makeId(),name:nm,memberIds:[],leaderId:'',deputyId:'',standbyColor:c};teams.push(t);persistTeams();
  const d=res.dept&&departments.find(x=>x.id===res.dept);if(d){departments.forEach(x=>x.teamIds=x.teamIds.filter(id=>id!==t.id));d.teamIds.push(t.id);persistDepartments()}
  audit('Erstellt','Teams',t.name,{title:'Team angelegt',object:t.name,after:d?'Abteilung: '+d.name:''});render();toast('Team angelegt.');openTeamEditor(t.id,'members');
@@ -2838,7 +2842,6 @@ function openDeptEditor(id){
   <div class="te-head"><span class="ta-mark">${icon('build')}</span><div><h2 id="dp-title">${ex?escapeHtml(d.name||'Abteilung'):'Abteilung anlegen'}</h2><p class="small muted">${d.teamIds.length} ${d.teamIds.length===1?'Team':'Teams'} · Leitung: ${escapeHtml(nameOf(d.headId)||'—')}</p></div><button class="icon-btn" type="button" data-dp-close aria-label="Schließen">×</button></div>
   <div class="te-body"><div class="te-sec">
    <label class="wp-field"><span class="wp-label">Name der Abteilung</span><input id="dp-name" value="${escapeHtml(d.name)}" maxlength="60" placeholder="z. B. Technik"></label>
-   <div class="wp-field"><span class="wp-label">Farbe</span><div class="te-colors">${TEAM_COLORS.map(c=>`<button type="button" class="te-swatch ${c.toLowerCase()===d.color.toLowerCase()?'on':''}" style="--c:${c}" data-color="${c}" aria-label="Farbe ${c}">${icon('check')}</button>`).join('')}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="dp-color" value="${/^#[0-9a-f]{6}$/i.test(d.color)?d.color:'#0068a8'}"><span>Eigene</span></label></div></div>
    <div class="wp-field"><span class="wp-label">Abteilungsleitung</span>${personPicker({id:'dp-head',people,value:nameOf(d.headId),noneLabel:'Nicht besetzt',placeholder:'Nicht besetzt',empty:'Keine Abteilungsleiter gefunden'})}
     ${people.length?`<small class="muted">Zur Auswahl stehen alle Personen mit der Rolle „Abteilungsleiter“.</small>`:`<small class="dept-note">${icon('alert')}Es gibt noch keine Person mit der Rolle „Abteilungsleiter“. Die Rolle vergibst du unter „Kontakte“.</small>`}</div>
    <div class="wp-field"><span class="wp-label">Teams dieser Abteilung <span class="pill teal" id="dp-count">${d.teamIds.length} ausgewählt</span></span>
@@ -2851,7 +2854,6 @@ function openDeptEditor(id){
  const bind=()=>{
   layer.querySelectorAll('[data-dp-close]').forEach(b=>b.onclick=()=>close());
   const nm=layer.querySelector('#dp-name');nm.oninput=()=>{d.name=nm.value};
-  layer.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{d.color=b.dataset.color;draw()});const dpc=layer.querySelector('#dp-color');if(dpc)dpc.onchange=()=>{d.color=dpc.value;draw()};
   bindPersonPicker(layer);
   layer.querySelector('#dp-head').addEventListener('change',e=>{d.headId=staff.find(p=>p[0]===e.target.value)?.[8]||'';draw()});
   layer.querySelectorAll('[data-dt]').forEach(c=>c.onchange=()=>{d.teamIds=c.checked?[...new Set([...d.teamIds,c.dataset.dt])]:d.teamIds.filter(x=>x!==c.dataset.dt);layer.querySelector('#dp-count').textContent=`${d.teamIds.length} ausgewählt`});
@@ -2879,17 +2881,40 @@ function openDeptEditor(id){
  setTimeout(()=>layer.querySelector('#dp-name')?.focus(),30);
 }
 const TEAM_COLORS=['#14A1A9','#0068A8','#2f8f5b','#d4880f','#c2412d','#8a4fbf','#d0508a','#596579','#1f3f7a','#7b8f32'];
+/* ===== Eindeutige Teamfarben: jede Farbe nur einmal, zu ähnliche Farben werden deutlich abgeändert ===== */
+const TC_MIN_DIFF=22; // Mindestabstand (ΔE, CIE76) – darunter wirken zwei Farben gleich
+const tcHexRgb=h=>{h=String(h||'').replace('#','');return /^[0-9a-f]{6}$/i.test(h)?[0,2,4].map(i=>parseInt(h.substr(i,2),16)):null};
+const tcLab=hex=>{const c=tcHexRgb(hex);if(!c)return null;const l=c.map(v=>{v/=255;return v>.04045?Math.pow((v+.055)/1.055,2.4):v/12.92});
+ const x=(l[0]*.4124+l[1]*.3576+l[2]*.1805)/.95047,y=l[0]*.2126+l[1]*.7152+l[2]*.0722,z=(l[0]*.0193+l[1]*.1192+l[2]*.9505)/1.08883,f=t=>t>.008856?Math.cbrt(t):7.787*t+16/116;
+ return [116*f(y)-16,500*(f(x)-f(y)),200*(f(y)-f(z))]};
+const tcDiff=(a,b)=>{const A=tcLab(a),B=tcLab(b);if(!A||!B)return 999;return Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2])};
+const tcHsl=hex=>{const [r,g,b]=tcHexRgb(hex).map(v=>v/255),mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}return [h,s,l]};
+const tcFromHsl=(h,s,l)=>{h=((h%360)+360)%360;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return '#'+[f(0),f(8),f(4)].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('')};
+// Team, dessen Farbe der Farbe c zu ähnlich ist (oder null)
+function teamColorClash(c,exceptId){let best=null,bd=999;teams.forEach(t=>{if(t.id===exceptId)return;const d=tcDiff(c,teamColor(t));if(d<bd){bd=d;best=t}});return bd<TC_MIN_DIFF?best:null}
+// Liefert c unverändert, wenn sie sich deutlich von allen anderen Teamfarben unterscheidet – sonst eine klar unterscheidbare Abwandlung
+function distinctTeamColor(c,exceptId){
+ if(!tcHexRgb(c))c='#14a1a9';c=c.toLowerCase();if(!teamColorClash(c,exceptId))return c;
+ let [h,sat,l]=tcHsl(c);sat=Math.max(.45,Math.min(.85,sat));l=Math.max(.32,Math.min(.55,l));
+ for(const dl of [0,-.1,.1]){for(let step=1;step<12;step++){for(const dir of [1,-1]){const x=tcFromHsl(h+dir*step*30,sat,Math.max(.25,Math.min(.62,l+dl)));if(!teamColorClash(x,exceptId))return x}}}
+ return TEAM_COLORS.map(x=>x.toLowerCase()).find(x=>!teamColorClash(x,exceptId))||c}
+// Freie Farbvorschläge: unterscheiden sich deutlich von allen Teams und voneinander
+function freeTeamColors(exceptId,max=10){const pool=[...TEAM_COLORS,...STANDBY_COLORS];for(const l of [.45,.36,.54])for(let h=0;h<360;h+=20)pool.push(tcFromHsl(h,.62,l));
+ const out=[];for(const c of pool){const x=c.toLowerCase();if(teamColorClash(x,exceptId))continue;if(out.some(o=>tcDiff(o,x)<TC_MIN_DIFF))continue;out.push(x);if(out.length>=max)break}return out}
+// Farbfelder: nur freie Farben (+ die aktuelle Farbe des Teams)
+function teamColorSwatches(cur,exceptId,extra=''){const list=freeTeamColors(exceptId);const c0=String(cur||'').toLowerCase();if(c0&&!list.includes(c0))list.unshift(c0);return list.slice(0,10).map(c=>{const used=teamColorClash(c,exceptId);return `<button type="button" class="te-swatch ${c.toLowerCase()===String(cur).toLowerCase()?'on':''} ${used?'taken':''}" style="--c:${c}" data-color="${c}" aria-label="Farbe ${c}${used?' – vergeben an '+escapeHtml(used.name):''}" title="${used?'Bereits vergeben an '+escapeHtml(used.name):'Farbe '+c}" ${used?'disabled':''} ${extra}>${icon(used?'lock':'check')}</button>`}).join('')}
+const tcNote=(from,to,exceptId)=>{const t=teamColorClash(from,exceptId);return `${icon('alert')}<span>Die gewählte Farbe ist ${t?`zu ähnlich wie <b>${escapeHtml(t.name)}</b>`:'bereits vergeben'} – sie wurde auf <i class="tc-dot" style="background:${to}"></i><b>${to}</b> abgeändert.</span>`};
 function openTeamEditor(id,startTab){
  const t=teamById(id);if(!t||!adminTeams().includes(t)){toast('Dieses Team kannst du nicht öffnen.');return}
  const caps=adminCaps(),st=teamSettings(t);
  const d={name:t.name,color:teamColor(t),memberIds:[...t.memberIds],leaderId:t.leaderId||'',deputyId:t.deputyId||'',...st,selfDutyIds:[...st.selfDutyIds],selfStandbyIds:[...st.selfStandbyIds]};
- const orig=JSON.stringify(d);let tab=startTab||'general';
+ const orig=JSON.stringify(d);let tab=startTab||'general',colorMsg='';
  const layer=document.createElement('div');layer.className='modal-backdrop app-dialog';
  const ro=x=>x?'':'disabled';
  const mem=()=>staff.filter(p=>d.memberIds.includes(p[8])).sort((a,b)=>a[0].localeCompare(b[0],'de'));
  const nameOf=id=>staff.find(p=>p[8]===id)?.[0]||'';
  const general=()=>`<div class="te-sec"><label class="wp-field"><span class="wp-label">Teamname</span><input id="te-name" value="${escapeHtml(d.name)}" maxlength="60" ${ro(caps.structure)}></label>
-   <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${TEAM_COLORS.map(c=>`<button type="button" class="te-swatch ${c.toLowerCase()===d.color.toLowerCase()?'on':''}" style="--c:${c}" data-color="${c}" aria-label="Farbe ${c}" ${ro(caps.color)}>${icon('check')}</button>`).join('')}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="te-color" value="${/^#[0-9a-f]{6}$/i.test(d.color)?d.color:'#14a1a9'}" ${ro(caps.color)}><span>Eigene</span></label></div></div>
+   <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${teamColorSwatches(d.color,t.id,ro(caps.color))}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="te-color" value="${/^#[0-9a-f]{6}$/i.test(d.color)?d.color:'#14a1a9'}" ${ro(caps.color)}><span>Eigene</span></label></div>${colorMsg?`<small class="wp-note tc-msg">${colorMsg}</small>`:''}<small class="wp-note">Wird auch für die Bereitschaft verwendet. Jede Farbe gibt es nur einmal.</small></div>
    <div class="te-two"><div class="wp-field"><span class="wp-label">Teamleitung</span>${caps.structure?personPicker({id:'te-lead',people:mem().map(p=>({name:p[0],sub:visibleRole(p[10])})),value:nameOf(d.leaderId),noneLabel:'Nicht besetzt',placeholder:'Nicht besetzt'}):`<div class="wp-me">${d.leaderId?avatarHtml(nameOf(d.leaderId),'var(--accent-color)',30):''}<div><b>${escapeHtml(nameOf(d.leaderId)||'Nicht besetzt')}</b></div></div>`}</div>
    <div class="wp-field"><span class="wp-label">Deputy</span>${caps.structure?personPicker({id:'te-dep',people:mem().map(p=>({name:p[0],sub:visibleRole(p[10])})),value:nameOf(d.deputyId),noneLabel:'Nicht besetzt',placeholder:'Nicht besetzt'}):`<div class="wp-me">${d.deputyId?avatarHtml(nameOf(d.deputyId),'var(--accent-color)',30):''}<div><b>${escapeHtml(nameOf(d.deputyId)||'Nicht besetzt')}</b></div></div>`}</div></div>
    ${caps.structure?'<small class="muted">Teamleitung und Deputy werden aus den Mitgliedern gewählt. Ein Deputy kann nur einem Team zugeordnet sein.</small>':'<small class="muted">Name, Verantwortliche und Mitglieder ändert die Administration.</small>'}</div>`;
@@ -2921,8 +2946,9 @@ function openTeamEditor(id,startTab){
   layer.querySelectorAll('[data-te-close]').forEach(b=>b.onclick=()=>close());
   layer.querySelectorAll('[data-te-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.teTab;draw();layer.querySelector(`[data-te-tab="${tab}"]`)?.focus()});
   const nm=layer.querySelector('#te-name');if(nm)nm.oninput=()=>{d.name=nm.value;const h=layer.querySelector('#te-title');if(h)h.textContent=nm.value||'Team'};
-  layer.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{d.color=b.dataset.color;draw()});
-  const cc=layer.querySelector('#te-color');if(cc)cc.onchange=()=>{d.color=cc.value;draw()};
+  const setTc=c=>{const f=distinctTeamColor(c,t.id);colorMsg=f!==String(c).toLowerCase()?tcNote(c,f,t.id):'';d.color=f;draw()};
+  layer.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>setTc(b.dataset.color));
+  const cc=layer.querySelector('#te-color');if(cc)cc.onchange=()=>setTc(cc.value);
   bindPersonPicker(layer);
   const lp=layer.querySelector('#te-lead');if(lp)lp.addEventListener('change',()=>{const id=staff.find(p=>p[0]===lp.value)?.[8]||'';if(id&&id===d.deputyId)d.deputyId='';d.leaderId=id;draw()});
   const dp=layer.querySelector('#te-dep');if(dp)dp.addEventListener('change',()=>{const id=staff.find(p=>p[0]===dp.value)?.[8]||'';if(id&&teams.some(o=>o.id!==t.id&&o.deputyId===id)){toast('Ein Deputy kann nur einem einzigen Team zugeordnet werden.');draw();return}if(id&&id===d.leaderId)d.leaderId='';d.deputyId=id;draw()});
@@ -2947,7 +2973,7 @@ function openTeamEditor(id,startTab){
     if(c.structure){
      if(name!==t.name){const old=t.name;assignments.forEach(a=>{if(a.team===old)a.team=name});shiftTypes.forEach(x=>{if(x.team===old)x.team=name});staff.forEach(p=>{if(p[5]===old)p[5]=name});calendarTeams=calendarTeams.map(x=>x===old?name:x);persistAssignments();save('dienstplanShiftTypes',shiftTypes);persistStaff();t.name=name}
      t.memberIds=[...d.memberIds];t.leaderId=d.leaderId;t.deputyId=d.deputyId}
-    if(c.color)t.standbyColor=d.color;
+    if(c.color&&d.color.toLowerCase()!==teamColor(t).toLowerCase())t.standbyColor=distinctTeamColor(d.color,t.id);
     t.settings={swap:d.swap,selfDuty:d.selfDuty,selfDutyIds:d.selfDutyIds.filter(x=>memSet.has(x)),selfStandby:d.selfStandby,selfStandbyIds:d.selfStandbyIds.filter(x=>memSet.has(x))};
     persistTeams();
    }catch(e){Object.assign(t,JSON.parse(snap));toast('Speichern nicht möglich.');return}
@@ -3259,7 +3285,6 @@ function bindStandbyAdmin(){
  const on=(sel,fn)=>content.querySelectorAll(sel).forEach(fn);
  ['sb-new-time','sb-new-time-empty'].forEach(id=>{const b=document.getElementById(id);if(b)b.onclick=()=>openStandbyTime(null)});
  on('[data-sb-edit-time]',b=>b.onclick=()=>openStandbyTime(b.dataset.sbEditTime));
- on('[data-sb-color]',b=>b.onclick=()=>openStandbyColor(b.dataset.sbColor));
  on('[data-sb-delete-time]',b=>b.onclick=async()=>{if(!standbyTimesEditable())return;const t=standbyTimes.find(x=>x.id===b.dataset.sbDeleteTime);if(!t||!await ask(`Bereitschaftszeit „${t.name}“ löschen? Bestehende Bereitschaftseinträge bleiben erhalten.`,'Löschen'))return;
   standbyTimes=standbyTimes.filter(x=>x.id!==t.id);persistStandbyConfig();audit('Gelöscht','Bereitschaftszeiten',`${t.name} (${tRange(t)})`,{title:'Bereitschaftszeit gelöscht',object:t.name,before:tRange(t)});render();toast('Bereitschaftszeit gelöscht.')});
 }
@@ -3316,7 +3341,7 @@ const HELP_SECTIONS=[
   {t:'Teamnotizen',s:['Notizen für ein ganzes Team stehen im Kalender direkt unter dem Datum (z. B. „Teambesprechung 09:00“).','Klicke darauf, um alle Teamnotizen des Tages zu sehen.'],tip:c=>teamNoteTeams().length?'Neue Teamnotiz: Fahre über das Datum und klicke auf „+ Teamnotiz“ – oder im Teamnotizen-Popup auf „Weitere Teamnotiz hinzufügen“.':''},
   {t:'Notiz hinzufügen',s:['Hast du an dem Tag einen Dienst, klicke bei deinem Dienst auf „⋯“ und wähle „Notiz hinzufügen“. Die Notiz hängt dann an diesem Dienst.','Hast du an dem Tag keinen Dienst, klicke im Kalender auf das Feld „Notiz hinzufügen“.','Schreibe die Notiz und speichere. Im Notizen-Popup kannst du sie später bearbeiten, löschen oder weitere hinzufügen.'],tip:c=>c.admin?'Als Admin kannst du Notizen für alle Personen anlegen.':['Teamleiter','Deputy'].includes(currentRole)?'Notizen kannst du für dich selbst und für Personen deiner Teams anlegen.':'Notizen kannst du für dich selbst anlegen.'},
   {t:'Einträge verschieben',when:c=>c.plan,s:['Ziehe einen Eintrag mit der Maus auf einen anderen Tag oder zu einer anderen Person im selben Team.','Lass los – der Eintrag wird verschoben. Strg Z nimmt es zurück.']},
-  {t:'Rotation automatisch planen',when:c=>c.plan,s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Dienste und den Zeitraum.','Die Dienste werden gleichmäßig auf die Teammitglieder verteilt; Abwesende werden übersprungen.','Kontrolliere das Ergebnis im Kalender – mit Strg Z lässt sich die ganze Rotation zurücknehmen.']},
+  {t:'Rotation automatisch planen',when:c=>c.plan&&featureOn('rotationDuty'),s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Dienste und den Zeitraum.','Die Dienste werden gleichmäßig auf die Teammitglieder verteilt; Abwesende werden übersprungen.','Kontrolliere das Ergebnis im Kalender – mit Strg Z lässt sich die ganze Rotation zurücknehmen.']},
   {t:'Abwesenheit eintragen',when:c=>c.absence,s:['Klicke auf „Abwesenheit“.','Wähle Mitarbeiter und Art (z. B. Urlaub, Zeitausgleich, Arztbesuch). Bei stundenweisen Arten gibst du zusätzlich die Uhrzeit an.','Wähle den Zeitraum und speichere – die Abwesenheit erscheint beim Mitarbeiter im Kalender.']},
   {t:'Arbeitsort eintragen (Büro / Homeoffice)',s:['Klicke auf „Arbeitsort“.','Wähle Büro oder Homeoffice und den Zeitraum – eingetragen wird Montag bis Freitag.','Schneller geht es in der Wochen- oder Monatsansicht: Mit gedrückter Maustaste über mehrere Tage ziehen, um den Zeitraum zu markieren.']},
   {t:'Dienst tauschen',when:c=>c.swap,s:['Klicke bei deinem Dienst im „⋯“-Menü auf „Dienst tauschen“.','Wähle die Kollegin bzw. den Kollegen und den Dienst, den du dafür übernimmst.','Getauscht wird erst, wenn die andere Person zustimmt. Offene Anfragen bestätigst, lehnst ab oder ziehst zurück in der Übersicht „Diensttausch“ (Dashboard-Kachel oder Benachrichtigung).'],tip:'Der Diensttausch muss für dein Team in der Administration aktiviert sein.'},
@@ -3325,14 +3350,13 @@ const HELP_SECTIONS=[
  {id:'bereitschaft',page:'Bereitschaft',icon:'moon',title:'Bereitschaft',intro:'Wer wann Bereitschaft hat – und wie man sie einteilt.',items:[
   {t:'Ansichten und Zeitleiste',s:['Wähle Tag, Woche, Monat oder Zeitleiste.','Die Zeitleiste zeigt pro Team, wer an welchem Tag Bereitschaft hat.','Mit ‹ › und „Heute“ wechselst du den Zeitraum.']},
   {t:'Bereitschaft einteilen',when:c=>c.planSb||c.selfSb,s:['Klicke auf „Bereitschaft einteilen“ – oder im Kalender bei der Person und dem Tag auf „+“.','Wähle Team, Mitarbeiter und Bereitschaftszeit – angeboten werden nur die Bereitschaftszeiten, die für dieses Team freigegeben sind.','Bei einer fixen Bereitschaft wird die Uhrzeit übernommen. Bei einer variablen Bereitschaft musst du Beginn und Ende selbst eingeben.','Wähle das Datum bzw. den Zeitraum und speichere.']},
-  {t:'Bereitschafts-Rotation planen',when:c=>c.planSb,s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Bereitschaftszeit, Zeitraum und ob wöchentlich oder täglich gewechselt wird. Die Bereitschaftszeit muss für alle gewählten Teams freigegeben sein.','Bei einer variablen Bereitschaft gibst du die Uhrzeit einmal für alle Einträge ein.','Mit „Bestehende Einträge behalten“ werden nur Lücken gefüllt.']},
+  {t:'Bereitschafts-Rotation planen',when:c=>c.planSb&&featureOn('rotationStandby'),s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Bereitschaftszeit, Zeitraum und ob wöchentlich oder täglich gewechselt wird. Die Bereitschaftszeit muss für alle gewählten Teams freigegeben sein.','Bei einer variablen Bereitschaft gibst du die Uhrzeit einmal für alle Einträge ein.','Mit „Bestehende Einträge behalten“ werden nur Lücken gefüllt.']},
   {t:'Bereitschaft bearbeiten oder löschen',when:c=>c.planSb||c.selfSb,s:['Klicke auf den Eintrag oder auf „⋯“.','Wähle „Bearbeiten“ oder „Löschen“.']},
   {t:'Bereitschaft erreichen',s:['Fahre über einen Bereitschaftseintrag oder öffne ihn.','Über die Telefonnummer bzw. „Anrufen“ erreichst du die Person direkt.']}
  ]},
- {id:'sbadmin',page:'Bereitschaft verwalten',icon:'sliders',title:'Bereitschaft verwalten',intro:'Bereitschaftszeiten je Team und Teamfarben.',items:[
+ {id:'sbadmin',page:'Bereitschaft verwalten',icon:'sliders',title:'Bereitschaft verwalten',intro:'Bereitschaftszeiten je Team. Bereitschaften verwenden automatisch die Teamfarbe.',items:[
   {t:'Bereitschaftszeit anlegen',when:c=>c.sbTimes,s:['Klicke oben auf „Bereitschaftszeit anlegen“.','Gib eine Bezeichnung ein, z. B. „Nachtbereitschaft“.','Wähle unter „Teams mit dieser Bereitschaft“ die Teams aus – nur diese Teams können die Bereitschaft später einteilen. „Alle Teams“ gilt auch für später angelegte Teams.','Wähle die Art: „Fix“ – Beginn und Ende sind Pflicht (über Mitternacht möglich). „Variabel“ – ohne Uhrzeit, sie wird erst beim Einteilen eingegeben.','Wähle eine Farbe für die Übersicht und klicke auf „Bereitschaftszeit anlegen“.']},
   {t:'Bereitschaftszeit ändern oder löschen',when:c=>c.sbTimes,s:['In der Tabelle „Bereitschaftszeiten“ klickst du beim Eintrag auf den Stift, um Bezeichnung, Teams, Art, Uhrzeit oder Farbe zu ändern.','Mit dem Papierkorb löschst du die Bereitschaftszeit.'],tip:'Bereits eingeteilte Bereitschaften bleiben beim Ändern oder Löschen erhalten.'},
-  {t:'Bereitschaftsfarbe eines Teams ändern',when:c=>c.sbColors,s:['Klicke unter „Bereitschaftsfarben“ bei deinem Team auf „Ändern“.','Wähle eine Farbe oder „Eigene“ – die Vorschau zeigt, wie der Eintrag im Kalender aussieht.','Klicke auf „Speichern“. Die Farbe gilt für alle Bereitschaftseinträge des Teams.'],tip:c=>c.admin?'Als Admin änderst du die Farbe aller Teams.':'Du kannst die Farbe der Teams ändern, die du leitest. Bereitschaftszeiten legt die Administration fest.'},
   {t:'Übersicht lesen',when:c=>!c.sbTimes,s:['Die Tabelle zeigt alle Bereitschaftszeiten mit Uhrzeit und den Teams, für die sie gelten.','„Fix“ bedeutet feste Uhrzeit, „Variabel“ eine Uhrzeit, die beim Einteilen eingegeben wird.','„Teams mit Bereitschaft“ zeigt, wie viele Teams mindestens eine Bereitschaftszeit haben.']}
  ]},
  {id:'dienstzeiten',page:'Dienstzeiten',icon:'clock',title:'Dienstzeiten',intro:'Schichtmodelle pro Team, die beim Einteilen zur Auswahl stehen.',items:[
@@ -3354,7 +3378,7 @@ const HELP_SECTIONS=[
  {id:'administration',page:'Administration',icon:'build',title:'Administration',intro:'Teams, Verantwortliche, Mitglieder und Teamregeln.',items:[
   {t:'Teams finden',s:['Über das Suchfeld findest du Teams oder Personen.','„Vollständig“ und „Offen“ filtern nach Teams mit bzw. ohne Teamleitung.']},
   {t:'Team anlegen',when:c=>c.adminCaps.create,s:['Klicke auf „Team anlegen“.','Gib den Teamnamen ein, wähle eine Teamfarbe und optional eine Abteilung.','Klicke auf „Team anlegen“ – danach legst du Mitglieder, Teamleitung und Deputy fest.']},
-  {t:'Abteilung anlegen',when:c=>c.adminCaps.dept,s:['Klicke auf „Abteilung anlegen“.','Gib Name und Farbe ein, wähle die Abteilungsleitung (Rolle „Abteilungsleiter“) und hake die Teams an.','Klicke auf „Anlegen“.']},
+  {t:'Abteilung anlegen',when:c=>c.adminCaps.dept,s:['Klicke auf „Abteilung anlegen“.','Gib den Namen ein, wähle die Abteilungsleitung (Rolle „Abteilungsleiter“) und hake die Teams an.','Klicke auf „Anlegen“.']},
   {t:'Mitglieder, Teamleitung und Deputy festlegen',when:c=>c.adminCaps.structure,s:['Klicke bei einem Team auf „Bearbeiten“.','Im Reiter „Mitglieder“ fügst du Personen hinzu oder entfernst sie.','Im Reiter „Allgemein“ wählst du Teamleitung und Deputy aus den Mitgliedern.','Klicke auf „Speichern“.'],tip:'Ein Deputy kann nur einem Team zugeordnet sein.'},
   {t:'Teamregeln einstellen',when:c=>c.adminCaps.settings,s:['Klicke bei deinem Team auf „Bearbeiten“ und öffne den Reiter „Teamregeln“.','„Diensttausch“: erlaubt Mitarbeitern, Dienste untereinander zu tauschen – erst nach Bestätigung der anderen Person.','„Selbst eintragen“: legt fest, ob niemand, alle oder ausgewählte Mitglieder eigene Dienste bzw. Bereitschaften selbst eintragen dürfen.','Klicke auf „Speichern“.']},
   {t:'Teams ansehen',when:c=>!c.adminCaps.settings,s:['Klicke bei einem Team auf „Ansehen“, um Mitglieder und Regeln zu sehen.']}
@@ -3540,7 +3564,7 @@ function openStandbyContact(id){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-sb-open]');if(!b||e.target.closest('.duty-actions,a,button:not([data-sb-open]),input,select,label'))return;if(document.body.classList.contains('dp-range-dragging'))return;e.preventDefault();openStandbyContact(b.dataset.sbOpen)});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-sb-open]')){e.preventDefault();openStandbyContact(e.target.dataset.sbOpen)}});
 /* ===== Live-Sync: Änderungen aus anderen Fenstern/Tabs sofort übernehmen (storage-Ereignis) ===== */
-const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},dienstplanTeamNotes:()=>{teamNotes=__ld_teamNotes()},
+const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},dienstplanTeamNotes:()=>{teamNotes=__ld_teamNotes()},dienstplanFeatures:()=>{features=__ld_features()},
  dienstplanShiftTypes:()=>{const v=__ld_shiftTypesParse(load('dienstplanShiftTypes',null));if(v)shiftTypes=v},dienstplanStandbyGroups:()=>{standbyGroups=__ld_standbyGroups()},dienstplanStandbyTimes:()=>{standbyTimes=__ld_standbyTimes()},
  dienstplanSwaps:()=>{swaps=__ld_swaps()},dienstplanNotifications:()=>{notifications=__ld_notifications()},dienstplanRoles:()=>{roles=__ld_roles()},dienstplanPermissions:()=>{permissions=__ld_permissions()},
  dienstplanAuditLog:()=>{const v=load('dienstplanAuditLog',[]);auditLog=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]},dienstplanExportLog:()=>{const v=load('dienstplanExportLog',[]);exportLog=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]}};
