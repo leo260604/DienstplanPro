@@ -2486,3 +2486,21 @@ body.dp-range-dragging{cursor:cell}
 .ca-shift-row .ca-shift-name{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ca-shift-row .ca-time-inline{flex:none;font-variant-numeric:tabular-nums;font-weight:600;opacity:.9}
 
+/* Bereitschaft: Kontakt-Popup (im Stil der übrigen Dialoge) */
+[data-sb-open]{cursor:pointer}
+[data-sb-open]:focus-visible{outline:2px solid var(--accent-color);outline-offset:2px}
+.sbc-modal{width:min(460px,100%)}
+.sbc-person{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.sbc-person>span{display:flex;flex-direction:column;min-width:0}
+.sbc-person b{font-size:15px}
+.sbc-person small{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px}
+.sbc-live{margin-left:auto;background:color-mix(in srgb,#1f9a63 14%,var(--surface));color:#1f9a63;font-weight:700;white-space:nowrap}
+.sbc-value{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.sbc-value .ic{width:17px;height:17px;color:var(--accent-color);flex:none}
+.sbc-value b{font-size:14.5px;font-variant-numeric:tabular-nums}
+.sbc-modal .wp-actions{justify-content:flex-end}
+.sbc-modal .wp-actions-right{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.sbc-modal .wp-actions .btn{text-decoration:none}
+.sbc-teams{color:#4b53bc;border-color:color-mix(in srgb,#4b53bc 35%,var(--line));background:color-mix(in srgb,#4b53bc 7%,var(--surface))}
+.sbc-modal .is-off{opacity:.45;pointer-events:none}
+@media (max-width:560px){.sbc-live{display:none}.sbc-modal .wp-actions-right{width:100%}.sbc-modal .wp-actions-right .btn{flex:1;justify-content:center}}
