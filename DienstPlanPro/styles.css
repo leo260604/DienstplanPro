@@ -2061,6 +2061,55 @@ body.dark-mode .wp-box.office .wp-ic{color:#7fb2ea}
 @container (max-width:250px){.contact-teams .teams-btn .ic{display:none}.contact-teams .teams-btn{font-size:12px}}
 @container (max-width:215px){.contact-tile-links .contact-teams{grid-template-columns:1fr}.contact-teams .teams-btn .ic{display:inline-block}}
 .contact-tile-name b{white-space:normal;overflow-wrap:break-word}
+/* ===== Export-Dialog ===== */
+.export-modal{width:min(640px,100%);padding:0!important;overflow:hidden;display:flex;flex-direction:column;max-height:min(92vh,860px)}
+.export-head{display:flex;align-items:center;gap:14px;padding:20px 22px 16px;border-bottom:1px solid var(--line)}
+.export-head h2{margin:0;font-size:18px}
+.export-head small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.export-head .icon-btn{margin-left:auto;font-size:22px;line-height:1}
+.export-head-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-color);flex:none}
+.export-head-ic .ic{width:20px;height:20px}
+.export-body{padding:16px 22px 6px;overflow:auto}
+.export-label{font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 0 8px}
+.export-list{display:grid;gap:8px;margin-bottom:18px}
+.export-opt{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.export-opt:hover{border-color:color-mix(in srgb,var(--accent-color) 45%,var(--line))}
+.export-opt.on{border-color:var(--accent-color);background:color-mix(in srgb,var(--accent-color) 7%,var(--surface));box-shadow:0 0 0 3px var(--accent-ring)}
+.export-opt[data-empty]{opacity:.6}
+.export-opt-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent-color)}
+.export-opt-ic .ic{width:18px;height:18px}
+.export-opt-ic.tone-standby{background:#ece9fa;color:#6c5ccf}
+.export-opt-ic.tone-absence{background:#f8eedf;color:#c27a12}
+.export-opt-ic.tone-workplace{background:#e4ecf8;color:#3974c6}
+body.dark-mode .export-opt-ic.tone-standby{background:rgba(108,92,207,.2);color:#a99df0}
+body.dark-mode .export-opt-ic.tone-absence{background:rgba(194,122,18,.2);color:#e9b15f}
+body.dark-mode .export-opt-ic.tone-workplace{background:rgba(57,116,198,.22);color:#86b0ea}
+.export-opt-text{display:flex;flex-direction:column;min-width:0;flex:1}
+.export-opt-text b{font-size:14px}
+.export-opt-text small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.export-opt-count{flex:none;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface-3);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.export-formats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.export-fmt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.export-fmt .ic{width:20px;height:20px;color:var(--muted)}
+.export-fmt b{font-size:14px}
+.export-fmt small{font-size:11px;color:var(--muted);text-align:center}
+.export-fmt.on{border-color:var(--accent-color);background:color-mix(in srgb,var(--accent-color) 7%,var(--surface));box-shadow:0 0 0 3px var(--accent-ring)}
+.export-fmt.on .ic{color:var(--accent-color)}
+.export-note{display:flex;align-items:center;gap:8px;min-height:20px;margin:12px 0 4px;font-size:12.5px;color:var(--muted)}
+.export-note:empty{display:none}
+.export-note .ic{width:15px;height:15px;color:var(--amber);flex:none}
+.export-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 18px;border-top:1px solid var(--line);background:var(--surface-2)}
+.export-actions .btn:disabled{opacity:.5;cursor:not-allowed}
+.tpl-formats{display:flex;gap:4px;margin-top:6px}
+.tpl-formats i{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+@media (max-width:700px){
+  .export-modal{max-height:94vh}
+  .export-head,.export-body,.export-actions{padding-left:16px;padding-right:16px}
+  .export-opt-text small{white-space:normal}
+  .export-opt-count{display:none}
+  .export-fmt small{display:none}
+  .export-actions .btn{flex:1;justify-content:center}
+}
 /* Neues Team anlegen */
 .nt-modal{width:min(520px,100%)}
 .nt-input{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px 0 8px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color .15s,box-shadow .15s}

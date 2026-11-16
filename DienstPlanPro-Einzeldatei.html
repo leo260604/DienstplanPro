@@ -2069,6 +2069,55 @@ body.dark-mode .wp-box.office .wp-ic{color:#7fb2ea}
 @container (max-width:250px){.contact-teams .teams-btn .ic{display:none}.contact-teams .teams-btn{font-size:12px}}
 @container (max-width:215px){.contact-tile-links .contact-teams{grid-template-columns:1fr}.contact-teams .teams-btn .ic{display:inline-block}}
 .contact-tile-name b{white-space:normal;overflow-wrap:break-word}
+/* ===== Export-Dialog ===== */
+.export-modal{width:min(640px,100%);padding:0!important;overflow:hidden;display:flex;flex-direction:column;max-height:min(92vh,860px)}
+.export-head{display:flex;align-items:center;gap:14px;padding:20px 22px 16px;border-bottom:1px solid var(--line)}
+.export-head h2{margin:0;font-size:18px}
+.export-head small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.export-head .icon-btn{margin-left:auto;font-size:22px;line-height:1}
+.export-head-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-color);flex:none}
+.export-head-ic .ic{width:20px;height:20px}
+.export-body{padding:16px 22px 6px;overflow:auto}
+.export-label{font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 0 8px}
+.export-list{display:grid;gap:8px;margin-bottom:18px}
+.export-opt{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.export-opt:hover{border-color:color-mix(in srgb,var(--accent-color) 45%,var(--line))}
+.export-opt.on{border-color:var(--accent-color);background:color-mix(in srgb,var(--accent-color) 7%,var(--surface));box-shadow:0 0 0 3px var(--accent-ring)}
+.export-opt[data-empty]{opacity:.6}
+.export-opt-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent-color)}
+.export-opt-ic .ic{width:18px;height:18px}
+.export-opt-ic.tone-standby{background:#ece9fa;color:#6c5ccf}
+.export-opt-ic.tone-absence{background:#f8eedf;color:#c27a12}
+.export-opt-ic.tone-workplace{background:#e4ecf8;color:#3974c6}
+body.dark-mode .export-opt-ic.tone-standby{background:rgba(108,92,207,.2);color:#a99df0}
+body.dark-mode .export-opt-ic.tone-absence{background:rgba(194,122,18,.2);color:#e9b15f}
+body.dark-mode .export-opt-ic.tone-workplace{background:rgba(57,116,198,.22);color:#86b0ea}
+.export-opt-text{display:flex;flex-direction:column;min-width:0;flex:1}
+.export-opt-text b{font-size:14px}
+.export-opt-text small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.export-opt-count{flex:none;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface-3);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.export-formats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.export-fmt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.export-fmt .ic{width:20px;height:20px;color:var(--muted)}
+.export-fmt b{font-size:14px}
+.export-fmt small{font-size:11px;color:var(--muted);text-align:center}
+.export-fmt.on{border-color:var(--accent-color);background:color-mix(in srgb,var(--accent-color) 7%,var(--surface));box-shadow:0 0 0 3px var(--accent-ring)}
+.export-fmt.on .ic{color:var(--accent-color)}
+.export-note{display:flex;align-items:center;gap:8px;min-height:20px;margin:12px 0 4px;font-size:12.5px;color:var(--muted)}
+.export-note:empty{display:none}
+.export-note .ic{width:15px;height:15px;color:var(--amber);flex:none}
+.export-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 18px;border-top:1px solid var(--line);background:var(--surface-2)}
+.export-actions .btn:disabled{opacity:.5;cursor:not-allowed}
+.tpl-formats{display:flex;gap:4px;margin-top:6px}
+.tpl-formats i{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+@media (max-width:700px){
+  .export-modal{max-height:94vh}
+  .export-head,.export-body,.export-actions{padding-left:16px;padding-right:16px}
+  .export-opt-text small{white-space:normal}
+  .export-opt-count{display:none}
+  .export-fmt small{display:none}
+  .export-actions .btn{flex:1;justify-content:center}
+}
 /* Neues Team anlegen */
 .nt-modal{width:min(520px,100%)}
 .nt-input{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px 0 8px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color .15s,box-shadow .15s}
@@ -2405,7 +2454,7 @@ const EN={
  // Dienstzeiten
  'Schichtmodelle pro Team – stehen beim Einteilen als Auswahl zur Verfügung.':'Shift templates per team – available when scheduling.','＋ Dienstzeit erstellen':'＋ Create shift time','Dienstzeit erstellen':'Create shift time','Dienstzeit bearbeiten':'Edit shift time','Dienstzeit suchen …':'Search shift time …','z. B. 1A Dienst':'e.g. Shift 1A','Farbe auswählen':'Choose colour','Eigene Farbe wählen':'Pick custom colour','Farbvorschläge':'Colour suggestions','Vorschau der Dienstfarbe':'Shift colour preview','Vorschau':'Preview','Für diese Auswahl sind noch keine Dienstzeiten angelegt.':'No shift times for this selection yet.','Für dich sind keine Teams zur Bearbeitung zugeordnet.':'No teams are assigned to you for editing.','Bitte wende dich an die Administration.':'Please contact your administrator.',
  // Kontakte
- 'Mitarbeiter & Kontakte':'Employees & contacts','Meine Favoriten':'My favourites','Alle Rollen':'All roles','Alle Arten':'All types','Vorherige Favoriten':'Previous favourites','Weitere Favoriten':'More favourites','Suchergebnisse':'Search results','Teams-Chat':'Teams chat','Teams-Telefonnummer':'Teams phone number','(Teams Anruf)':'(Teams call)','Keine E-Mail hinterlegt':'No email on file','Keine Bereitschaftsnummer hinterlegt':'No on-call number on file','Bereitschaftsnummer':'On-call number','Chat in Microsoft Teams starten':'Start chat in Microsoft Teams','Anruf in Microsoft Teams starten':'Start call in Microsoft Teams','Anruf':'Call','Chat':'Chat','Teams':'Teams','Kontakt':'Contact','Teams-Anruf':'Teams call','Aus Favoriten entfernen':'Remove from favourites','Zu Favoriten hinzufügen':'Add to favourites','Suche nach Name, Team, Telefon oder E-Mail, um Kontakte anzuzeigen.':'Search by name, team, phone or email to show contacts.','Noch keine Favoriten. Tippe bei einem Kontakt auf den Stern, um ihn hier anzuzeigen.':'No favourites yet. Tap the star on a contact to show it here.','Treffer':'results','CSV exportieren':'Export CSV','＋ Mitarbeiter hinzufügen':'＋ Add employee','Name, Team, Telefon oder E-Mail …':'Name, team, phone or email …','Teams':'Teams','Keine Mitarbeiter gefunden.':'No employees found.','Mitarbeiter hinzufügen':'Add employee','Mitarbeiter bearbeiten':'Edit employee','Vor- und Nachname':'First and last name','Benutzerrolle':'User role','Profilbild wählen':'Choose profile photo','Teams zuordnen':'Assign teams',
+ 'Mitarbeiter & Kontakte':'Employees & contacts','Meine Favoriten':'My favourites','Exportieren':'Export','Was möchtest du exportieren?':'What would you like to export?','Format':'Format','Zum Lesen & Drucken':'For reading & printing','Formatiert, mit Summen':'Formatted, with totals','Rohdaten für Importe':'Raw data for imports','Alle Einträge':'All entries','Alle gefilterten Einträge mit Art, Dienst & Uhrzeit':'All filtered entries with type, shift & time','Ausgewählte Einträge':'Selected entries','Nur die angehakten Zeilen':'Only the checked rows','Monatsbericht Lohnverrechnung':'Monthly payroll report','Dienste, Bereitschaften & Abwesenheiten je Mitarbeiter':'Shifts, on-call & absences per employee','Bereitschaftsabrechnung':'On-call statement','Bereitschaftstage & -stunden je Team':'On-call days & hours per team','Abwesenheitsübersicht':'Absence overview','Urlaub & Abwesenheiten je Mitarbeiter':'Leave & absences per employee','Stunden je Mitarbeiter':'Hours per employee','Dienst- & Bereitschaftsstunden im Zeitraum':'Shift & on-call hours in the period','Arbeitsort-Monatsauswertung':'Work location monthly report','Büro- & Homeoffice-Tage je Mitarbeiter':'Office & home office days per employee','Abbrechen':'Cancel','Für diesen Bericht gibt es im gewählten Zeitraum keine Daten.':'There is no data for this report in the selected period.','CSV enthält nur die Werte – Farben und Spaltenbreiten kann das Format nicht speichern.':'CSV only contains the values – the format cannot store colours or column widths.','Keine Daten für diesen Bericht im gewählten Zeitraum.':'No data for this report in the selected period.','Vorlagen verwenden den oben gewählten Zeitraum, Teams und Mitarbeiter. Das Format wählst du im Export-Fenster.':'Templates use the period, teams and employees selected above. Choose the format in the export window.','Alle Rollen':'All roles','Alle Arten':'All types','Vorherige Favoriten':'Previous favourites','Weitere Favoriten':'More favourites','Suchergebnisse':'Search results','Teams-Chat':'Teams chat','Teams-Telefonnummer':'Teams phone number','(Teams Anruf)':'(Teams call)','Keine E-Mail hinterlegt':'No email on file','Keine Bereitschaftsnummer hinterlegt':'No on-call number on file','Bereitschaftsnummer':'On-call number','Chat in Microsoft Teams starten':'Start chat in Microsoft Teams','Anruf in Microsoft Teams starten':'Start call in Microsoft Teams','Anruf':'Call','Chat':'Chat','Teams':'Teams','Kontakt':'Contact','Teams-Anruf':'Teams call','Aus Favoriten entfernen':'Remove from favourites','Zu Favoriten hinzufügen':'Add to favourites','Suche nach Name, Team, Telefon oder E-Mail, um Kontakte anzuzeigen.':'Search by name, team, phone or email to show contacts.','Noch keine Favoriten. Tippe bei einem Kontakt auf den Stern, um ihn hier anzuzeigen.':'No favourites yet. Tap the star on a contact to show it here.','Treffer':'results','CSV exportieren':'Export CSV','＋ Mitarbeiter hinzufügen':'＋ Add employee','Name, Team, Telefon oder E-Mail …':'Name, team, phone or email …','Teams':'Teams','Keine Mitarbeiter gefunden.':'No employees found.','Mitarbeiter hinzufügen':'Add employee','Mitarbeiter bearbeiten':'Edit employee','Vor- und Nachname':'First and last name','Benutzerrolle':'User role','Profilbild wählen':'Choose profile photo','Teams zuordnen':'Assign teams',
  // Teamverwaltung
  'Teamverwaltung':'Team management','Teams, Mitglieder und Verantwortlichkeiten zentral verwalten.':'Manage teams, members and responsibilities in one place.','Teams gesamt':'Teams in total','Zugeordnete Mitarbeiter':'Assigned employees','Teamleiter bestimmt':'Team leads assigned','Deputy bestimmt':'Deputies assigned','Neues Team erstellen':'Create new team','Anschließend Mitglieder und Verantwortliche in der Teamkarte zuordnen.':'Then assign members and leads in the team card.','Teamname, z. B. Team Ost':'Team name, e.g. Team East','Teamname':'Team name','＋ Team erstellen':'＋ Create team','Team oder Mitarbeiter suchen …':'Search team or employee …','Vollständig eingerichtet':'Fully set up','Vollständig':'Complete','Deputy fehlt':'Deputy missing','Teamleiter fehlt':'Team lead missing','TEAMLEITER':'TEAM LEAD','DEPUTY':'DEPUTY','Noch keine Mitarbeiter zugeordnet':'No employees assigned yet','Team bearbeiten':'Edit team','Mitglieder & Zuständigkeiten':'Members & responsibilities','Mitarbeiter suchen …':'Search employee …','Deputy / Stellvertretung':'Deputy','Team löschen':'Delete team','Änderungen speichern':'Save changes','Die Teamverwaltung ist nur für Administratoren freigegeben.':'Team management is available to administrators only.','Bitte über das Profilmenü als Admin anmelden.':'Please sign in as admin via the profile menu.','Noch keine Teams vorhanden. Lege oben dein erstes Team an.':'No teams yet. Create your first team above.',
  // Berichte
@@ -2881,22 +2930,22 @@ const KIND_LIGHT={Dienst:'E3F4F5',Bereitschaft:'ECE9FA',Abwesenheit:'F8EEDF',Arb
 const KIND_ORDER=['Dienst','Bereitschaft','Abwesenheit','Arbeitsort'];
 function makeXlsx(sheetName,rows,opts={}){
  const col=i=>{let s='';i++;while(i){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
- const head=rows[0],data=rows.slice(1),nc=head.length,num=new Set(opts.numCols||[]),kc=opts.kindCol;
+ const head=rows[0],data=rows.slice(1),nc=head.length,num=new Set(opts.numCols||[]),ints=new Set(opts.intCols||[]),kc=opts.kindCol,hk=opts.headKinds||[],sums=opts.sumCols||(opts.sumCol!=null?[opts.sumCol]:[]);
  const top=opts.title?3:0,hr=top+1,first=hr+1,last=hr+data.length;
  const cell=(ref,v,st)=>typeof v==='number'&&isFinite(v)?`<c r="${ref}" s="${st}"><v>${v}</v></c>`:`<c r="${ref}" t="inlineStr" s="${st}"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
  let out='';
  if(opts.title){out+=`<row r="1" ht="22" customHeight="1">${cell('A1',opts.title,2)}</row>`;out+=`<row r="2">${cell('A2',opts.subtitle||'',3)}</row>`;}
- out+=`<row r="${hr}" ht="20" customHeight="1">${head.map((h,ci)=>cell(col(ci)+hr,h,1)).join('')}</row>`;
- data.forEach((r,i)=>{const rr=first+i;out+=`<row r="${rr}">${r.map((v,ci)=>{let st=4;if(ci===kc&&KIND_ORDER.includes(v))st=6+KIND_ORDER.indexOf(v);else if(num.has(ci)&&typeof v==='number')st=5;return cell(col(ci)+rr,v,st)}).join('')}</row>`});
+ out+=`<row r="${hr}" ht="30" customHeight="1">${head.map((h,ci)=>cell(col(ci)+hr,h,KIND_ORDER.includes(hk[ci])?13+KIND_ORDER.indexOf(hk[ci]):1)).join('')}</row>`;
+ data.forEach((r,i)=>{const rr=first+i;out+=`<row r="${rr}">${r.map((v,ci)=>{let st=4;if(ci===kc&&KIND_ORDER.includes(v))st=6+KIND_ORDER.indexOf(v);else if(ints.has(ci)&&typeof v==='number')st=12;else if(num.has(ci)&&typeof v==='number')st=5;return cell(col(ci)+rr,v,st)}).join('')}</row>`});
  let sumRow='';
- if(opts.sumCol!=null&&data.length){const rr=last+1,sc=opts.sumCol,tot=data.reduce((t,r)=>t+(typeof r[sc]==='number'?r[sc]:0),0);
-  sumRow=`<row r="${rr}">${head.map((_,ci)=>ci===sc?`<c r="${col(ci)+rr}" s="11"><f>SUM(${col(sc)}${first}:${col(sc)}${last})</f><v>${+tot.toFixed(2)}</v></c>`:cell(col(ci)+rr,ci===0?'Summe':'',10)).join('')}</row>`;}
- const widths=head.map((h,i)=>Math.min(46,Math.max(String(h).length+4,...data.slice(0,400).map(r=>String(r[i]??'').length+3),10)));
+ if(sums.length&&data.length){const rr=last+1;sumRow=`<row r="${rr}" ht="20" customHeight="1">${head.map((_,ci)=>{if(sums.includes(ci)){const tot=data.reduce((t,r)=>t+(typeof r[ci]==='number'?r[ci]:0),0);return `<c r="${col(ci)+rr}" s="${ints.has(ci)?17:11}"><f>SUM(${col(ci)}${first}:${col(ci)}${last})</f><v>${+tot.toFixed(2)}</v></c>`}return cell(col(ci)+rr,ci===0?(opts.sumLabel||'Summe'):'',10)}).join('')}</row>`;}
+ const widths=head.map((h,i)=>Math.min(46,Math.max(Math.min(String(h).length+4,24),...data.slice(0,400).map(r=>String(r[i]??'').length+3),10)));
  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="${opts.title?0:1}"><pane ySplit="${hr}" topLeftCell="A${first}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${out}${sumRow}</sheetData><autoFilter ref="A${hr}:${col(nc-1)}${Math.max(hr,last)}"/>${opts.title?`<mergeCells count="2"><mergeCell ref="A1:${col(Math.max(1,nc-1))}1"/><mergeCell ref="A2:${col(Math.max(1,nc-1))}2"/></mergeCells>`:''}<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
  const kFonts=KIND_ORDER.map(k=>`<font><b/><sz val="10"/><color rgb="FF${KIND_HEX[k]}"/><name val="Calibri"/></font>`).join('');
  const kFills=KIND_ORDER.map(k=>`<fill><patternFill patternType="solid"><fgColor rgb="FF${KIND_LIGHT[k]}"/></patternFill></fill>`).join('');
+ const kSolid=KIND_ORDER.map(k=>`<fill><patternFill patternType="solid"><fgColor rgb="FF${KIND_HEX[k]}"/></patternFill></fill>`).join('');
  const bd='<border><left style="thin"><color rgb="FFE3E8EB"/></left><right style="thin"><color rgb="FFE3E8EB"/></right><top style="thin"><color rgb="FFE3E8EB"/></top><bottom style="thin"><color rgb="FFE3E8EB"/></bottom><diagonal/></border>';
- const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts><fonts count="9"><font><sz val="10"/><color rgb="FF17242B"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="15"/><color rgb="FF17242B"/><name val="Calibri"/></font><font><sz val="10"/><color rgb="FF6B7A83"/><name val="Calibri"/></font>${kFonts}<font><b/><sz val="10"/><color rgb="FF17242B"/><name val="Calibri"/></font></fonts><fills count="8"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF14A1A9"/></patternFill></fill>${kFills}<fill><patternFill patternType="solid"><fgColor rgb="FFEEF2F4"/></patternFill></fill></fills><borders count="2"><border/>${bd}</borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="12"><xf/><xf fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf><xf fontId="2" applyFont="1"/><xf fontId="3" applyFont="1"/><xf borderId="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="164" borderId="1" applyNumberFormat="1" applyBorder="1"/>${KIND_ORDER.map((_,i)=>`<xf fontId="${4+i}" fillId="${3+i}" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>`).join('')}<xf fontId="8" fillId="7" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/><xf fontId="8" fillId="7" borderId="1" numFmtId="164" applyFont="1" applyFill="1" applyBorder="1" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+ const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts><fonts count="9"><font><sz val="10"/><color rgb="FF17242B"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="15"/><color rgb="FF17242B"/><name val="Calibri"/></font><font><sz val="10"/><color rgb="FF6B7A83"/><name val="Calibri"/></font>${kFonts}<font><b/><sz val="10"/><color rgb="FF17242B"/><name val="Calibri"/></font></fonts><fills count="12"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF14A1A9"/></patternFill></fill>${kFills}<fill><patternFill patternType="solid"><fgColor rgb="FFEEF2F4"/></patternFill></fill>${kSolid}</fills><borders count="2"><border/>${bd}</borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="18"><xf/><xf fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf fontId="2" applyFont="1"/><xf fontId="3" applyFont="1"/><xf borderId="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="164" borderId="1" applyNumberFormat="1" applyBorder="1"/>${KIND_ORDER.map((_,i)=>`<xf fontId="${4+i}" fillId="${3+i}" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>`).join('')}<xf fontId="8" fillId="7" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/><xf fontId="8" fillId="7" borderId="1" numFmtId="164" applyFont="1" applyFill="1" applyBorder="1" applyNumberFormat="1"/><xf numFmtId="3" borderId="1" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right"/></xf>${KIND_ORDER.map((_,i)=>`<xf fontId="1" fillId="${8+i}" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>`).join('')}<xf fontId="8" fillId="7" borderId="1" numFmtId="3" applyFont="1" applyFill="1" applyBorder="1" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
  const sn=xmlEsc(sheetName.slice(0,31));
  return makeZip([
   {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
@@ -2924,16 +2973,16 @@ function makePdf(title,subtitle,headers,rows,widths,opts={}){
   if(opts.legend){let lx=W-M;const items=[...opts.legend].reverse();items.forEach(k=>{const w=tw(k,7.5,true)+14;lx-=w;ops.push(`${rgb(KIND_LIGHT[k]||'EEF2F4')} rg ${lx} ${y-34} ${w-4} 13 re f`);ops.push(`BT /F2 7.5 Tf ${rgb(KIND_HEX[k]||'6B7A83')} rg ${lx+5} ${y-30} Td (${toCp(k)}) Tj ET`);lx-=2})}
   y-=62;
   ops.push(`0.078 0.631 0.663 rg ${M} ${y-5} ${W-2*M} ${LH+2} re f`);
-  let x=M;headers.forEach((h,i)=>{const t=fit(h,cw[i]-10,FS,true);const tx=right.has(i)?x+cw[i]-6-tw(t,FS,true):x+6;ops.push(`BT /F2 ${FS} Tf 1 1 1 rg ${tx} ${y+1} Td (${toCp(t)}) Tj ET`);x+=cw[i]});
+  let x=M;headers.forEach((h,i)=>{const hk=(opts.headKinds||[])[i];if(hk&&KIND_HEX[hk])ops.push(`${rgb(KIND_HEX[hk])} rg ${x} ${y-5} ${cw[i]} ${LH+2} re f`);const t=fit(h,cw[i]-10,FS,true);const tx=right.has(i)?x+cw[i]-6-tw(t,FS,true):x+6;ops.push(`BT /F2 ${FS} Tf 1 1 1 rg ${tx} ${y+1} Td (${toCp(t)}) Tj ET`);x+=cw[i]});
   y-=LH+2;
   let prevG=p>0&&gc!=null?null:undefined;
   body.slice(p*perPage,(p+1)*perPage).forEach((r,ri)=>{
-   if(r.sum){ops.push(`0.933 0.949 0.957 rg ${M} ${y-5} ${W-2*M} ${LH} re f`);let xs=M;r.sum.forEach((v,i)=>{if(v!==''&&v!=null){const t=fit(v,cw[i]-10,FS,true);const tx=right.has(i)?xs+cw[i]-6-tw(t,FS,true):xs+6;ops.push(`BT /F2 ${FS} Tf 0.09 0.141 0.169 rg ${tx} ${y} Td (${toCp(t)}) Tj ET`)}xs+=cw[i]});y-=LH;return}
+   if(r.sum){ops.push(`${r.sub?'0.965 0.973 0.976':'0.933 0.949 0.957'} rg ${M} ${y-5} ${W-2*M} ${LH} re f`);let xs=M;r.sum.forEach((v,i)=>{if(v!==''&&v!=null){const t=fit(v,cw[i]-10,FS,true);const tx=right.has(i)?xs+cw[i]-6-tw(t,FS,true):xs+6;ops.push(`BT /F2 ${FS} Tf 0.09 0.141 0.169 rg ${tx} ${y} Td (${toCp(t)}) Tj ET`)}xs+=cw[i]});y-=LH;return}
    const newGroup=gc!=null&&r[gc]!==prevG;
    if(ri%2)ops.push(`0.976 0.98 0.984 rg ${M} ${y-5} ${W-2*M} ${LH} re f`);
    ops.push(`${newGroup&&ri>0?'0.78 0.82 0.84':'0.91 0.93 0.94'} RG ${newGroup&&ri>0?0.8:0.4} w ${M} ${newGroup&&ri>0?y+LH-5:y-5} m ${W-M} ${newGroup&&ri>0?y+LH-5:y-5} l S`);
    let x2=M;r.forEach((v,i)=>{
-    if(i===kc&&KIND_HEX[v]){const t=String(v),w=tw(t,7.8,true)+12;ops.push(`${rgb(KIND_LIGHT[v])} rg ${x2+4} ${y-3} ${w} 12 re f`);ops.push(`BT /F2 7.8 Tf ${rgb(KIND_HEX[v])} rg ${x2+10} ${y} Td (${toCp(t)}) Tj ET`)}
+    const kk=i===kc?(opts.kindOf?opts.kindOf(v):v):null;if(kk&&KIND_HEX[kk]){const t=fit(v,cw[i]-16,7.8,true),w=tw(t,7.8,true)+12;ops.push(`${rgb(KIND_LIGHT[kk])} rg ${x2+4} ${y-3} ${w} 12 re f`);ops.push(`BT /F2 7.8 Tf ${rgb(KIND_HEX[kk])} rg ${x2+10} ${y} Td (${toCp(t)}) Tj ET`)}
     else{const show=i===gc&&!newGroup&&ri>0?'':v;const bold=i===gc;const t=fit(show,cw[i]-10,FS,bold);if(t){const tx=right.has(i)?x2+cw[i]-6-tw(t,FS,bold):x2+6;ops.push(`BT /${bold?'F2':'F1'} ${FS} Tf ${i===gc?'0.09 0.141 0.169':'0.2 0.247 0.275'} rg ${tx} ${y} Td (${toCp(t)}) Tj ET`)}}
     x2+=cw[i]});
    if(gc!=null)prevG=r[gc];
@@ -5661,8 +5710,8 @@ function openTeamEditor(id,startTab){
 let reportTeams=[],reportMember='Alle Mitarbeiter',reportKinds=['Dienst','Bereitschaft','Abwesenheit','Arbeitsort'],reportSel=new Set(),reportPage=0;
 const REPORT_PAGE=25;
 const kindLabel=a=>a.isAbsence?'Abwesenheit':a.kind==='Dienstplan'?'Dienst':a.kind;
-function reportRows(){
- return assignments.filter(a=>(!reportTeams.length||reportTeams.includes(a.team))&&(reportMember==='Alle Mitarbeiter'||a.employee===reportMember)&&reportKinds.includes(kindLabel(a))&&(!reportFrom||a.date>=reportFrom)&&(!reportTo||a.date<=reportTo)&&(['Admin','Abteilungsleiter','Lohnverrechnung'].includes(currentRole)||currentUserTeamNames().includes(a.team))).sort((a,b)=>b.date.localeCompare(a.date)||(a.start||'').localeCompare(b.start||'')||a.employee.localeCompare(b.employee));
+function reportRows(allKinds=false){
+ return assignments.filter(a=>(!reportTeams.length||reportTeams.includes(a.team))&&(reportMember==='Alle Mitarbeiter'||a.employee===reportMember)&&(allKinds||reportKinds.includes(kindLabel(a)))&&(!reportFrom||a.date>=reportFrom)&&(!reportTo||a.date<=reportTo)&&(['Admin','Abteilungsleiter','Lohnverrechnung'].includes(currentRole)||currentUserTeamNames().includes(a.team))).sort((a,b)=>b.date.localeCompare(a.date)||(a.start||'').localeCompare(b.start||'')||a.employee.localeCompare(b.employee));
 }
 const rangeText=()=>`${reportFrom?fmtIsoDate(reportFrom):'…'} – ${reportTo?fmtIsoDate(reportTo):'…'}`;
 const sortEntries=list=>[...list].sort((a,b)=>a.date.localeCompare(b.date)||String(a.team).localeCompare(String(b.team),'de')||String(a.employee).localeCompare(String(b.employee),'de')||String(a.start||'').localeCompare(String(b.start||''))||KIND_ORDER.indexOf(kindLabel(a))-KIND_ORDER.indexOf(kindLabel(b)));
@@ -5674,12 +5723,93 @@ function entriesPdf(list,title,sub){const rows=list.map(a=>{const d=new Date(a.d
  return makePdf(title,sub,['Datum','Mitarbeiter','Team','Art','Dienst','Uhrzeit','Std.'],rows,[1.7,2.6,1.8,1.5,2.3,1.4,0.8],{kindCol:3,rightCols:[6],groupCol:0,legend:KIND_ORDER.filter(k=>list.some(a=>kindLabel(a)===k)),sumRow:['Summe',`${list.length} Einträge`,'','','','',tot.toLocaleString(LOC(),{minimumFractionDigits:1,maximumFractionDigits:2})]})}
 function exportGuard(report,format){if(canEdit('Berichte / Export'))return true;logExport(report,format,0,'Verweigert',{range:rangeText()});toast('Keine Berechtigung zum Exportieren. Der Versuch wurde protokolliert.');return false}
 function hoursPerEmployee(list){const map={};list.forEach(a=>{const m=map[a.employee]=map[a.employee]||{team:a.team,dn:0,dh:0,sn:0,sh:0,abs:0,vac:0};if(a.isAbsence){m.abs++;if(String(a.shift).startsWith('Urlaub'))m.vac+=a.shift==='Urlaub 1/2 Tag'?0.5:1}else if(a.kind==='Dienstplan'){m.dn++;m.dh+=netHours(a)}else if(a.kind==='Bereitschaft'){m.sn++;m.sh+=durationHours(a.start,a.end)}});return Object.entries(map).sort((a,b)=>a[1].team.localeCompare(b[1].team)||a[0].localeCompare(b[0]))}
-const REPORT_TEMPLATES=[
- {id:'payroll',icon:'file',title:'Monatsbericht Lohnverrechnung',sub:'Stunden je Mitarbeiter · XLSX',run:list=>{const rows=hoursPerEmployee(list).map(([n,m])=>[n,m.team,m.dn,+m.dh.toFixed(2),m.sn,+m.sh.toFixed(2),m.vac,m.abs]);if(!rows.length)return 0;saveFile(`lohnverrechnung-${reportFrom}_${reportTo}.xlsx`,makeXlsx('Lohnverrechnung',[['Mitarbeiter','Team','Dienste','Dienststunden (netto)','Bereitschaften','Bereitschaftsstunden','Urlaubstage','Abwesenheitstage gesamt'],...rows]));return {n:rows.length,f:'XLSX'}}},
- {id:'standby',icon:'moon',title:'Bereitschaftsabrechnung',sub:'Bereitschaftsstunden je Team · PDF',run:list=>{const sb=list.filter(a=>a.kind==='Bereitschaft');const map={};sb.forEach(a=>{const k=a.team+'|'+a.employee;const m=map[k]=map[k]||{team:a.team,emp:a.employee,days:0,h:0};m.days++;m.h+=durationHours(a.start,a.end)});const rows=Object.values(map).sort((a,b)=>a.team.localeCompare(b.team)||a.emp.localeCompare(b.emp)).map(m=>[m.team,m.emp,m.days,m.h.toLocaleString(LOC(),{maximumFractionDigits:1})+' h']);if(!rows.length)return 0;const tot=Object.values(map).reduce((s,m)=>s+m.h,0);rows.push(['Gesamt','',sb.length,tot.toLocaleString(LOC(),{maximumFractionDigits:1})+' h']);saveFile(`bereitschaftsabrechnung-${reportFrom}_${reportTo}.pdf`,makePdf('Bereitschaftsabrechnung',`Zeitraum ${rangeText()} · ${reportTeams.length?reportTeams.join(', '):'Alle Teams'}`,['Team','Mitarbeiter','Tage','Stunden'],rows,[3,4,1.2,1.5],{groupCol:0,rightCols:[2,3]}));return {n:rows.length,f:'PDF'}}},
- {id:'absence',icon:'plane',title:'Abwesenheitsübersicht',sub:'Urlaub & Abwesenheiten · CSV',run:list=>{const ab=list.filter(a=>a.isAbsence).sort((a,b)=>a.employee.localeCompare(b.employee)||a.date.localeCompare(b.date));if(!ab.length)return 0;downloadCsv([['Mitarbeiter','Team','Datum','Art','Von','Bis','Bemerkung'],...ab.map(a=>[a.employee,a.team,fmtIsoDate(a.date),a.shift,a.start||'',a.end||'',a.note||''])],`abwesenheiten-${reportFrom}_${reportTo}.csv`);return {n:ab.length,f:'CSV'}}},
- {id:'hours',icon:'clock',title:'Stunden je Mitarbeiter',sub:'Dienst- & Bereitschaftsstunden · CSV',run:list=>{const rows=hoursPerEmployee(list).map(([n,m])=>[n,m.team,m.dh.toLocaleString(LOC(),{maximumFractionDigits:2}),m.sh.toLocaleString(LOC(),{maximumFractionDigits:2}),m.abs]);if(!rows.length)return 0;downloadCsv([['Mitarbeiter','Team','Dienststunden','Bereitschaftsstunden','Abwesenheitstage'],...rows],`stunden-je-mitarbeiter-${reportFrom}_${reportTo}.csv`);return {n:rows.length,f:'CSV'}}}
+const reportFilterText=()=>`${reportTeams.length?reportTeams.join(', '):'Alle Teams'}${reportMember!=='Alle Mitarbeiter'?' · '+reportMember:''}`;
+const reportStamp=()=>`erstellt ${fmtDateTime(Date.now())} von ${currentUserName()}`;
+const nfH=(v,d=1)=>(+v||0).toLocaleString(LOC(),{minimumFractionDigits:d,maximumFractionDigits:2});
+/* ===== Export-Zentrale: ein Dialog, alle Berichte in PDF / Excel / CSV ===== */
+function groupHours(list){const map={};list.forEach(a=>{const m=map[a.employee]=map[a.employee]||{team:a.team,dn:0,dh:0,sn:0,sh:0,abs:0,vac:0,off:0,ho:0};if(a.isAbsence){m.abs++;if(String(a.shift).startsWith('Urlaub'))m.vac+=a.shift==='Urlaub 1/2 Tag'?0.5:1}else if(a.kind==='Dienstplan'){m.dn++;m.dh+=netHours(a)}else if(a.kind==='Bereitschaft'){m.sn++;m.sh+=durationHours(a.start,a.end)}else if(a.kind==='Arbeitsort'){if(a.shift==='Homeoffice')m.ho++;else m.off++}});return Object.entries(map).sort((a,b)=>a[1].team.localeCompare(b[1].team,'de')||a[0].localeCompare(b[0],'de'))}
+const EXPORT_REPORTS=[
+ {id:'entries',icon:'grid',title:'Alle Einträge',sub:'Alle gefilterten Einträge mit Art, Dienst & Uhrzeit',unit:'Einträge',src:'filtered',
+  build:list=>{list=sortEntries(list);return {file:'dienstplan-eintraege',title:'Dienstplan – Einträge',head:ENTRY_HEAD,rows:list.map(entryRow),kindCol:4,numCols:[9],sumCols:[9],count:list.length,pdf:(t,sub)=>entriesPdf(list,t,sub)}}},
+ {id:'selection',icon:'check',title:'Ausgewählte Einträge',sub:'Nur die angehakten Zeilen',unit:'Einträge',src:'selection',
+  build:list=>{list=sortEntries(list);return {file:'dienstplan-auswahl',title:'Dienstplan – Auswahl',head:ENTRY_HEAD,rows:list.map(entryRow),kindCol:4,numCols:[9],sumCols:[9],count:list.length,pdf:(t,sub)=>entriesPdf(list,t,sub)}}},
+ {id:'payroll',icon:'file',title:'Monatsbericht Lohnverrechnung',sub:'Dienste, Bereitschaften & Abwesenheiten je Mitarbeiter',unit:'Mitarbeiter',template:true,
+  build:list=>{const rows=groupHours(list).filter(([,m])=>m.dn||m.sn||m.abs).map(([n,m])=>[n,m.team,m.dn,+m.dh.toFixed(2),m.sn,+m.sh.toFixed(2),m.vac,m.abs]);
+   return {file:'lohnverrechnung',title:'Monatsbericht Lohnverrechnung',head:['Mitarbeiter','Team','Dienste','Dienststunden (netto)','Bereitschaften','Bereitschaftsstunden','Urlaubstage','Abwesenheitstage'],rows,headKinds:[null,null,'Dienst','Dienst','Bereitschaft','Bereitschaft','Abwesenheit','Abwesenheit'],intCols:[2,4,7],numCols:[3,5,6],sumCols:[2,3,4,5,6,7],units:{3:' h',5:' h'},groupCol:1,subBy:1,widths:[2.6,2,1,1.6,1.3,1.7,1.2,1.4],legend:['Dienst','Bereitschaft','Abwesenheit'],count:rows.length,pdfHead:['Mitarbeiter','Team','Dienste','Dienststunden','Bereitschaften','Bereitsch.-Stunden','Urlaubstage','Abwes.-Tage']}}},
+ {id:'standby',icon:'moon',title:'Bereitschaftsabrechnung',sub:'Bereitschaftstage & -stunden je Team',unit:'Mitarbeiter',template:true,
+  build:list=>{const sb=list.filter(a=>a.kind==='Bereitschaft');const map={};sb.forEach(a=>{const k=a.team+'|'+a.employee;const m=map[k]=map[k]||{team:a.team,emp:a.employee,days:0,h:0};m.days++;m.h+=durationHours(a.start,a.end)});
+   const rows=Object.values(map).sort((a,b)=>a.team.localeCompare(b.team,'de')||a.emp.localeCompare(b.emp,'de')).map(m=>[m.team,m.emp,'Bereitschaft',m.days,+m.h.toFixed(2)]);
+   return {file:'bereitschaftsabrechnung',title:'Bereitschaftsabrechnung',head:['Team','Mitarbeiter','Art','Bereitschaftstage','Stunden'],rows,kindCol:2,headKinds:[null,null,null,'Bereitschaft','Bereitschaft'],intCols:[3],numCols:[4],sumCols:[3,4],units:{4:' h'},groupCol:0,subBy:0,widths:[2.6,3.2,1.6,1.4,1.4],legend:['Bereitschaft'],count:rows.length}}},
+ {id:'absence',icon:'plane',title:'Abwesenheitsübersicht',sub:'Urlaub & Abwesenheiten je Mitarbeiter',unit:'Einträge',template:true,
+  build:list=>{const ab=list.filter(a=>a.isAbsence).sort((a,b)=>a.employee.localeCompare(b.employee,'de')||a.date.localeCompare(b.date));
+   const rows=ab.map(a=>{const d=new Date(a.date+'T12:00:00');return [a.employee,a.team,fmtIsoDate(a.date),weekdayName(d,'short'),a.shift||'Abwesend',a.start?a.start+'–'+a.end:(a.shift==='Urlaub 1/2 Tag'?'halber Tag':'ganztägig'),a.shift==='Urlaub 1/2 Tag'?0.5:1,a.note||'']});
+   return {file:'abwesenheiten',title:'Abwesenheitsübersicht',head:['Mitarbeiter','Team','Datum','Tag','Art der Abwesenheit','Dauer','Tage','Bemerkung'],rows,kindCol:4,kindOf:()=>'Abwesenheit',headKinds:[null,null,null,null,'Abwesenheit',null,'Abwesenheit',null],numCols:[6],sumCols:[6],groupCol:0,subBy:0,widths:[2.5,1.9,1.4,0.7,2,1.3,0.8,2.2],legend:['Abwesenheit'],count:rows.length,dec:{6:1}}}},
+ {id:'hours',icon:'clock',title:'Stunden je Mitarbeiter',sub:'Dienst- & Bereitschaftsstunden im Zeitraum',unit:'Mitarbeiter',template:true,
+  build:list=>{const rows=groupHours(list).filter(([,m])=>m.dn||m.sn||m.abs).map(([n,m])=>[n,m.team,+m.dh.toFixed(2),+m.sh.toFixed(2),+(m.dh+m.sh).toFixed(2),m.abs]);
+   return {file:'stunden-je-mitarbeiter',title:'Stunden je Mitarbeiter',head:['Mitarbeiter','Team','Dienststunden (netto)','Bereitschaftsstunden','Stunden gesamt','Abwesenheitstage'],rows,headKinds:[null,null,'Dienst','Bereitschaft',null,'Abwesenheit'],numCols:[2,3,4],intCols:[5],sumCols:[2,3,4,5],units:{2:' h',3:' h',4:' h'},groupCol:1,subBy:1,widths:[2.8,2.2,1.8,1.8,1.6,1.4],legend:['Dienst','Bereitschaft','Abwesenheit'],count:rows.length,pdfHead:['Mitarbeiter','Team','Dienststunden','Bereitsch.-Stunden','Stunden gesamt','Abwes.-Tage']}}},
+ {id:'workplace',icon:'home',title:'Arbeitsort-Monatsauswertung',sub:'Büro- & Homeoffice-Tage je Mitarbeiter',unit:'Mitarbeiter',template:true,
+  build:list=>{const rows=groupHours(list).filter(([,m])=>m.off||m.ho).map(([n,m])=>{const t=m.off+m.ho;return [n,m.team,m.off,m.ho,t,t?+(m.ho/t*100).toFixed(1):0]});
+   return {file:'arbeitsort-auswertung',title:'Arbeitsort – Monatsauswertung',head:['Mitarbeiter','Team','Bürotage','Homeoffice-Tage','Tage gesamt','Homeoffice-Anteil (%)'],rows,headKinds:[null,null,'Arbeitsort','Arbeitsort','Arbeitsort','Arbeitsort'],intCols:[2,3,4],numCols:[5],sumCols:[2,3,4],units:{5:' %'},groupCol:1,subBy:1,widths:[2.8,2.2,1.3,1.6,1.4,1.8],pdfHead:['Mitarbeiter','Team','Bürotage','Homeoffice-Tage','Tage gesamt','Homeoffice-Anteil'],legend:['Arbeitsort'],count:rows.length,bars:{col:5}}}}
 ];
+const REPORT_TEMPLATES=EXPORT_REPORTS.filter(r=>r.template);
+const EXPORT_FORMATS=[['PDF','PDF','file'],['XLSX','Excel','grid'],['CSV','CSV','download']];
+let exportReportId='entries',exportFormat='PDF';
+function exportSourceList(rep){return rep.src==='filtered'?reportRows():rep.src==='selection'?reportRows().filter(a=>reportSel.has(a.id)):reportRows(true)}
+function fmtCell(v,ci,spec){if(typeof v!=='number')return v===''||v==null?'—':v;const u=(spec.units||{})[ci]||'';if((spec.intCols||[]).includes(ci))return v.toLocaleString(LOC())+u;const d=(spec.dec||{})[ci];return v.toLocaleString(LOC(),{minimumFractionDigits:d??1,maximumFractionDigits:2})+u}
+function genericPdf(spec,sub){
+ const sums=spec.sumCols||[],rows=[];let cur,acc=null,n=0;
+ const flush=()=>{if(acc&&n>1)rows.push({sub:true,sum:spec.head.map((_,ci)=>ci===0?`Summe ${cur}`:sums.includes(ci)?fmtCell(+acc[ci].toFixed(2),ci,spec):'')})};
+ spec.rows.forEach(r=>{const g=spec.subBy!=null?r[spec.subBy]:null;if(spec.subBy!=null&&g!==cur){flush();cur=g;acc={};n=0;sums.forEach(c=>acc[c]=0)}if(acc)sums.forEach(c=>acc[c]+=typeof r[c]==='number'?r[c]:0);n++;rows.push(r.map((v,ci)=>fmtCell(v,ci,spec)))});flush();
+ const tot=spec.head.map((_,ci)=>ci===0?'Gesamt':ci===1?`${spec.count} ${spec.unitLabel||''}`.trim():sums.includes(ci)?fmtCell(+spec.rows.reduce((t,r)=>t+(typeof r[ci]==='number'?r[ci]:0),0).toFixed(2),ci,spec):'');
+ const right=[...(spec.numCols||[]),...(spec.intCols||[])];
+ return makePdf(spec.title,sub,spec.pdfHead||spec.head,rows,spec.widths||spec.head.map(()=>1),{groupCol:spec.groupCol,kindCol:spec.kindCol,kindOf:spec.kindOf,headKinds:spec.headKinds,rightCols:right,legend:spec.legend,sumRow:sums.length?tot:null});
+}
+function runExport(id,fmt){
+ const rep=EXPORT_REPORTS.find(r=>r.id===id);if(!rep)return;const fmtName=fmt==='XLSX'?'XLSX':fmt;
+ if(!exportGuard(rep.title,fmtName))return false;
+ const list=exportSourceList(rep);const spec=rep.build(list);
+ if(!spec||!spec.rows.length){toast('Keine Daten für diesen Bericht im gewählten Zeitraum.');return false}
+ spec.unitLabel=rep.unit;
+ const sub=`Zeitraum ${rangeText()} · ${reportFilterText()} · ${spec.count.toLocaleString(LOC())} ${rep.unit}`;
+ const base=`${spec.file}-${reportFrom||'alle'}_${reportTo||''}`;
+ if(fmt==='CSV')downloadCsv([spec.head,...spec.rows],base+'.csv');
+ else if(fmt==='XLSX')saveFile(base+'.xlsx',makeXlsx(spec.title.slice(0,31),[spec.head,...spec.rows],{title:spec.title,subtitle:`${sub} · ${reportStamp()}`,kindCol:spec.kindCol,headKinds:spec.headKinds,numCols:spec.numCols,intCols:spec.intCols,sumCols:spec.sumCols,sumLabel:'Gesamt'}));
+ else saveFile(base+'.pdf',spec.pdf?spec.pdf(spec.title,sub):genericPdf(spec,sub));
+ logExport(rep.title,fmtName,spec.rows.length,spec.rows.length>1000?'Groß (>1.000 Zeilen)':'Erfolgreich',{range:rangeText()});
+ toast(`„${rep.title}“ als ${fmt==='XLSX'?'Excel':fmt} erstellt.`);return true;
+}
+function exportDialogHtml(){
+ return `<div class="modal-backdrop" id="export-modal" hidden><div class="modal export-modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+  <div class="export-head"><span class="export-head-ic">${icon('download')}</span><div><h2 id="export-title">Exportieren</h2><small id="export-scope"></small></div><button type="button" class="icon-btn" id="export-close" aria-label="Schließen">×</button></div>
+  <div class="export-body">
+   <div class="export-label">Was möchtest du exportieren?</div>
+   <div class="export-list" role="radiogroup" id="export-list"></div>
+   <div class="export-label">Format</div>
+   <div class="export-formats" role="radiogroup">${EXPORT_FORMATS.map(([v,l,ic])=>`<button type="button" class="export-fmt" data-fmt="${v}" role="radio">${icon(ic)}<b>${l}</b><small>${v==='PDF'?'Zum Lesen & Drucken':v==='XLSX'?'Formatiert, mit Summen':'Rohdaten für Importe'}</small></button>`).join('')}</div>
+   <p class="export-note" id="export-note"></p>
+  </div>
+  <div class="export-actions"><button type="button" class="btn ghost" id="export-cancel">Abbrechen</button><button type="button" class="btn primary" id="export-go">${icon('download')}<span id="export-go-label">Exportieren</span></button></div>
+ </div></div>`;
+}
+function openExportDialog(preset){
+ const m=document.getElementById('export-modal');if(!m)return;
+ if(preset)exportReportId=preset;
+ const sel=reportSel.size;if(exportReportId==='selection'&&!sel)exportReportId='entries';
+ const reps=EXPORT_REPORTS.filter(r=>r.id!=='selection'||sel);
+ const count=r=>{const l=exportSourceList(r);try{return r.build(l).count}catch(e){return 0}};
+ m.querySelector('#export-list').innerHTML=reps.map(r=>{const c=count(r);return `<button type="button" class="export-opt ${r.id===exportReportId?'on':''}" data-rep="${r.id}" role="radio" aria-checked="${r.id===exportReportId}" ${c?'':'data-empty="1"'}><span class="export-opt-ic tone-${r.id}">${icon(r.icon)}</span><span class="export-opt-text"><b>${r.title}</b><small>${r.sub}</small></span><span class="export-opt-count">${c.toLocaleString(LOC())} ${r.unit}</span></button>`}).join('');
+ m.querySelector('#export-scope').textContent=`Zeitraum ${rangeText()} · ${reportFilterText()}`;
+ const sync=()=>{m.querySelectorAll('.export-opt').forEach(b=>{const on=b.dataset.rep===exportReportId;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)});m.querySelectorAll('.export-fmt').forEach(b=>{const on=b.dataset.fmt===exportFormat;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)});
+  const r=EXPORT_REPORTS.find(x=>x.id===exportReportId),opt=m.querySelector(`.export-opt[data-rep="${exportReportId}"]`),empty=opt&&opt.dataset.empty;
+  m.querySelector('#export-note').innerHTML=empty?`${icon('alert')}Für diesen Bericht gibt es im gewählten Zeitraum keine Daten.`:exportFormat==='CSV'?`${icon('alert')}CSV enthält nur die Werte – Farben und Spaltenbreiten kann das Format nicht speichern.`:r.id==='entries'?`Berücksichtigt die Art-Filter (${reportKinds.join(', ')}).`:'';
+  m.querySelector('#export-go').disabled=!!empty;m.querySelector('#export-go-label').textContent=`Als ${exportFormat==='XLSX'?'Excel':exportFormat} exportieren`};
+ m.querySelectorAll('.export-opt').forEach(b=>b.onclick=()=>{exportReportId=b.dataset.rep;sync()});
+ m.querySelectorAll('.export-fmt').forEach(b=>b.onclick=()=>{exportFormat=b.dataset.fmt;sync()});
+ const close=()=>{m.hidden=true};
+ m.querySelector('#export-close').onclick=close;m.querySelector('#export-cancel').onclick=close;m.onclick=e=>{if(e.target===m)close()};m.onkeydown=e=>{if(e.key==='Escape')close()};
+ m.querySelector('#export-go').onclick=()=>{if(runExport(exportReportId,exportFormat))close()};
+ sync();m.hidden=false;setTimeout(()=>m.querySelector('.export-opt.on')?.focus({preventScroll:true}),30);
+}
 function reportExportPage(){
  if(!reportFrom&&!reportTo){const d=new Date();reportFrom=isoDate(new Date(d.getFullYear(),d.getMonth(),1));reportTo=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));}
  const filtered=reportRows(),ids=new Set(filtered.map(a=>a.id));reportSel.forEach(id=>{if(!ids.has(id))reportSel.delete(id)});
@@ -5693,7 +5823,7 @@ function reportExportPage(){
  const isQ=k=>reportFrom===q[k][0]&&reportTo===q[k][1];
  const members=staff.filter(s=>!reportTeams.length||teams.some(t=>reportTeams.includes(t.name)&&t.memberIds.includes(s[8])));
  const allChecked=shown.length&&shown.every(a=>reportSel.has(a.id));
- return `${heading('Berichte / Export','Auswertungen erstellen und Dienst- und Bereitschaftsdaten exportieren.',`<button class="btn" id="export-pdf">${icon('file')}PDF</button><button class="btn" id="export-xlsx">${icon('file')}Excel</button><button class="btn primary" id="export-all">${icon('download')}Alle exportieren (CSV)</button>`)}
+ return `${heading('Berichte / Export','Auswertungen erstellen und Dienst- und Bereitschaftsdaten exportieren.',`<button class="btn primary" id="export-open">${icon('download')}Exportieren</button>`)}
  <section class="panel filter-panel report-filters">
   <span class="date-range">${icon('cal')}<input type="date" id="report-from" value="${reportFrom}" aria-label="Von"><span>–</span><input type="date" id="report-to" value="${reportTo}" aria-label="Bis"></span>
   <button type="button" class="chip ${isQ('week')?'active':''}" data-range="week">Diese Woche</button><button type="button" class="chip ${isQ('month')?'active':''}" data-range="month">Dieser Monat</button><button type="button" class="chip ${isQ('last')?'active':''}" data-range="last">Letzter Monat</button>
@@ -5710,12 +5840,12 @@ function reportExportPage(){
   <div class="stat-card"><div><div class="stat-label">Bereitschaftsstunden</div><div class="stat-value">${nf(standbyHours)} h</div><div class="stat-note">${new Set(sbs.map(a=>a.team)).size} Teams · ${sbs.length} Einsätze</div></div></div>
   <div class="stat-card"><div><div class="stat-label">Abwesenheitstage</div><div class="stat-value">${abs.length}</div><div class="stat-note">${vac} Urlaub · ${abs.length-vac} Sonstige</div></div></div>
  </div>
- <div class="split-layout narrow-side">
+ <div class="split-layout no-side">
   <section class="panel flush"><div class="panel-toolbar">${reportSel.size?`<b>${reportSel.size} ausgewählt</b><button class="btn small push-right" id="export-selection">${icon('download')}Auswahl exportieren</button><button class="btn small ghost" id="clear-selection">Auswahl aufheben</button>`:`<b>Einträge</b><span class="rt-count">${filtered.length.toLocaleString(LOC())}</span><span class="muted small push-right rt-hint">Zeilen anhaken für einen Teil-Export</span>`}<label class="rt-selall"><input type="checkbox" id="select-page-m" ${allChecked?'checked':''}>Seite auswählen</label></div>
    <div class="table-wrap borderless report-table-wrap"><table class="report-table"><thead><tr><th class="cb-col"><input type="checkbox" id="select-page" ${allChecked?'checked':''} aria-label="Alle auf dieser Seite auswählen"></th><th>Datum</th><th>Mitarbeiter</th><th>Art</th><th>Dienst</th><th class="num">Std.</th></tr></thead><tbody>${shown.map(a=>{const dd=new Date(a.date+'T12:00:00'),k=kindLabel(a),t=teamByName(a.team),c=teamColor(t),h=a.start&&a.end&&!a.isAbsence?nf(netHours(a)):'';return `<tr class="${reportSel.has(a.id)?'is-selected':''}"><td class="cb-col rt-cb"><input type="checkbox" data-sel="${a.id}" ${reportSel.has(a.id)?'checked':''} aria-label="Auswählen"></td><td class="rt-date"><span class="rt-day">${escapeHtml(weekdayName(dd,'short'))}</span><b>${escapeHtml(fmtIsoDate(a.date))}</b></td><td class="rt-person"><span class="person">${avatarHtml(a.employee,c,30)}<span class="rt-name"><b>${escapeHtml(a.employee)}</b><small><i class="dot" style="--c:${c}"></i>${escapeHtml(a.team)}</small></span></span></td><td class="rt-kind"><span class="pill kind-${k.toLowerCase()}">${k}</span></td><td class="rt-shift" data-date="${escapeHtml(weekdayName(dd,'short')+' '+fmtShort(dd))}"><b>${escapeHtml(a.shift||k)}</b><small>${icon('clock')}${a.start?escapeHtml(a.start+'–'+a.end):'ganztägig'}</small></td><td class="num rt-hours">${h?`<b>${h}</b><small>Std.</small>`:'<span class="muted">—</span>'}</td></tr>`}).join('')||'<tr><td colspan="6" class="empty-note">Keine Einträge für diese Filter gefunden.</td></tr>'}</tbody></table></div>
    <div class="pager"><span class="muted small">${filtered.length?`${reportPage*REPORT_PAGE+1}–${Math.min(filtered.length,(reportPage+1)*REPORT_PAGE)} von ${filtered.length.toLocaleString(LOC())}`:'0 Einträge'}</span><span class="btn-row"><button class="btn small" id="page-prev" ${reportPage?'':'disabled'} aria-label="Vorherige Seite">‹</button><button class="btn small" id="page-next" ${reportPage<pages-1?'':'disabled'} aria-label="Nächste Seite">›</button></span></div>
   </section>
-  <aside class="side-stack"><div class="side-label">BERICHTSVORLAGEN</div>${REPORT_TEMPLATES.map(t=>`<button type="button" class="panel template-card" data-template="${t.id}"><span class="stat-icon">${icon(t.icon)}</span><span><b>${t.title}</b><small>${t.sub}</small></span><span class="icon-btn">${icon('download')}</span></button>`).join('')}<p class="muted small">Vorlagen verwenden den oben gewählten Zeitraum und Filter.</p></aside>
+  ${exportDialogHtml()}
  </div>`;
 }
 const reportTeamCtx={list:()=>teams.filter(t=>teamNames().includes(t.name)),sel:()=>reportTeams.filter(n=>teams.some(t=>t.name===n)),count:t=>t.memberIds.length,
@@ -5737,11 +5867,9 @@ function bindReports(){
  const pp=document.getElementById('page-prev');if(pp)pp.onclick=()=>{reportPage--;render()};const pn=document.getElementById('page-next');if(pn)pn.onclick=()=>{reportPage++;render()};
  const cs=document.getElementById('clear-selection');if(cs)cs.onclick=()=>{reportSel.clear();render()};
  const status=n=>n>1000?'Groß (>1.000 Zeilen)':'Erfolgreich';
- const es=document.getElementById('export-selection');if(es)es.onclick=()=>{if(!exportGuard('Auswahl','CSV'))return;const list=sortEntries(reportRows().filter(a=>reportSel.has(a.id)));downloadCsv([ENTRY_HEAD,...list.map(entryRow)],`auswahl-${isoDate(new Date())}.csv`);logExport(`Auswahl (${list.length} Einträge)`,'CSV',list.length,status(list.length),{range:rangeText()});toast(`${list.length} Einträge exportiert.`)};
- document.getElementById('export-all').onclick=()=>{if(!exportGuard('Alle Einträge','CSV'))return;const list=sortEntries(reportRows());if(!list.length){toast('Keine Einträge zum Exportieren.');return}downloadCsv([ENTRY_HEAD,...list.map(entryRow)],`dienstplan-export-${reportFrom||'alle'}_${reportTo||''}.csv`);logExport('Alle Einträge','CSV',list.length,status(list.length),{range:rangeText()});toast(`${list.length} Einträge exportiert.`)};
- document.getElementById('export-xlsx').onclick=()=>{if(!exportGuard('Alle Einträge','XLSX'))return;const list=sortEntries(reportRows());if(!list.length){toast('Keine Einträge zum Exportieren.');return}saveFile(`dienstplan-export-${reportFrom}_${reportTo}.xlsx`,makeXlsx('Einträge',[ENTRY_HEAD,...list.map(entryRow)],{...ENTRY_XLSX,title:'Dienstplan – Einträge',subtitle:`Zeitraum ${rangeText()} · ${reportTeams.length?reportTeams.join(', '):'Alle Teams'}${reportMember!=='Alle Mitarbeiter'?' · '+reportMember:''} · ${reportKinds.join(', ')} · ${list.length} Einträge · erstellt ${fmtDateTime(Date.now())} von ${currentUserName()}`}));logExport('Alle Einträge','XLSX',list.length,status(list.length),{range:rangeText()});toast(`${list.length} Einträge exportiert.`)};
- document.getElementById('export-pdf').onclick=()=>{if(!exportGuard('Alle Einträge','PDF'))return;const list=sortEntries(reportRows());if(!list.length){toast('Keine Einträge zum Exportieren.');return}saveFile(`dienstplan-bericht-${reportFrom}_${reportTo}.pdf`,entriesPdf(list,'Dienstplan – Bericht',`Zeitraum ${rangeText()} · ${reportTeams.length?reportTeams.join(', '):'Alle Teams'}${reportMember!=='Alle Mitarbeiter'?' · '+reportMember:''} · ${list.length} Einträge`));logExport('Alle Einträge','PDF',list.length,status(list.length),{range:rangeText()});toast(`${list.length} Einträge exportiert.`)};
- content.querySelectorAll('[data-template]').forEach(b=>b.onclick=()=>{const t=REPORT_TEMPLATES.find(x=>x.id===b.dataset.template);const fmtName=t.sub.split('·').pop().trim();if(!exportGuard(t.title,fmtName))return;const res=t.run(reportRows());if(!res){toast('Keine Daten im Zeitraum.');return}logExport(t.title,res.f,res.n,'Erfolgreich',{range:rangeText()});toast(`„${t.title}“ wurde erstellt.`)});
+ const es=document.getElementById('export-selection');if(es)es.onclick=()=>openExportDialog('selection');
+ document.getElementById('export-open').onclick=()=>openExportDialog(reportSel.size?'selection':'entries');
+ content.querySelectorAll('[data-template]').forEach(b=>b.onclick=()=>openExportDialog(b.dataset.template));
 }
 
 /* ------------------------------------------------------------------
