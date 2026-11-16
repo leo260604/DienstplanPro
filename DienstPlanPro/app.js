@@ -2803,7 +2803,7 @@ async function openCreateTeam(){
   <div class="wp-field"><label class="wp-label" for="nt-name">Teamname</label>
    <div class="nt-input"><span class="nt-input-ic">${icon('users')}</span><input id="nt-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Team Ost" required><span class="nt-count" id="nt-count">0/60</span></div>
    <small class="wp-note nt-msg" id="nt-msg">Der Name erscheint im Dienstplan, in der Bereitschaft und in den Filtern.</small></div>
-  <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${teamColorSwatches(color0,null)}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="nt-color-pick" value="${color0}"><span>Eigene</span></label></div><input type="hidden" name="color" id="nt-color" value="${color0}"><small class="wp-note tc-msg" id="nt-color-msg" hidden></small><small class="wp-note">Jede Farbe gibt es nur einmal – angezeigt werden nur freie Farben.</small></div>
+  <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${teamColorSwatches(color0,null)}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="nt-color-pick" value="${color0}"><span>Eigene</span></label></div><input type="hidden" name="color" id="nt-color" value="${color0}"><small class="wp-note">Jede Farbe gibt es nur einmal – angezeigt werden nur freie Farben.</small></div>
   ${depts.length?`<div class="wp-field"><span class="wp-label">Abteilung <span class="muted">(optional)</span></span><select id="nt-dept" name="dept"><option value="">Keine Abteilung</option>${depts.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.name)}</option>`).join('')}</select></div>`:''}
   <div class="wp-summary nt-preview" id="nt-preview"></div>`,'Team anlegen','Danach legst du Mitglieder, Teamleitung und Deputy fest.',{icon:'users',cls:'nt-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=id=>layer.querySelector('#'+id);
@@ -2816,8 +2816,7 @@ async function openCreateTeam(){
   const d=dept&&departments.find(x=>x.id===dept.value);
   prev.innerHTML=`<span class="nt-badge" style="--c:${c}">${escapeHtml((v||'T').replace(/^Team\s+/i,'').slice(0,2).toUpperCase()||'T')}</span><div><b>${escapeHtml(v||'Neues Team')}</b><small>0 Mitglieder${d?' · '+escapeHtml(d.name):''} · ${teams.length+1} von ${MAX_TEAMS} Teams</small></div>`;
   layer.querySelector('button[type=submit]').disabled=!!pr};
- const cmsg=$('nt-color-msg');
- const setColor=(c,check=true)=>{let fixed=c;if(check){fixed=distinctTeamColor(c,null);cmsg.hidden=fixed===c.toLowerCase();if(!cmsg.hidden)cmsg.innerHTML=tcNote(c,fixed,null)}c=fixed;col.value=c;pick.value=c;layer.querySelectorAll('.te-swatch').forEach(b=>b.classList.toggle('on',b.dataset.color.toLowerCase()===c.toLowerCase()));upd()};
+ const setColor=(c,check=true)=>{if(check)c=distinctTeamColor(c,null);col.value=c;pick.value=c;layer.querySelectorAll('.te-swatch').forEach(b=>b.classList.toggle('on',b.dataset.color.toLowerCase()===c.toLowerCase()));upd()};
  layer.querySelectorAll('.te-swatch').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=()=>setColor(pick.value,false);pick.onchange=()=>setColor(pick.value);
  name.oninput=upd;dept?.addEventListener('change',upd);upd();
  layer.addEventListener('submit',e=>{if(problem()){e.preventDefault();e.stopPropagation();name.focus()}},true);
@@ -2903,18 +2902,17 @@ function freeTeamColors(exceptId,max=10){const pool=[...TEAM_COLORS,...STANDBY_C
  const out=[];for(const c of pool){const x=c.toLowerCase();if(teamColorClash(x,exceptId))continue;if(out.some(o=>tcDiff(o,x)<TC_MIN_DIFF))continue;out.push(x);if(out.length>=max)break}return out}
 // Farbfelder: nur freie Farben (+ die aktuelle Farbe des Teams)
 function teamColorSwatches(cur,exceptId,extra=''){const list=freeTeamColors(exceptId);const c0=String(cur||'').toLowerCase();if(c0&&!list.includes(c0))list.unshift(c0);return list.slice(0,10).map(c=>{const used=teamColorClash(c,exceptId);return `<button type="button" class="te-swatch ${c.toLowerCase()===String(cur).toLowerCase()?'on':''} ${used?'taken':''}" style="--c:${c}" data-color="${c}" aria-label="Farbe ${c}${used?' – vergeben an '+escapeHtml(used.name):''}" title="${used?'Bereits vergeben an '+escapeHtml(used.name):'Farbe '+c}" ${used?'disabled':''} ${extra}>${icon(used?'lock':'check')}</button>`}).join('')}
-const tcNote=(from,to,exceptId)=>{const t=teamColorClash(from,exceptId);return `${icon('alert')}<span>Die gewählte Farbe ist ${t?`zu ähnlich wie <b>${escapeHtml(t.name)}</b>`:'bereits vergeben'} – sie wurde auf <i class="tc-dot" style="background:${to}"></i><b>${to}</b> abgeändert.</span>`};
 function openTeamEditor(id,startTab){
  const t=teamById(id);if(!t||!adminTeams().includes(t)){toast('Dieses Team kannst du nicht öffnen.');return}
  const caps=adminCaps(),st=teamSettings(t);
  const d={name:t.name,color:teamColor(t),memberIds:[...t.memberIds],leaderId:t.leaderId||'',deputyId:t.deputyId||'',...st,selfDutyIds:[...st.selfDutyIds],selfStandbyIds:[...st.selfStandbyIds]};
- const orig=JSON.stringify(d);let tab=startTab||'general',colorMsg='';
+ const orig=JSON.stringify(d);let tab=startTab||'general';
  const layer=document.createElement('div');layer.className='modal-backdrop app-dialog';
  const ro=x=>x?'':'disabled';
  const mem=()=>staff.filter(p=>d.memberIds.includes(p[8])).sort((a,b)=>a[0].localeCompare(b[0],'de'));
  const nameOf=id=>staff.find(p=>p[8]===id)?.[0]||'';
  const general=()=>`<div class="te-sec"><label class="wp-field"><span class="wp-label">Teamname</span><input id="te-name" value="${escapeHtml(d.name)}" maxlength="60" ${ro(caps.structure)}></label>
-   <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${teamColorSwatches(d.color,t.id,ro(caps.color))}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="te-color" value="${/^#[0-9a-f]{6}$/i.test(d.color)?d.color:'#14a1a9'}" ${ro(caps.color)}><span>Eigene</span></label></div>${colorMsg?`<small class="wp-note tc-msg">${colorMsg}</small>`:''}<small class="wp-note">Wird auch für die Bereitschaft verwendet. Jede Farbe gibt es nur einmal.</small></div>
+   <div class="wp-field"><span class="wp-label">Teamfarbe</span><div class="te-colors">${teamColorSwatches(d.color,t.id,ro(caps.color))}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="te-color" value="${/^#[0-9a-f]{6}$/i.test(d.color)?d.color:'#14a1a9'}" ${ro(caps.color)}><span>Eigene</span></label></div><small class="wp-note">Wird auch für die Bereitschaft verwendet. Jede Farbe gibt es nur einmal.</small></div>
    <div class="te-two"><div class="wp-field"><span class="wp-label">Teamleitung</span>${caps.structure?personPicker({id:'te-lead',people:mem().map(p=>({name:p[0],sub:visibleRole(p[10])})),value:nameOf(d.leaderId),noneLabel:'Nicht besetzt',placeholder:'Nicht besetzt'}):`<div class="wp-me">${d.leaderId?avatarHtml(nameOf(d.leaderId),'var(--accent-color)',30):''}<div><b>${escapeHtml(nameOf(d.leaderId)||'Nicht besetzt')}</b></div></div>`}</div>
    <div class="wp-field"><span class="wp-label">Deputy</span>${caps.structure?personPicker({id:'te-dep',people:mem().map(p=>({name:p[0],sub:visibleRole(p[10])})),value:nameOf(d.deputyId),noneLabel:'Nicht besetzt',placeholder:'Nicht besetzt'}):`<div class="wp-me">${d.deputyId?avatarHtml(nameOf(d.deputyId),'var(--accent-color)',30):''}<div><b>${escapeHtml(nameOf(d.deputyId)||'Nicht besetzt')}</b></div></div>`}</div></div>
    ${caps.structure?'<small class="muted">Teamleitung und Deputy werden aus den Mitgliedern gewählt. Ein Deputy kann nur einem Team zugeordnet sein.</small>':'<small class="muted">Name, Verantwortliche und Mitglieder ändert die Administration.</small>'}</div>`;
@@ -2946,7 +2944,7 @@ function openTeamEditor(id,startTab){
   layer.querySelectorAll('[data-te-close]').forEach(b=>b.onclick=()=>close());
   layer.querySelectorAll('[data-te-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.teTab;draw();layer.querySelector(`[data-te-tab="${tab}"]`)?.focus()});
   const nm=layer.querySelector('#te-name');if(nm)nm.oninput=()=>{d.name=nm.value;const h=layer.querySelector('#te-title');if(h)h.textContent=nm.value||'Team'};
-  const setTc=c=>{const f=distinctTeamColor(c,t.id);colorMsg=f!==String(c).toLowerCase()?tcNote(c,f,t.id):'';d.color=f;draw()};
+  const setTc=c=>{d.color=distinctTeamColor(c,t.id);draw()};
   layer.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>setTc(b.dataset.color));
   const cc=layer.querySelector('#te-color');if(cc)cc.onchange=()=>setTc(cc.value);
   bindPersonPicker(layer);
