@@ -2362,3 +2362,10 @@ button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline
 @media (max-width:700px){.help-top-btn{right:16px;bottom:76px;width:44px;height:44px}}
 /* Kopfzeile immer sichtbar (auch am Handy und im Querformat) */
 .topbar{position:sticky!important;top:0;z-index:60}
+/* Popups: nur eine Scrollleiste – die des Popups.
+   – Versteckte Checkboxen bleiben in ihrer Zeile (sonst ragen sie aus dem Popup und lassen den Hintergrund scrollen)
+   – Mitgliederliste im Team-Dialog scrollt nicht separat, das erledigt der Dialog
+   – Seite im Hintergrund ist gesperrt, solange ein Popup offen ist */
+.ts-person,.modal label.ts-person{position:relative}
+.te-mlist{overflow:visible}
+html:has(.modal-backdrop:not([hidden])),body:has(.modal-backdrop:not([hidden])){overflow:hidden!important}
