@@ -2276,3 +2276,8 @@ button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline
 .sb-color-preview .calendar-assignment{position:static;flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border-radius:9px;font-size:12.5px}
 .sb-color-preview .sb-color-hex{margin-left:auto}
 @media (max-width:700px){.sb-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sb-color-grid{grid-template-columns:1fr}.sb-group-actions .btn span{display:none}}
+/* Bereitschaft: fixe / variable Bereitschaftszeiten */
+.pill.sb-type{font-weight:700}
+.pill.sb-type.fix{background:color-mix(in srgb,var(--accent-color) 14%,var(--surface));color:var(--accent-color)}
+.pill.sb-type.var{background:color-mix(in srgb,#9b69c8 16%,var(--surface));color:color-mix(in srgb,#9b69c8 80%,var(--ink))}
+.mini-scale.is-variable{background:repeating-linear-gradient(135deg,var(--surface-3) 0 6px,transparent 6px 12px);border:1px dashed var(--line)}
