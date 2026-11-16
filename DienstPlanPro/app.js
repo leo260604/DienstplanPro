@@ -957,10 +957,12 @@ function floatDialogDetails(layer,dd,all){
  dd.addEventListener('toggle',()=>{if(dd.open)layer.querySelectorAll('details.team-dd[open]').forEach(o=>{if(o!==dd)o.open=false})});
  // Liste schwebt im Vordergrund (fixed), damit sie im scrollbaren Fenster nicht abgeschnitten wird
  const panel=dd.querySelector('.team-dd-panel'),sum=dd.querySelector('summary'),q=dd.querySelector('.dlg-dd-q');
- const place=()=>{if(!dd.open)return;const r=sum.getBoundingClientRect(),vh=window.innerHeight,below=vh-r.bottom-12,above=r.top-12;
+ const place=()=>{if(!dd.open)return;const r=sum.getBoundingClientRect(),box=(layer.querySelector('.modal')||layer).getBoundingClientRect();
+  // Liste bleibt innerhalb des Popups: unten bis zum Popup-Rand, sonst nach oben aufklappen
+  const bottom=Math.min(window.innerHeight,box.bottom)-10,top=Math.max(0,box.top)+10,below=bottom-r.bottom-6,above=r.top-6-top;
   panel.style.position='fixed';panel.style.left=r.left+'px';panel.style.width=r.width+'px';panel.style.right='auto';
-  const mh=Math.max(140,Math.min(320,Math.max(below,above)));panel.style.maxHeight=mh+'px';
-  const h=Math.min(panel.scrollHeight,mh);panel.style.top=(below>=h||below>=above?r.bottom+6:r.top-h-6)+'px'};
+  const want=Math.min(320,panel.scrollHeight),down=below>=Math.min(want,200)||below>=above,mh=Math.max(96,Math.min(320,down?below:above));panel.style.maxHeight=mh+'px';
+  const h=Math.min(panel.scrollHeight,mh);panel.style.top=(down?r.bottom+6:r.top-h-6)+'px'};
  const filter=()=>{if(!q)return;const v=q.value.trim().toLowerCase();let n=0;dd.querySelectorAll('.dlg-dd-list .check').forEach(l=>{const hit=!v||l.dataset.q.includes(v);l.classList.toggle('q-miss',!hit);if(hit&&!l.hidden)n++});dd.querySelector('.team-dd-empty').hidden=n>0;if(all)all.closest('label').hidden=!!v};
  if(q){q.addEventListener('input',filter);q.addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault()})}
  dd.addEventListener('toggle',()=>{if(dd.open){if(q){q.value='';filter()}place();if(q&&!window.matchMedia('(pointer: coarse)').matches)q.focus({preventScroll:true})}});
