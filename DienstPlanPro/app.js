@@ -423,6 +423,21 @@ if(!localStorage.getItem('dienstplanAddTeamDonau')){
  }catch(e){console.warn('Team Donau konnte nicht angelegt werden.',e)}
 }
 
+/* Bereinigung 16.11.2026: alle eingetragenen Dienste und Bereitschaften einmalig löschen.
+   Abwesenheiten und Arbeitsorte bleiben erhalten. Läuft in jedem Browser genau einmal. */
+if(!localStorage.getItem('dienstplanClearEntries20261116')){
+ try{
+  const isDutyOrStandby=a=>a&&(a.kind==='Bereitschaft'||(a.kind==='Dienstplan'&&!a.isAbsence));
+  const removed=assignments.filter(isDutyOrStandby);
+  if(removed.length){
+   const duty=removed.filter(a=>a.kind==='Dienstplan').length,standby=removed.length-duty;
+   assignments=assignments.filter(a=>!isDutyOrStandby(a));persistAssignments();
+   auditLog.unshift({id:makeId(),ts:Date.now(),user:'System',role:'Admin',action:'Gelöscht',area:'Dienstplan',detail:`Alle Dienste (${duty}) und Bereitschaften (${standby}) gelöscht – Abwesenheiten und Arbeitsorte bleiben`,title:'Dienste und Bereitschaften gelöscht',object:'Alle Teams',before:`${duty} Dienste, ${standby} Bereitschaften`,after:'0'});try{save('dienstplanAuditLog',auditLog,true)}catch(e){}
+  }
+  localStorage.setItem('dienstplanClearEntries20261116','1');
+ }catch(e){console.warn('Dienste/Bereitschaften konnten nicht gelöscht werden.',e)}
+}
+
 /* ------------------------------------------------------------------
    Benachrichtigungen
 ------------------------------------------------------------------ */
