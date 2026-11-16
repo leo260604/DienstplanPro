@@ -2284,3 +2284,4 @@ button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline
 /* Bereitschaftszeit-Dialog: Farbpunkte inkl. „Eigene Farbe“ in zwei sauberen Reihen */
 .sb-time-modal .shift-color-presets{display:grid;grid-template-columns:repeat(7,30px);justify-content:start;align-items:center;gap:10px 12px}
 .sb-time-modal .shift-color-presets .color-swatch{width:30px;height:30px;margin:0;padding:0}
+.fmt-modal{width:min(520px,100%)}

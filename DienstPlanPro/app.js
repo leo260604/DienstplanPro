@@ -94,8 +94,8 @@ function makeZip(files){
 }
 const xmlEsc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
 /* Farben der Arten wie im System (Dienst/Bereitschaft/Abwesenheit/Arbeitsort) */
-const KIND_HEX={Dienst:'14A1A9',Bereitschaft:'6C5CCF',Abwesenheit:'C27A12',Arbeitsort:'3974C6'};
-const KIND_LIGHT={Dienst:'E3F4F5',Bereitschaft:'ECE9FA',Abwesenheit:'F8EEDF',Arbeitsort:'E4ECF8'};
+const KIND_HEX={Dienst:'14A1A9',Bereitschaft:'6C5CCF',Abwesenheit:'C27A12',Arbeitsort:'3974C6',Erfolgreich:'1F9A63',Verweigert:'D64550',Hinweis:'C27A12',Erstellt:'1F9A63',Geändert:'3974C6',Gelöscht:'D64550',Info:'596579'};
+const KIND_LIGHT={Dienst:'E3F4F5',Bereitschaft:'ECE9FA',Abwesenheit:'F8EEDF',Arbeitsort:'E4ECF8',Erfolgreich:'E3F3EB',Verweigert:'FBE6E8',Hinweis:'F8EEDF',Erstellt:'E3F3EB',Geändert:'E4ECF8',Gelöscht:'FBE6E8',Info:'EEF1F3'};
 const KIND_ORDER=['Dienst','Bereitschaft','Abwesenheit','Arbeitsort'];
 function makeXlsx(sheetName,rows,opts={}){
  const col=i=>{let s='';i++;while(i){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
@@ -2966,6 +2966,20 @@ function runExport(id,fmt){
  logExport(rep.title,fmtName,spec.rows.length,spec.rows.length>1000?'Groß (>1.000 Zeilen)':'Erfolgreich',{range:rangeText()});
  toast(`„${rep.title}“ als ${fmt==='XLSX'?'Excel':fmt} erstellt.`);return true;
 }
+function chooseFormatDialog(title,sub){return new Promise(res=>{
+ document.getElementById('fmt-modal')?.remove();
+ const m=document.createElement('div');m.className='modal-backdrop';m.id='fmt-modal';
+ m.innerHTML=`<div class="modal export-modal fmt-modal" role="dialog" aria-modal="true" aria-labelledby="fmt-title"><div class="export-head"><span class="export-head-ic">${icon('download')}</span><div><h2 id="fmt-title">${escapeHtml(title)}</h2><small>${escapeHtml(sub||'')}</small></div><button type="button" class="icon-btn" data-x aria-label="Schließen">×</button></div>
+  <div class="export-body"><div class="export-label">In welchem Format?</div><div class="export-formats" role="radiogroup">${EXPORT_FORMATS.map(([v,l,ic])=>`<button type="button" class="export-fmt ${v===exportFormat?'on':''}" data-fmt="${v}" role="radio" aria-checked="${v===exportFormat}">${icon(ic)}<b>${l}</b><small>${v==='PDF'?'Zum Lesen & Drucken':v==='XLSX'?'Formatiert, mit Filter':'Rohdaten für Importe'}</small></button>`).join('')}</div><p class="export-note" data-note></p></div>
+  <div class="export-actions"><button type="button" class="btn ghost" data-x>Abbrechen</button><button type="button" class="btn primary" data-go>${icon('download')}<span data-go-l></span></button></div></div>`;
+ document.body.appendChild(m);let fmt=exportFormat;
+ const sync=()=>{m.querySelectorAll('.export-fmt').forEach(b=>{const on=b.dataset.fmt===fmt;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)});m.querySelector('[data-go-l]').textContent=`Als ${fmt==='XLSX'?'Excel':fmt} exportieren`;m.querySelector('[data-note]').innerHTML=fmt==='CSV'?`${icon('alert')}CSV enthält nur die Werte – Farben und Spaltenbreiten kann das Format nicht speichern.`:''};
+ const done=v=>{m.remove();document.removeEventListener('keydown',esc);res(v)};const esc=e=>{if(e.key==='Escape')done(null)};document.addEventListener('keydown',esc);
+ m.querySelectorAll('.export-fmt').forEach(b=>b.onclick=()=>{fmt=b.dataset.fmt;sync()});
+ m.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>done(null));m.onclick=e=>{if(e.target===m)done(null)};
+ m.querySelector('[data-go]').onclick=()=>{exportFormat=fmt;done(fmt)};
+ sync();setTimeout(()=>m.querySelector('.export-fmt.on')?.focus({preventScroll:true}),30);
+})}
 function exportDialogHtml(){
  return `<div class="modal-backdrop" id="export-modal" hidden><div class="modal export-modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
   <div class="export-head"><span class="export-head-ic">${icon('download')}</span><div><h2 id="export-title">Exportieren</h2><small id="export-scope"></small></div><button type="button" class="icon-btn" id="export-close" aria-label="Schließen">×</button></div>
@@ -3155,7 +3169,17 @@ function bindLogPage(){
   content.querySelectorAll('[data-exp-format]').forEach(b=>b.onclick=()=>{expFormat=b.dataset.expFormat;render()});
   document.getElementById('exp-status').onchange=e=>{expStatus=e.target.value;render()};
  }
- document.getElementById('export-log').onclick=()=>{const data=isAudit?auditLog:exportLog;if(!data.length){toast('Das Protokoll ist leer.');return}const rows=isAudit?[['Zeitpunkt','Benutzer','Rolle','Aktion','Bereich','Titel','Objekt','Vorher','Nachher','Details'],...data.map(x=>[fmtDateTime(x.ts),x.user,x.role,x.action,x.area,x.title,x.object,x.before,x.after,x.detail])]:[['Zeitpunkt','Benutzer','Rolle','Bericht','Format','Zeilen','Zeitraum','Größe','Status'],...data.map(x=>[fmtDateTime(x.ts),x.user,x.role,x.report,x.format,x.rows,x.range,fmtSize(x.size),x.status])];downloadCsv(rows,safeFileName(currentPage)+'.csv');logExport(currentPage,'CSV',data.length,'Erfolgreich');toast('Protokoll exportiert.');if(!isAudit)render()};
+ document.getElementById('export-log').onclick=async()=>{const data=isAudit?auditLog:exportLog;if(!data.length){toast('Das Protokoll ist leer.');return}
+  const fmt=await chooseFormatDialog(isAudit?'Audit Log exportieren':'Export-Protokoll exportieren',`${data.length.toLocaleString(LOC())} Einträge · vollständiges Protokoll`);if(!fmt)return;
+  const sorted=[...data].sort((a,b)=>b.ts-a.ts);
+  const head=isAudit?['Zeitpunkt','Benutzer','Rolle','Aktion','Bereich','Titel','Objekt','Vorher','Nachher','Details']:['Zeitpunkt','Benutzer','Rolle','Bericht','Format','Zeilen','Zeitraum','Größe','Status'];
+  const rows=isAudit?sorted.map(x=>[fmtDateTime(x.ts),x.user||'',x.role||'',x.action||'',x.area||'',x.title||'',x.object||'',x.before||'',x.after||'',x.detail||'']):sorted.map(x=>[fmtDateTime(x.ts),x.user||'',x.role||'',x.report||'',x.format||'',+x.rows||0,x.range||'',fmtSize(x.size),x.status||'']);
+  const title=isAudit?'Audit Log':'Export-Protokoll',sub=`${data.length.toLocaleString(LOC())} Einträge · Stand ${fmtDateTime(Date.now())}`,base=safeFileName(currentPage);
+  const statusKind=v=>KIND_HEX[v]?v:(isAudit?'Info':'Hinweis');
+  if(fmt==='CSV')downloadCsv([head,...rows],base+'.csv');
+  else if(fmt==='XLSX')saveFile(base+'.xlsx',makeXlsx(title,[head,...rows],{title,subtitle:`${sub} · ${reportStamp()}`,intCols:isAudit?[]:[5]}));
+  else saveFile(base+'.pdf',makePdf(title,sub,isAudit?['Zeitpunkt','Benutzer','Rolle','Aktion','Bereich','Titel','Objekt','Details']:head,isAudit?rows.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[9]||(r[7]||r[8]?`${r[7]||'—'} → ${r[8]||'—'}`:'')]):rows.map(r=>r.map(v=>typeof v==='number'?v.toLocaleString(LOC()):v)),isAudit?[1.6,1.8,1.3,1.1,1.4,2.2,2,3]:[1.6,1.8,1.3,2.6,0.9,0.8,2.1,0.9,1.2],{kindCol:isAudit?3:8,kindOf:statusKind,rightCols:isAudit?[]:[5,7]}));
+  logExport(currentPage,fmt,data.length,'Erfolgreich');toast(`Protokoll als ${fmt==='XLSX'?'Excel':fmt} exportiert.`);if(!isAudit)render()};
 }
 
 /* ------------------------------------------------------------------
