@@ -3314,28 +3314,40 @@ function helpVisibleSections(c=helpCaps()){
 const helpTipText=(it,c)=>typeof it.tip==='function'?it.tip(c):it.tip||'';
 function helpPage(){
  const c=helpCaps(),secs=helpVisibleSections(c),total=secs.reduce((n,s)=>n+s.items.length,0);
- const rights=PERM_AREAS.map(a=>({a,p:perm(a)})).filter(x=>x.p!=='N');
  const toc=secs.map(sec=>`<button type="button" class="help-toc-item" data-help-jump="${sec.id}">${icon(sec.icon)}<span>${escapeHtml(sec.title)}</span><small>${sec.items.length}</small></button>`).join('');
- const body=secs.map(sec=>{const mode=sec.page?perm(sec.page):'';
-  return `<section class="panel help-sec" id="help-${sec.id}" data-help-sec="${sec.id}"><div class="help-sec-head"><span class="ta-mark help-mark">${icon(sec.icon)}</span><div class="help-sec-txt"><h2>${escapeHtml(sec.title)}</h2><p class="sub">${escapeHtml(sec.intro)}</p></div>${mode?`<span class="pill help-mode ${mode==='E'?'edit':'read'}">${mode==='E'?'Bearbeiten':'Nur lesen'}</span>`:''}${sec.page&&sec.page!==currentPage?`<button type="button" class="btn small help-open" data-help-go="${escapeHtml(sec.page)}">Seite öffnen${icon('chev')}</button>`:''}</div>
+ const body=secs.map(sec=>{
+  return `<section class="panel help-sec" id="help-${sec.id}" data-help-sec="${sec.id}"><div class="help-sec-head"><span class="ta-mark help-mark">${icon(sec.icon)}</span><div class="help-sec-txt"><h2>${escapeHtml(sec.title)}</h2><p class="sub">${escapeHtml(sec.intro)}</p></div>${sec.page&&sec.page!==currentPage?`<button type="button" class="btn small help-open" data-help-go="${escapeHtml(sec.page)}">Seite öffnen${icon('chev')}</button>`:''}</div>
   <div class="help-items">${sec.items.map((it,i)=>{const id=sec.id+'-'+i,tip=helpTipText(it,c);return `<details class="help-item" id="help-${id}" data-help-item="${id}" data-help-text="${escapeHtml((sec.title+' '+it.t+' '+it.s.join(' ')+' '+tip).toLowerCase())}"><summary><span class="help-q">${escapeHtml(it.t)}</span>${icon('down','help-chev')}</summary><ol class="help-steps">${it.s.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol>${tip?`<p class="help-tip">${icon('spark')}<span>${escapeHtml(tip)}</span></p>`:''}</details>`}).join('')}</div></section>`}).join('');
  return `${heading('Hilfe',`Anleitungen für deine Rolle „${escapeHtml(currentRole)}“ – du siehst nur, was du nutzen darfst.`)}
  <div class="help-top">
   <label class="search-field help-search">${icon('search')}<input id="help-search" type="search" placeholder="Anleitung suchen, z. B. „Urlaub“ oder „Rotation“ …" value="${escapeHtml(helpQuery)}" autocomplete="off"></label>
   <span class="muted small" id="help-count">${total} Anleitungen</span>
  </div>
- <section class="panel help-rights"><div class="help-rights-head"><b>Deine Rechte als ${escapeHtml(currentRole)}</b><small class="muted">Freigaben verwaltet die Administration unter „Team Berechtigungen“.</small></div><div class="help-rights-list">${rights.map(r=>`<span class="help-right ${r.p==='E'?'edit':'read'}">${escapeHtml(r.a)}<em>${r.p==='E'?'Bearbeiten':'Lesen'}</em></span>`).join('')}</div></section>
- <div class="help-layout"><nav class="help-toc" aria-label="Inhalt der Hilfe">${toc}</nav><div class="help-main">${body}<div class="empty-note help-empty" id="help-empty" hidden>Keine Anleitung gefunden. Versuche einen anderen Begriff.</div></div></div>`;
+ <div class="team-dd help-dd" id="help-dd"><button type="button" class="chip team-dd-btn" id="help-dd-btn" aria-haspopup="listbox" aria-expanded="false">${icon('menu')}<span class="team-dd-label">Abschnitte</span>${icon('down','team-dd-caret')}</button>
+  <div class="team-dd-panel" id="help-dd-panel" hidden><div class="team-dd-list" role="listbox">${secs.map(sec=>`<button type="button" class="team-dd-opt help-dd-opt" data-help-jump="${sec.id}" role="option">${icon(sec.icon)}<span class="team-dd-name">${escapeHtml(sec.title)}</span><small>${sec.items.length}</small></button>`).join('')}</div></div></div>
+ <div class="help-layout"><nav class="help-toc" aria-label="Inhalt der Hilfe">${toc}</nav><div class="help-main">${body}<div class="empty-note help-empty" id="help-empty" hidden>Keine Anleitung gefunden. Versuche einen anderen Begriff.</div></div></div>
+ <button type="button" class="help-top-btn" id="help-top-btn" aria-label="Nach oben" title="Nach oben">${icon('down')}</button>`;
 }
 function bindHelp(){
  const input=document.getElementById('help-search');if(!input)return;
  const apply=()=>{const q=input.value.trim().toLowerCase();helpQuery=input.value;let n=0;
-  content.querySelectorAll('.help-sec').forEach(sec=>{let k=0;sec.querySelectorAll('.help-item').forEach(it=>{const hit=!q||q.split(/\s+/).every(w=>it.dataset.helpText.includes(w));it.hidden=!hit;if(hit)k++;if(q)it.open=hit&&q.length>2});sec.hidden=!k;n+=k;
-   const tb=content.querySelector(`[data-help-jump="${sec.dataset.helpSec}"]`);if(tb){tb.hidden=!k;const sm=tb.querySelector('small');if(sm)sm.textContent=k}});
+  content.querySelectorAll('.help-sec').forEach(sec=>{let k=0;sec.querySelectorAll('.help-item').forEach(it=>{const hit=!q||q.split(/\s+/).every(w=>it.dataset.helpText.includes(w));it.hidden=!hit;if(hit)k++;});sec.hidden=!k;n+=k;
+   content.querySelectorAll(`[data-help-jump="${sec.dataset.helpSec}"]`).forEach(tb=>{tb.hidden=!k;const sm=tb.querySelector('small');if(sm)sm.textContent=k})});
   document.getElementById('help-count').textContent=q?`${n} ${n===1?'Treffer':'Treffer'}`:`${n} Anleitungen`;document.getElementById('help-empty').hidden=!!n};
  input.addEventListener('input',apply);if(helpQuery)apply();
- content.querySelectorAll('[data-help-jump]').forEach(b=>b.onclick=()=>{const el=document.getElementById('help-'+b.dataset.helpJump);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});content.querySelectorAll('.help-toc-item').forEach(x=>x.classList.toggle('on',x===b))}});
+ const hdd=document.getElementById('help-dd'),hbtn=document.getElementById('help-dd-btn'),hpan=document.getElementById('help-dd-panel');
+ const hClose=()=>{hdd.classList.remove('open');hpan.hidden=true;hbtn.setAttribute('aria-expanded','false')};
+ hbtn.onclick=e=>{e.stopPropagation();if(hpan.hidden){hdd.classList.add('open');hpan.hidden=false;hbtn.setAttribute('aria-expanded','true')}else hClose()};
+ hdd.addEventListener('pointerdown',e=>e.stopPropagation());hdd.onkeydown=e=>{if(e.key==='Escape'){hClose();hbtn.focus()}};
+ if(!window.__helpDdBound){window.__helpDdBound=true;document.addEventListener('pointerdown',()=>{const d=document.getElementById('help-dd');if(!d)return;const p=d.querySelector('#help-dd-panel');if(p&&!p.hidden){d.classList.remove('open');p.hidden=true;d.querySelector('#help-dd-btn').setAttribute('aria-expanded','false')}})}
+ content.querySelectorAll('[data-help-jump]').forEach(b=>b.onclick=()=>{const id=b.dataset.helpJump,el=document.getElementById('help-'+id);if(!el)return;hClose();
+  content.querySelectorAll('[data-help-jump]').forEach(x=>x.classList.toggle('on',x.dataset.helpJump===id));
+  setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'start'});el.classList.add('help-flash');setTimeout(()=>el.classList.remove('help-flash'),1400)},30)});
  content.querySelectorAll('[data-help-go]').forEach(b=>b.onclick=()=>go(b.dataset.helpGo));
+ const topBtn=document.getElementById('help-top-btn');topBtn.onclick=()=>{window.scrollTo({top:0,behavior:'smooth'});document.querySelector('.main')?.scrollTo?.({top:0,behavior:'smooth'})};
+ const syncTop=()=>{const b=document.getElementById('help-top-btn');if(!b)return;const long=document.documentElement.scrollHeight>window.innerHeight*1.6;b.classList.toggle('show',long&&window.scrollY>Math.min(500,window.innerHeight*.6))};
+ if(!window.__helpTopBound){window.__helpTopBound=true;window.addEventListener('scroll',()=>{if(currentPage==='Hilfe')syncTop()},{passive:true});window.addEventListener('resize',()=>{if(currentPage==='Hilfe')syncTop()})}
+ input.addEventListener('input',()=>setTimeout(syncTop,50));content.querySelectorAll('.help-item').forEach(d=>d.addEventListener('toggle',syncTop));syncTop();
  if(helpFocus){const el=document.getElementById('help-'+helpFocus);helpFocus='';if(el){if(el.tagName==='DETAILS')el.open=true;setTimeout(()=>el.scrollIntoView({block:'center'}),40);el.classList.add('help-flash');setTimeout(()=>el.classList.remove('help-flash'),1600)}}
 }
 function openHelp(id){helpFocus=id||'';helpQuery='';go('Hilfe')}
