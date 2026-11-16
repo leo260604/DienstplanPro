@@ -2640,6 +2640,36 @@ body.dp-range-dragging{cursor:cell}
 .tm-person.mo-dragging{opacity:.45}
 .tm-person.mo-before{box-shadow:inset 0 3px 0 var(--accent-color)}
 .tm-person.mo-after{box-shadow:inset 0 -3px 0 var(--accent-color)}
+/* ===== Dienstplan/Bereitschaft am PC: aufgeräumter Kopfbereich (angelehnt an die Mobilansicht) ===== */
+.page-heading .sub:empty{display:none}
+@media (min-width:701px){
+ /* nur Hauptbutton + „Aktionen“-Menü */
+ .dp-actions>.btn:not(.primary){display:none}
+ .dp-actions>.btn.primary{order:2}
+ .dp-actions-toggle{display:inline-flex;align-items:center;gap:7px;order:1}
+ .dp-actions-toggle.no-secondary{display:none}
+ .dp-actions-toggle .dp-act-ic{width:15px;height:15px;opacity:.75}
+ .dp-actions-toggle .dp-act-caret{width:13px;height:13px;opacity:.6;transition:transform .15s}
+ .dp-actions-toggle[aria-expanded="true"] .dp-act-caret{transform:rotate(180deg)}
+ /* Dropdown statt Bottom-Sheet */
+ .dp-sheet-layer.dp-pop,.dp-sheet-layer.dp-pop.show{background:transparent;align-items:flex-start;justify-content:flex-end}
+ .dp-pop .dp-sheet{position:fixed;width:330px;max-width:calc(100vw - 16px);border-radius:14px;padding:6px;border:1px solid var(--line);box-shadow:0 18px 44px -14px rgba(15,23,42,.35);transform:translateY(-4px);opacity:0;transition:transform .15s,opacity .15s}
+ .dp-pop.show .dp-sheet{transform:none;opacity:1}
+ .dp-pop .dp-sheet-grip,.dp-pop .dp-sheet-head{display:none}
+ .dp-pop .dp-sheet-item{padding:9px 8px}
+ .dp-pop .dp-sheet-ic{width:34px;height:34px;border-radius:10px}
+ .dp-pop .dp-sheet-chev{display:none}
+ /* Zeitraum-Navigation als ruhige Segment-Leiste – passend zur Ansichtsauswahl */
+ .calendar-toolbar{margin-bottom:10px}
+ .calendar-nav{gap:2px;background:var(--surface-3);padding:3px;border-radius:10px}
+ .calendar-nav .btn{height:32px;min-width:32px;border:0;background:transparent;box-shadow:none;border-radius:7px;color:var(--ink-2)}
+ .calendar-nav .btn:hover{background:var(--surface);color:var(--ink)}
+ .calendar-nav #today{margin-left:4px;padding:0 12px;font-weight:600;background:var(--surface);box-shadow:var(--shadow-sm);color:var(--ink)}
+ .calendar-nav strong{min-width:0;padding:0 8px;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+ .calendar-nav .kw-pill{font-size:11px}
+ .view-switch button{padding:7px 16px}
+}
+@media (min-width:701px){.dp-sheet-layer.dp-pop{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important}.dp-pop .dp-sheet{margin:0}}
 
 </style>
 </head>
@@ -4099,8 +4129,10 @@ function calendar(){
  const canAdd=entryTeams().length>0,canManageAny=manageableTeams().length>0;
   const actionsRaw=isDuty?`<button class="btn" id="add-workplace">${icon('home')}Arbeitsort</button>${absenceTeams().length?`<button class="btn" id="add-absence">${icon('travel','ic-fill')}Abwesenheit</button>`:''}${featureOn('rotationDuty')&&canManageAny&&manageableTeams('Dienstplan').some(t=>shiftTypes.some(s=>s.team===t.name))?`<button class="btn" id="duty-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Eintrag erstellen</button>`:''}`:`${featureOn('rotationStandby')&&canManageAny&&standbyTimes.length?`<button class="btn" id="auto-rotation">${icon('spark')}Rotation automatisch planen</button>`:''}${canAdd?`<button class="btn primary" id="add">${icon('plus')}Bereitschaft einteilen</button>`:''}`;
  // Mobil: Aktionen im Dienstplan unter einem Button „Aktionen“ zusammenfassen
- const actions=actionsRaw?`<span class="dp-actions">${actionsRaw}</span><button type="button" class="btn dp-actions-toggle" id="dp-actions-toggle" aria-haspopup="dialog">Aktionen${icon('down','dp-act-caret')}</button>`:actionsRaw;
- const sub=isDuty?((currentView==='Monat')?monthName(d):`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}`):(currentView==='Zeitleiste'||currentView==='Woche'?`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}${currentView==='Zeitleiste'?' · Wer hat wann Bereitschaft?':''}`:currentView==='Monat'?`${monthName(d)} · Rotationsübersicht aller Teams`:fmtWithWeekday(d));
+ // PC: nur der Hauptbutton bleibt sichtbar, die übrigen Aktionen liegen im Menü „Aktionen“ (wie mobil)
+ const secCount=(actionsRaw.match(/class="btn"/g)||[]).length;
+ const actions=actionsRaw?`<span class="dp-actions${secCount?'':' no-secondary'}">${actionsRaw}</span><button type="button" class="btn dp-actions-toggle${secCount?'':' no-secondary'}" id="dp-actions-toggle" aria-haspopup="menu">${icon('grid','dp-act-ic')}<span>Aktionen</span>${icon('down','dp-act-caret')}</button>`:actionsRaw;
+ const sub=isDuty?'':(currentView==='Zeitleiste'||currentView==='Woche'?`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}${currentView==='Zeitleiste'?' · Wer hat wann Bereitschaft?':''}`:currentView==='Monat'?`${monthName(d)} · Rotationsübersicht aller Teams`:fmtWithWeekday(d));
  let nowBlock='';// Bereich „Jetzt in Bereitschaft“ entfernt – Kontakt über Klick auf eine Bereitschaft
 
  const memberOptions=staff.filter(s=>!calendarTeams.length||teams.some(t=>calendarTeams.includes(t.name)&&t.memberIds.includes(s[8]))).map(s=>`<option value="${escapeHtml(s[0])}">`).join('');
@@ -5831,9 +5863,11 @@ const wpMerged=a=>a.kind==='Arbeitsort'&&WPX.duty.has(a.date+'|'+a.employee);// 
 const wpHint=(wp,cls='')=>wp?`<span class="wp-hint ${wp.shift==='Homeoffice'?'is-home':'is-office'} ${cls}" title="Arbeitsort: ${escapeHtml(wp.shift)}">${icon(wp.shift==='Homeoffice'?'home':'build')}${escapeHtml(wp.shift)}</span>`:'';
 /* Mobil: Aktionen-Menü im Dienstplan und in der Bereitschaft */
 function openDutyActionsSheet(){
- const src=[...document.querySelectorAll('.dp-actions > button')];if(!src.length)return;
+ const desk=!window.matchMedia('(max-width: 700px)').matches;
+ const src=[...document.querySelectorAll('.dp-actions > button')].filter(b=>!desk||!b.classList.contains('primary'));if(!src.length)return;
+ const anchor=document.getElementById('dp-actions-toggle');
  const desc={'swap-new-btn':'Dienst mit einer Kollegin oder einem Kollegen tauschen','add-workplace':'Homeoffice oder Büro eintragen','add-note':'Notiz für einen Tag hinterlegen','add-absence':'Urlaub, Krankenstand & Co. eintragen','duty-rotation':'Dienste im Wechsel automatisch verteilen','auto-rotation':'Bereitschaften im Wechsel automatisch verteilen','add':currentPage==='Bereitschaft'?'Neue Bereitschaft einteilen':'Neuen Dienst einteilen'};
- const layer=document.createElement('div');layer.className='modal-backdrop app-dialog dp-sheet-layer';
+ const layer=document.createElement('div');layer.className='modal-backdrop app-dialog dp-sheet-layer'+(desk?' dp-pop':'');
  layer.innerHTML=`<div class="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="dp-sheet-title"><div class="dp-sheet-grip" aria-hidden="true"></div><div class="dp-sheet-head"><b id="dp-sheet-title">Aktionen</b><button type="button" class="icon-btn" data-sheet-close aria-label="Schließen">×</button></div>
   <div class="dp-sheet-list">${src.map((b,i)=>`<button type="button" class="dp-sheet-item ${b.classList.contains('primary')?'primary':''}" data-sheet-i="${i}"><span class="dp-sheet-ic">${b.querySelector('svg')?.outerHTML||''}</span><span class="dp-sheet-txt"><b>${escapeHtml(b.textContent.trim())}</b><small>${escapeHtml(desc[b.id]||'')}</small></span>${icon('chev','dp-sheet-chev')}</button>`).join('')}</div></div>`;
  const close=()=>{layer.classList.remove('show');document.removeEventListener('keydown',key,true);setTimeout(()=>layer.remove(),180)};
@@ -5842,6 +5876,8 @@ function openDutyActionsSheet(){
  layer.querySelectorAll('[data-sheet-close]').forEach(b=>b.onclick=close);
  layer.querySelectorAll('[data-sheet-i]').forEach(b=>b.onclick=()=>{const t=src[+b.dataset.sheetI];close();setTimeout(()=>t&&t.click(),60)});
  document.addEventListener('keydown',key,true);document.body.appendChild(layer);
+ if(desk&&anchor){const r=anchor.getBoundingClientRect(),sh=layer.querySelector('.dp-sheet');sh.style.top=(r.bottom+6)+'px';sh.style.right=Math.max(8,window.innerWidth-r.right)+'px';anchor.setAttribute('aria-expanded','true');
+  const off=()=>anchor.removeAttribute('aria-expanded');layer.addEventListener('transitionend',()=>{if(!layer.isConnected)off()});new MutationObserver((_,o)=>{if(!layer.isConnected){off();o.disconnect()}}).observe(document.body,{childList:true})}
  requestAnimationFrame(()=>layer.classList.add('show'));
  setTimeout(()=>layer.querySelector('.dp-sheet-item')?.focus(),60);
 }
@@ -6550,16 +6586,16 @@ const HELP_SECTIONS=[
   {t:'Teamnotizen',s:['Notizen für ein ganzes Team stehen im Kalender direkt unter dem Datum (z. B. „Teambesprechung 09:00“).','Klicke darauf, um alle Teamnotizen des Tages zu sehen.'],tip:c=>teamNoteTeams().length?'Neue Teamnotiz: Fahre über das Datum und klicke auf „+ Teamnotiz“ – oder im Teamnotizen-Popup auf „Weitere Teamnotiz hinzufügen“.':''},
   {t:'Notiz hinzufügen',s:['Hast du an dem Tag einen Dienst, klicke bei deinem Dienst auf „⋯“ und wähle „Notiz hinzufügen“. Die Notiz hängt dann an diesem Dienst.','Hast du an dem Tag keinen Dienst, klicke im Kalender auf das Feld „Notiz hinzufügen“.','Schreibe die Notiz und speichere. Im Notizen-Popup kannst du sie später bearbeiten, löschen oder weitere hinzufügen.'],tip:c=>c.admin?'Als Admin kannst du Notizen für alle Personen anlegen.':['Teamleiter','Deputy'].includes(currentRole)?'Notizen kannst du für dich selbst und für Personen deiner Teams anlegen.':'Notizen kannst du für dich selbst anlegen.'},
   {t:'Einträge verschieben',when:c=>c.plan,s:['Ziehe einen Eintrag mit der Maus auf einen anderen Tag oder zu einer anderen Person im selben Team.','Lass los – der Eintrag wird verschoben. Strg Z nimmt es zurück.']},
-  {t:'Rotation automatisch planen',when:c=>c.plan&&featureOn('rotationDuty'),s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Dienste und den Zeitraum.','Die Dienste werden gleichmäßig auf die Teammitglieder verteilt; Abwesende werden übersprungen.','Kontrolliere das Ergebnis im Kalender – mit Strg Z lässt sich die ganze Rotation zurücknehmen.']},
-  {t:'Abwesenheit eintragen',when:c=>c.absence,s:['Klicke auf „Abwesenheit“.','Wähle Mitarbeiter und Art (z. B. Urlaub, Zeitausgleich, Arztbesuch). Bei stundenweisen Arten gibst du zusätzlich die Uhrzeit an.','Wähle den Zeitraum und speichere – die Abwesenheit erscheint beim Mitarbeiter im Kalender.']},
-  {t:'Arbeitsort eintragen (Büro / Homeoffice)',s:['Klicke auf „Arbeitsort“.','Wähle Büro oder Homeoffice und den Zeitraum – eingetragen wird Montag bis Freitag.','Schneller geht es in der Wochen- oder Monatsansicht: Mit gedrückter Maustaste über mehrere Tage ziehen, um den Zeitraum zu markieren.']},
+  {t:'Rotation automatisch planen',when:c=>c.plan&&featureOn('rotationDuty'),s:['Klicke oben auf „Aktionen“ und wähle „Rotation automatisch planen“.','Wähle Teams, Dienste und den Zeitraum.','Die Dienste werden gleichmäßig auf die Teammitglieder verteilt; Abwesende werden übersprungen.','Kontrolliere das Ergebnis im Kalender – mit Strg Z lässt sich die ganze Rotation zurücknehmen.']},
+  {t:'Abwesenheit eintragen',when:c=>c.absence,s:['Klicke oben auf „Aktionen“ und wähle „Abwesenheit“.','Wähle Mitarbeiter und Art (z. B. Urlaub, Zeitausgleich, Arztbesuch). Bei stundenweisen Arten gibst du zusätzlich die Uhrzeit an.','Wähle den Zeitraum und speichere – die Abwesenheit erscheint beim Mitarbeiter im Kalender.']},
+  {t:'Arbeitsort eintragen (Büro / Homeoffice)',s:['Klicke oben auf „Aktionen“ und wähle „Arbeitsort“.','Wähle Büro oder Homeoffice und den Zeitraum – eingetragen wird Montag bis Freitag.','Schneller geht es in der Wochen- oder Monatsansicht: Mit gedrückter Maustaste über mehrere Tage ziehen, um den Zeitraum zu markieren.']},
   {t:'Dienst tauschen',when:c=>c.swap,s:['Klicke bei deinem Dienst im „⋯“-Menü auf „Dienst tauschen“.','Wähle die Kollegin bzw. den Kollegen und den Dienst, den du dafür übernimmst.','Getauscht wird erst, wenn die andere Person zustimmt. Offene Anfragen bestätigst, lehnst ab oder ziehst zurück in der Übersicht „Diensttausch“ (Dashboard-Kachel oder Benachrichtigung).'],tip:'Der Diensttausch muss für dein Team in der Administration aktiviert sein.'},
   {t:'Dienste lesen',when:c=>!c.plan&&!c.selfDuty,s:['Du siehst den Dienstplan im Lesemodus.','Klicke auf einen Eintrag, um Details wie Uhrzeit und Team zu sehen.']}
  ]},
  {id:'bereitschaft',page:'Bereitschaft',icon:'moon',title:'Bereitschaft',intro:'Wer wann Bereitschaft hat – und wie man sie einteilt.',items:[
   {t:'Ansichten und Zeitleiste',s:['Wähle Tag, Woche, Monat oder Zeitleiste.','Die Zeitleiste zeigt pro Team, wer an welchem Tag Bereitschaft hat.','Mit ‹ › und „Heute“ wechselst du den Zeitraum.']},
   {t:'Bereitschaft einteilen',when:c=>c.planSb||c.selfSb,s:['Klicke auf „Bereitschaft einteilen“ – oder im Kalender bei der Person und dem Tag auf „+“.','Wähle Team, Mitarbeiter und Bereitschaftszeit – angeboten werden nur die Bereitschaftszeiten, die für dieses Team freigegeben sind.','Bei einer fixen Bereitschaft wird die Uhrzeit übernommen. Bei einer variablen Bereitschaft musst du Beginn und Ende selbst eingeben.','Wähle das Datum bzw. den Zeitraum und speichere.']},
-  {t:'Bereitschafts-Rotation planen',when:c=>c.planSb&&featureOn('rotationStandby'),s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Bereitschaftszeit, Zeitraum und ob wöchentlich oder täglich gewechselt wird. Die Bereitschaftszeit muss für alle gewählten Teams freigegeben sein.','Bei einer variablen Bereitschaft gibst du die Uhrzeit einmal für alle Einträge ein.','Mit „Bestehende Einträge behalten“ werden nur Lücken gefüllt.']},
+  {t:'Bereitschafts-Rotation planen',when:c=>c.planSb&&featureOn('rotationStandby'),s:['Klicke oben auf „Aktionen“ und wähle „Rotation automatisch planen“.','Wähle Teams, Bereitschaftszeit, Zeitraum und ob wöchentlich oder täglich gewechselt wird. Die Bereitschaftszeit muss für alle gewählten Teams freigegeben sein.','Bei einer variablen Bereitschaft gibst du die Uhrzeit einmal für alle Einträge ein.','Mit „Bestehende Einträge behalten“ werden nur Lücken gefüllt.']},
   {t:'Bereitschaft bearbeiten oder löschen',when:c=>c.planSb||c.selfSb,s:['Klicke auf den Eintrag oder auf „⋯“.','Wähle „Bearbeiten“ oder „Löschen“.']},
   {t:'Bereitschaft erreichen',s:['Fahre über einen Bereitschaftseintrag oder öffne ihn.','Über die Telefonnummer bzw. „Anrufen“ erreichst du die Person direkt.']}
  ]},
