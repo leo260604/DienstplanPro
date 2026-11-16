@@ -330,7 +330,7 @@ EN_RX.push(
 Object.assign(EN,{
 'Teameinstellungen':'Team settings','Gilt für alle Mitglieder des ausgewählten Teams.':'Applies to all members of the selected team.','Team':'Team',
 'Mitarbeiter können Dienste untereinander tauschen – erst nach Bestätigung der Kollegin bzw. des Kollegen.':'Employees can swap duties with each other – only after the colleague confirms.',
-'Aktiviert – der Button „Diensttausch“ ist im Dienstplan sichtbar.':'Enabled – the “Shift swap” button is shown in the duty roster.','Deaktiviert – in diesem Team sind keine Tauschanfragen möglich.':'Disabled – no swap requests are possible in this team.',
+'Aktiviert – „Dienst tauschen“ ist im ⋯-Menü der Dienste verfügbar.':'Enabled – “Swap shift” is available in the ⋯ menu of duties.','Deaktiviert – in diesem Team sind keine Tauschanfragen möglich.':'Disabled – no swap requests are possible in this team.',
 ' Offene Anfragen können nicht mehr angenommen werden.':' Open requests can no longer be accepted.','Diensttausch aktiv':'Shift swap active',
 'Dienste selbst eintragen':'Enter own duties','Wer eigene Dienste im Dienstplan anlegen und bearbeiten darf.':'Who may create and edit their own duties in the roster.',
 'Bereitschaft selbst eintragen':'Enter own on-call','Wer eigene Bereitschaften anlegen und bearbeiten darf.':'Who may create and edit their own on-call shifts.',
