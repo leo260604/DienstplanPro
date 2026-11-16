@@ -37,7 +37,7 @@ Weitere Korrekturen: Beim Umbenennen eines Mitarbeiters werden seine Dienste mit
 - **Dashboard:** Heute im Dienst, Bereitschaft heute (mit Anruf-Button), Wochenauslastung sowie automatisch erkannte offene Punkte (fehlender Deputy, Tage ohne Bereitschaft, Überschneidungen).
 - **Mitarbeiter-Startseite:** der heutige Dienst, Stunden diese Woche, die nächsten Dienste und Bereitschaften.
 - **Dienstzeiten:** Suche, Zeitleiste über 24 Stunden, Duplizieren, Dauer und Live-Vorschau beim Bearbeiten; Dienste über Mitternacht werden erkannt.
-- **Bereitschaft verwalten:** Zeitfenster auf einer 24-Stunden-Skala; einzelne Zeitfenster lassen sich löschen.
+- **Bereitschaft verwalten:** Gruppen und Zeitfenster (auf einer 24-Stunden-Skala) legt nur der Admin an, ändert und löscht sie – über „Gruppe anlegen“ und „Bereitschaftszeit anlegen“ bzw. die Symbole in der Tabelle. Die Bereitschaftsfarbe eines Teams ändert der Admin für alle Teams, die Teamleitung für ihre eigenen Teams.
 - **Kontakte:** Filter nach Rolle, Links zum Anrufen und Mailen, CSV-Export; Teams per Häkchen statt Mehrfachauswahl mit Strg.
 - **Teamverwaltung:** Mitglieder per Häkchen mit Suche; bis 20 Teams, beliebig viele Personen pro Team.
 - **Rollen:** Rollen neu anlegen, umbenennen (wird bei den Personen mitgeführt) und löschen; Admin ist geschützt.

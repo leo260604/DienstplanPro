@@ -335,7 +335,7 @@ const navItems=['Dashboard','Dienstplan','Bereitschaft','Bereitschaft verwalten'
 const PERM_AREAS=['Dashboard','Dienstplan','Bereitschaft','Dienstzeiten','Kontakte','Berichte / Export','Administration','Bereitschaft verwalten','Team Berechtigungen','Audit Log','Export Audit','Einstellungen'];
 const DEFAULT_PERMS={
  'Admin':Object.fromEntries(PERM_AREAS.map(a=>[a,'E'])),
- 'Teamleiter':{'Dashboard':'E','Dienstplan':'E','Bereitschaft':'E','Dienstzeiten':'E','Kontakte':'R','Berichte / Export':'E','Administration':'E','Einstellungen':'E'},
+ 'Teamleiter':{'Dashboard':'E','Dienstplan':'E','Bereitschaft':'E','Dienstzeiten':'E','Kontakte':'R','Berichte / Export':'E','Administration':'E','Bereitschaft verwalten':'E','Einstellungen':'E'},
  'Deputy':{'Dashboard':'E','Dienstplan':'E','Bereitschaft':'E','Dienstzeiten':'E','Kontakte':'R','Berichte / Export':'E','Administration':'E','Einstellungen':'E'},
  'Abteilungsleiter':{'Dashboard':'E','Dienstplan':'E','Bereitschaft':'E','Dienstzeiten':'E','Kontakte':'R','Berichte / Export':'E','Administration':'E','Audit Log':'R','Einstellungen':'E'},
  'Mitarbeiter':{'Dashboard':'R','Dienstplan':'R','Bereitschaft':'R','Kontakte':'R','Einstellungen':'E'},
@@ -346,6 +346,8 @@ const BASE_PERMS={'Dashboard':'R','Dienstplan':'R','Bereitschaft':'R','Kontakte'
 let permissions=(()=>{const v=load('dienstplanPermissions',null);return v&&typeof v==='object'?v:{}})();
 // einmalig: gespeicherte Rechte um „Administration“ für Teamleitung, Deputy und Abteilungsleitung ergänzen
 try{if(!localStorage.getItem('dienstplanPermMig2')){['Teamleiter','Deputy','Abteilungsleiter'].forEach(r=>{if(permissions[r]&&typeof permissions[r]==='object'&&(permissions[r].Administration||'N')==='N')permissions[r].Administration='E'});localStorage.setItem('dienstplanPermMig2','1');if(Object.keys(permissions).length)localStorage.setItem('dienstplanPermissions',JSON.stringify(permissions))}}catch(_){}
+// einmalig: Teamleitung darf unter „Bereitschaft verwalten“ die Bereitschaftsfarben der eigenen Teams ändern
+try{if(!localStorage.getItem('dienstplanPermMig3')){const p=permissions.Teamleiter;if(p&&typeof p==='object'&&(p['Bereitschaft verwalten']||'N')==='N'){p['Bereitschaft verwalten']='E';localStorage.setItem('dienstplanPermissions',JSON.stringify(permissions))}localStorage.setItem('dienstplanPermMig3','1')}}catch(e){}
 function permsFor(role){const p=permissions[role]||DEFAULT_PERMS[role]||BASE_PERMS;return Object.fromEntries(PERM_AREAS.map(a=>[a,role==='Admin'?'E':(a==='Einstellungen'?'E':(p[a]||'N'))]))}
 function perm(area,role=currentRole){return permsFor(role)[area]||'N'}
 const canView=area=>perm(area)!=='N';
@@ -1193,22 +1195,123 @@ function bindCalendarExtras(){
 }
 
 /* ------------------------------------------------------------------
-   Bereitschaft verwalten (Admin)
+   Bereitschaft verwalten
+   – Gruppen und Bereitschaftszeiten: nur Admin
+   – Bereitschaftsfarben: Admin für alle Teams, Teamleitung für die eigenen Teams
 ------------------------------------------------------------------ */
+const STANDBY_COLORS=['#3974c6','#0068a8','#263d75','#159da8','#24966b','#7b8f32','#e09a2d','#d95f20','#c2412d','#dc6475','#d0508a','#b5487d','#9b69c8','#596579'];
+const standbyTimesEditable=()=>currentRole==='Admin';
+function standbyColorTeams(){if(!canEdit('Bereitschaft verwalten'))return [];return currentRole==='Admin'?teams:teams.filter(t=>t.leaderId===currentUserId)}
+function standbyListTeams(){const ed=standbyColorTeams();if(currentRole==='Admin'||ed.length)return ed;return teams}
+const standbyHex=t=>/^#[0-9a-f]{6}$/i.test(t?.standbyColor||'')?t.standbyColor:'#159da8';
+const standbyBadge=t=>escapeHtml(String(t.name).replace(/^Team\s+/i,'').slice(0,2).toUpperCase()||'T');
+function standbyCoverage(){const m=new Uint8Array(1440);standbyTimes.forEach(t=>{const s=Math.round(durationHoursStart(t.start)*60),e=Math.round(durationHoursStart(t.end)*60);if(s===e)return;if(e>s)m.fill(1,s,e);else{m.fill(1,s,1440);m.fill(1,0,e)}});let n=0;for(const v of m)n+=v;return n/60}
+const fmtHours=h=>{const mm=Math.round(h*60),H=Math.floor(mm/60),M=mm%60;return M?`${H} Std. ${M} Min.`:`${H} Std.`};
 function standbyManagementPage(){
- if(!canView('Bereitschaft verwalten'))return `${heading('Zugriff nicht möglich','Diese Seite ist ausschließlich für Administratoren verfügbar.')}`;
- const groupCount=standbyGroups.length,timeCount=standbyTimes.length;
- return `${heading('Bereitschaft verwalten','Gruppen, Zeitfenster und Teamfarben – unabhängig von den regulären Dienstzeiten.')}
- <div class="stats stats-2"><div class="stat-card"><div><div class="stat-label">Gruppen</div><div class="stat-value">${groupCount}</div><div class="stat-note">Organisatorische Bereiche</div></div><div class="stat-icon">${icon('sliders')}</div></div><div class="stat-card"><div><div class="stat-label">Bereitschaftszeiten</div><div class="stat-value">${timeCount}</div><div class="stat-note">Zeitfenster gesamt</div></div><div class="stat-icon">${icon('clock')}</div></div></div>
- <div class="standby-management-layout">
-  <section class="panel"><div class="card-kicker">SCHRITT 1</div><h2>Bereitschaftsgruppe anlegen</h2><p class="sub">Ein organisatorischer Bereich, z. B. ein Standort oder Fachbereich.</p><form id="standby-group-form" class="stack-form"><label>Name der Gruppe<input id="standby-group-name" required maxlength="60" placeholder="z. B. Rufbereitschaft Nord"></label><div class="btn-row end"><button class="btn primary" type="submit">＋ Gruppe erstellen</button></div></form></section>
-  <section class="panel"><div class="card-kicker">SCHRITT 2</div><h2>Bereitschaftszeit hinzufügen</h2><p class="sub">Eine benannte Zeitspanne innerhalb einer Gruppe. Über Mitternacht ist möglich.</p><form id="standby-time-form" class="stack-form"><label>Zugehörige Gruppe<select id="standby-time-group" required ${groupCount?'':'disabled'}>${standbyGroups.map(g=>`<option value="${escapeHtml(g.id)}">${escapeHtml(g.name)}</option>`).join('')||'<option value="">Zuerst eine Gruppe erstellen</option>'}</select></label><label>Bezeichnung<input id="standby-time-name" required maxlength="60" placeholder="z. B. Nachtbereitschaft" ${groupCount?'':'disabled'}></label><div class="form-two"><label>Beginn<input id="standby-time-start" type="time" value="00:00" required ${groupCount?'':'disabled'}></label><label>Ende<input id="standby-time-end" type="time" value="23:59" required ${groupCount?'':'disabled'}></label></div><div class="btn-row end"><button class="btn primary" type="submit" ${groupCount?'':'disabled'}>＋ Bereitschaftszeit hinzufügen</button></div></form></section>
+ if(!canView('Bereitschaft verwalten'))return `${heading('Zugriff nicht möglich','Diese Seite ist für deine Rolle nicht freigegeben.')}`;
+ const admin=standbyTimesEditable(),colorTeams=standbyColorTeams(),listTeams=standbyListTeams();
+ const groupCount=standbyGroups.length,timeCount=standbyTimes.length,cover=standbyCoverage();
+ const sub=admin?'Gruppen, Zeitfenster und Teamfarben – unabhängig von den regulären Dienstzeiten.'
+  :colorTeams.length?`Bereitschaftsfarbe für ${colorTeams.length===1?'dein Team':'deine '+colorTeams.length+' Teams'} festlegen. Gruppen und Zeitfenster legt die Administration fest.`
+  :'Gruppen, Zeitfenster und Teamfarben im Überblick.';
+ const actions=admin?`<button class="btn" id="sb-new-group">${icon('sliders')}Gruppe anlegen</button><button class="btn primary" id="sb-new-time" ${groupCount?'':'disabled title="Zuerst eine Gruppe anlegen"'}>${icon('plus')}Bereitschaftszeit anlegen</button>`:'';
+ const head=`<tr><th>Bezeichnung</th><th>Zeit</th><th>Dauer</th><th class="hide-sm scale-head"><span>00</span><span>12</span><span>24</span></th>${admin?'<th>Aktionen</th>':''}</tr>`,cols=admin?5:4;
+ const rows=standbyGroups.map(g=>{const times=standbyTimes.filter(t=>t.groupId===g.id).sort((a,b)=>a.start.localeCompare(b.start));
+  let h=`<tr class="group-row sb-group-row"><td colspan="${cols}"><div class="sb-group-line"><span><i class="dot" style="--c:var(--accent-color)"></i> <b>${escapeHtml(g.name)}</b> <span class="muted">· ${times.length} Zeitfenster</span></span>${admin?`<span class="sb-group-actions"><button class="btn ghost small" type="button" data-sb-add-time="${escapeHtml(g.id)}">${icon('plus')}Zeit hinzufügen</button><button class="icon-btn" type="button" data-sb-edit-group="${escapeHtml(g.id)}" title="Gruppe umbenennen" aria-label="Gruppe ${escapeHtml(g.name)} umbenennen">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-group="${escapeHtml(g.id)}" title="Gruppe löschen" aria-label="Gruppe ${escapeHtml(g.name)} löschen">${icon('trash')}</button></span>`:''}</div></td></tr>`;
+  h+=times.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]];
+   return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}</td><td>${fmtHours(durationHours(t.start,t.end))}</td><td class="hide-sm"><div class="mini-scale">${segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('')
+   ||`<tr><td colspan="${cols}" class="muted small">Noch keine Zeitfenster in dieser Gruppe.</td></tr>`;
+  return h}).join('');
+ const colorCards=listTeams.map(t=>{const c=standbyHex(t),ed=colorTeams.includes(t),n=(t.memberIds||[]).length;
+  const inner=`<span class="ta-mark" style="--team:${c}">${standbyBadge(t)}</span><span class="sb-color-txt"><b>${escapeHtml(t.name)}</b><small><span class="sb-color-hex"><i style="background:${c}"></i>${escapeHtml(c.toLowerCase())}</span> · ${n} ${n===1?'Mitglied':'Mitglieder'}</small></span>${ed?`<span class="sb-color-edit">Ändern${icon('chev')}</span>`:''}`;
+  return ed?`<button type="button" class="sb-color-card" data-sb-color="${escapeHtml(t.id)}" style="--team:${c}" aria-label="Bereitschaftsfarbe für ${escapeHtml(t.name)} ändern">${inner}</button>`:`<div class="sb-color-card" style="--team:${c}">${inner}</div>`}).join('');
+ return `${heading('Bereitschaft verwalten',sub,actions)}
+ ${!admin&&!colorTeams.length?`<div class="readonly-note">${icon('eye')}Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>`:''}
+ <div class="stats sb-stats">
+  <div class="stat-card"><div><div class="stat-label">Gruppen</div><div class="stat-value">${groupCount}</div><div class="stat-note">Organisatorische Bereiche</div></div></div>
+  <div class="stat-card"><div><div class="stat-label">Bereitschaftszeiten</div><div class="stat-value">${timeCount}</div><div class="stat-note">Zeitfenster gesamt</div></div></div>
+  <div class="stat-card"><div><div class="stat-label">Tagesabdeckung</div><div class="stat-value">${Math.round(cover*10)/10} / 24 Std.</div><div class="meter ${cover<24?'warn':''}"><i style="width:${Math.min(100,cover/24*100)}%"></i></div></div></div>
+  <div class="stat-card"><div><div class="stat-label">${admin||!colorTeams.length?'Teams':'Deine Teams'}</div><div class="stat-value">${listTeams.length}</div><div class="stat-note">${colorTeams.length?(admin?'Farben bearbeitbar':'Farbe bearbeitbar'):'mit Bereitschaftsfarbe'}</div></div></div>
  </div>
- <section class="panel"><div class="panel-head"><div><h2>Gruppen und Zeiten im Überblick</h2><p class="sub">Zeitfenster auf einer 24-Stunden-Skala.</p></div><span class="pill">${groupCount} Gruppen · ${timeCount} Zeiten</span></div>
- ${groupCount?standbyGroups.map(g=>{const times=standbyTimes.filter(t=>t.groupId===g.id);const segs=times.flatMap(t=>{const s=durationHoursStart(t.start),e=durationHoursStart(t.end);const c=shiftHexColor(t.color||'#159da8');return e>s?[[s,e,c,t.name]]:[[s,24,c,t.name],[0,e,c,'']]});return `<article class="standby-group-row"><div class="standby-group-head"><div><b>${escapeHtml(g.name)}</b><small>${times.length} ${times.length===1?'Zeitfenster':'Zeitfenster'}</small></div><button class="btn danger" type="button" data-delete-standby-group="${escapeHtml(g.id)}">Gruppe löschen</button></div><div class="day-scale"><div class="day-scale-labels">${[0,3,6,9,12,15,18,21,24].map(h=>`<span>${String(h).padStart(2,'0')}</span>`).join('')}</div><div class="day-scale-bar">${segs.map(([s,e,c,name])=>`<i style="left:${s/24*100}%;width:${(e-s)/24*100}%;background:${c}">${escapeHtml(name)}</i>`).join('')}</div></div><div class="standby-time-chips">${times.map(t=>`<span class="standby-time-chip"><strong>${escapeHtml(t.name)}</strong><small>${escapeHtml(t.start)} – ${escapeHtml(t.end)} Uhr${durationHoursStart(t.end)<=durationHoursStart(t.start)?' (+1 Tag)':''}</small><button type="button" class="chip-x" data-delete-standby-time="${escapeHtml(t.id)}" title="Zeitfenster löschen" aria-label="Zeitfenster ${escapeHtml(t.name)} löschen">×</button></span>`).join('')||'<span class="muted small">Noch keine Zeiten zugeordnet.</span>'}</div></article>`}).join(''):'<div class="empty-note">Derzeit sind noch keine Gruppen angelegt. Erstelle zuerst eine Bereitschaftsgruppe.</div>'}</section>
- <section class="panel"><div class="panel-head"><div><h2>Bereitschaftsfarben je Team</h2><p class="sub">Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.</p></div></div><div class="standby-team-color-list">${teams.map(t=>`<label class="standby-team-color-row"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" value="${/^#[0-9a-f]{6}$/i.test(t.standbyColor||'')?t.standbyColor:'#159da8'}" data-standby-team-color="${escapeHtml(t.id)}" aria-label="Bereitschaftsfarbe für ${escapeHtml(t.name)}"><span><b>${escapeHtml(t.name)}</b><small>${escapeHtml(t.standbyColor||'#159da8')}</small></span></label>`).join('')}</div></section>`;
+ <section class="panel flush sb-times-panel">
+  <div class="panel-toolbar sb-toolbar"><div><h2>Gruppen und Zeitfenster</h2><p class="sub">${admin?'Zeitfenster auf einer 24-Stunden-Skala. Über Mitternacht ist möglich.':'Zeitfenster auf einer 24-Stunden-Skala. Änderungen nimmt die Administration vor.'}</p></div><span class="pill push-right">${groupCount} ${groupCount===1?'Gruppe':'Gruppen'} · ${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
+  ${groupCount?`<div class="table-wrap borderless shift-times-table-wrap"><table class="sb-times-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`
+   :`<div class="empty-note sb-empty">${admin?`Noch keine Bereitschaftsgruppen. Lege zuerst eine Gruppe an, z. B. „Rufbereitschaft Nord“.<div><button class="btn primary" type="button" id="sb-new-group-empty">${icon('plus')}Gruppe anlegen</button></div>`:'Es sind noch keine Bereitschaftsgruppen angelegt.'}</div>`}
+ </section>
+ <section class="panel sb-colors-panel"><div class="panel-head"><div><h2>Bereitschaftsfarben</h2><p class="sub">${admin?'Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.':colorTeams.length?'Diese Farbe wird für alle Bereitschaftseinträge deines Teams verwendet.':'Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.'}</p></div></div>
+  ${listTeams.length?`<div class="sb-color-grid">${colorCards}</div>`:'<div class="empty-note">Es sind noch keine Teams angelegt.</div>'}</section>`;
 }
 function durationHoursStart(hhmm){const [h,m]=String(hhmm||'0:0').split(':').map(Number);return h+(m||0)/60}
+/* Dialog: Bereitschaftsgruppe anlegen / umbenennen (nur Admin) */
+async function openStandbyGroup(id){
+ if(!standbyTimesEditable()){toast('Bereitschaftsgruppen kann nur ein Admin verwalten.');return}
+ const ex=id?standbyGroups.find(g=>g.id===id):null;if(id&&!ex)return;
+ const dlg=formDialog(ex?'Gruppe umbenennen':'Bereitschaftsgruppe anlegen',`
+  <div class="wp-field"><label class="wp-label" for="sbg-name">Name der Gruppe</label>
+   <div class="nt-input"><span class="nt-input-ic">${icon('sliders')}</span><input id="sbg-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Rufbereitschaft Nord" value="${escapeHtml(ex?.name||'')}" required><span class="nt-count" id="sbg-count">0/60</span></div>
+   <small class="wp-note nt-msg" id="sbg-msg">Ein organisatorischer Bereich, z. B. ein Standort oder Fachbereich.</small></div>`,ex?'Speichern':'Gruppe anlegen',ex?'Der neue Name erscheint auch bei bestehenden Bereitschaftseinträgen.':'Danach fügst du der Gruppe ihre Bereitschaftszeiten hinzu.',{icon:'sliders',cls:'nt-modal'});
+ const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x),name=$('sbg-name'),msg=$('sbg-msg');
+ const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(standbyGroups.some(g=>g.id!==id&&g.name.toLowerCase()===v.toLowerCase()))return 'Diese Bereitschaftsgruppe gibt es bereits.';return ''};
+ const upd=()=>{const pr=problem();$('sbg-count').textContent=`${name.value.length}/60`;msg.textContent=pr&&pr!=='empty'?pr:'Ein organisatorischer Bereich, z. B. ein Standort oder Fachbereich.';msg.classList.toggle('bad',!!pr&&pr!=='empty');name.closest('.nt-input').classList.toggle('bad',!!pr&&pr!=='empty');layer.querySelector('button[type=submit]').disabled=!!pr};
+ name.oninput=upd;upd();layer.addEventListener('submit',e=>{if(problem()){e.preventDefault();e.stopPropagation();name.focus()}},true);setTimeout(()=>name.focus(),30);
+ const res=await dlg;if(!res)return;const nm=res.name.trim().slice(0,60);
+ if(!nm||standbyGroups.some(g=>g.id!==id&&g.name.toLowerCase()===nm.toLowerCase()))return;
+ if(ex){const before=ex.name;if(before===nm)return;ex.name=nm;assignments.forEach(a=>{if(a.groupId===ex.id)a.groupName=nm});persistStandbyConfig();persistAssignments();audit('Geändert','Bereitschaftsgruppen',`${before} → ${nm}`,{title:'Bereitschaftsgruppe umbenannt',object:nm,before,after:nm});render();toast('Gruppe umbenannt.');return}
+ const g={id:makeId(),name:nm};standbyGroups.push(g);persistStandbyConfig();audit('Erstellt','Bereitschaftsgruppen',nm,{title:'Bereitschaftsgruppe angelegt',object:nm});render();toast('Bereitschaftsgruppe angelegt.');openStandbyTime(null,g.id);
+}
+/* Dialog: Bereitschaftszeit anlegen / bearbeiten (nur Admin) */
+async function openStandbyTime(id,groupId){
+ if(!standbyTimesEditable()){toast('Bereitschaftszeiten kann nur ein Admin verwalten.');return}
+ if(!standbyGroups.length){toast('Bitte zuerst eine Bereitschaftsgruppe anlegen.');return}
+ const ex=id?standbyTimes.find(t=>t.id===id):null;if(id&&!ex)return;
+ const g0=ex?.groupId||groupId||standbyGroups[0].id,c0=shiftHexColor(ex?.color||'#159da8');
+ const dlg=formDialog(ex?`${ex.name} bearbeiten`:'Bereitschaftszeit anlegen',`
+  <label class="wp-field"><span class="wp-label">Bezeichnung</span><input id="sbt-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Nachtbereitschaft" value="${escapeHtml(ex?.name||'')}" required></label>
+  <div class="wp-field"><span class="wp-label">Gruppe</span><select id="sbt-group" name="group">${standbyGroups.map(g=>`<option value="${escapeHtml(g.id)}" ${g.id===g0?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}</select></div>
+  <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="sbt-start" name="start" value="${escapeHtml(ex?.start||'19:00')}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="sbt-end" name="end" value="${escapeHtml(ex?.end||'07:00')}" required></label></div></div>
+  <div class="wp-summary sb-time-sum"><span class="wp-sum-ic">${icon('clock')}</span><div class="sb-sum-txt"><b id="sbt-dur"></b><small id="sbt-msg"></small><div class="mini-scale" id="sbt-scale"></div></div></div>
+  <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft als Auswahl zur Verfügung.',{icon:'clock',cls:'sb-time-modal'});
+ const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x);
+ const grp=$('sbt-group'),name=$('sbt-name'),st=$('sbt-start'),en=$('sbt-end'),col=$('sbt-color'),pick=$('sbt-color-pick'),head=layer.querySelector('.wp-head-icon');
+ if(typeof fancySelect==='function')fancySelect(grp,{kind:'dept',placeholder:'Gruppe wählen',meta:o=>{const n=standbyTimes.filter(t=>t.groupId===o.value).length;return{pic:'shift',icon:'sliders',color:'var(--accent-color)',sub:`${n} Zeitfenster`}}});
+ const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.';if(standbyTimes.some(t=>t.id!==id&&t.groupId===grp.value&&t.name.toLowerCase()===v.toLowerCase()))return 'In dieser Gruppe gibt es bereits ein Zeitfenster mit diesem Namen.';return ''};
+ const upd=()=>{const pr=problem(),c=col.value,s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s;
+  $('sbt-dur').textContent=st.value&&en.value&&st.value!==en.value?fmtHours(durationHours(st.value,en.value))+(over?' · über Mitternacht':''):'—';
+  const m=$('sbt-msg');m.textContent=pr&&pr!=='empty'?pr:(over?`Endet am Folgetag um ${en.value} Uhr.`:'Innerhalb eines Tages.');m.classList.toggle('bad',!!pr&&pr!=='empty');
+  $('sbt-scale').innerHTML=st.value&&en.value&&st.value!==en.value?(e>s?[[s,e]]:[[s,24],[0,e]]).map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join(''):'';
+  head.style.background=c;head.style.boxShadow=`0 6px 16px -6px ${c}`;head.style.color='#fff';
+  layer.querySelectorAll('.shift-color-presets .color-swatch[data-color]').forEach(b=>b.classList.toggle('active',b.dataset.color.toLowerCase()===c.toLowerCase()));
+  layer.querySelector('button[type=submit]').disabled=!!pr};
+ const setColor=c=>{col.value=c;pick.value=c;upd()};
+ layer.querySelectorAll('.shift-color-presets .color-swatch[data-color]').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=pick.onchange=()=>setColor(pick.value);
+ [name,st,en].forEach(x=>x.addEventListener('input',upd));grp.addEventListener('change',upd);upd();
+ layer.addEventListener('submit',e=>{if(problem()){e.preventDefault();e.stopPropagation();name.focus()}},true);setTimeout(()=>name.focus(),30);
+ const res=await dlg;if(!res)return;
+ const data={groupId:res.group,name:String(res.name||'').trim().slice(0,60),start:res.start,end:res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8'};
+ if(!standbyGroups.some(g=>g.id===data.groupId)||!data.name||!/^\d\d:\d\d$/.test(data.start)||!/^\d\d:\d\d$/.test(data.end)||data.start===data.end){toast('Bitte alle Angaben prüfen.');return}
+ const gName=standbyGroups.find(g=>g.id===data.groupId).name;
+ if(ex){const before=`${ex.name} (${ex.start}–${ex.end})`;Object.assign(ex,data);persistStandbyConfig();audit('Geändert','Bereitschaftszeiten',`${gName} · ${data.name} (${data.start}–${data.end})`,{title:'Bereitschaftszeit geändert',object:gName,before,after:`${data.name} (${data.start}–${data.end})`});render();toast('Bereitschaftszeit gespeichert.');return}
+ standbyTimes.push({id:makeId(),...data});persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${gName} · ${data.name} (${data.start}–${data.end})`,{title:'Bereitschaftszeit angelegt',object:gName,after:`${data.name} (${data.start}–${data.end})`});render();toast('Bereitschaftszeit angelegt.');
+}
+/* Dialog: Bereitschaftsfarbe eines Teams (Admin: alle Teams, Teamleitung: eigene Teams) */
+async function openStandbyColor(teamId){
+ const t=standbyColorTeams().find(x=>x.id===teamId);if(!t){toast('Du darfst die Bereitschaftsfarbe dieses Teams nicht ändern.');return}
+ const c0=standbyHex(t),list=STANDBY_COLORS;
+ const sample=standbyTimes[0]||{name:'Bereitschaft',start:'07:00',end:'19:00'};
+ const dlg=formDialog(`Bereitschaftsfarbe · ${t.name}`,`
+  <div class="wp-field"><span class="wp-label">Farbe</span><div class="te-colors">${list.map(c=>`<button type="button" class="te-swatch ${c===c0.toLowerCase()?'on':''}" style="--c:${c}" data-color="${c}" aria-label="Farbe ${c}">${icon('check')}</button>`).join('')}<label class="te-custom" title="Eigene Farbe"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbc-pick" value="${c0}"><span>Eigene</span></label></div><input type="hidden" name="color" id="sbc-color" value="${c0}"></div>
+  <div class="wp-field"><span class="wp-label">Vorschau im Kalender</span><div class="sb-color-preview" id="sbc-prev"></div></div>`,'Speichern','Wird für alle Bereitschaftseinträge des Teams verwendet.',{icon:'moon',cls:'nt-modal sb-color-modal'});
+ const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x),col=$('sbc-color'),pick=$('sbc-pick'),head=layer.querySelector('.wp-head-icon');
+ const upd=()=>{const c=col.value;head.style.background=c;head.style.boxShadow=`0 6px 16px -6px ${c}`;head.style.color='#fff';
+  layer.querySelectorAll('.te-swatch').forEach(b=>b.classList.toggle('on',b.dataset.color.toLowerCase()===c.toLowerCase()));
+  $('sbc-prev').innerHTML=`<span class="ta-mark sm" style="--team:${c}">${standbyBadge(t)}</span><div class="calendar-assignment standby-assignment" style="--shift-color:${c}"><span class="standby-indicator">Bereitschaft</span><b>${escapeHtml(sample.name)}</b><small>${escapeHtml(sample.start)} – ${escapeHtml(sample.end)}</small></div><span class="sb-color-hex"><i style="background:${c}"></i>${escapeHtml(c.toLowerCase())}</span>`};
+ const setColor=c=>{col.value=c;pick.value=c;upd()};
+ layer.querySelectorAll('.te-swatch').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=pick.onchange=()=>setColor(pick.value);upd();
+ const res=await dlg;if(!res)return;
+ if(!standbyColorTeams().includes(t)){toast('Du darfst die Bereitschaftsfarbe dieses Teams nicht ändern.');return}
+ const c=/^#[0-9a-f]{6}$/i.test(res.color)?res.color:c0;if(c.toLowerCase()===c0.toLowerCase())return;
+ t.standbyColor=c;persistTeams();audit('Geändert','Teamfarben',`${t.name} → ${c}`,{title:'Bereitschaftsfarbe geändert',object:t.name,before:c0,after:c});render();toast('Bereitschaftsfarbe für '+t.name+' gespeichert.');
+}
 
 /* ------------------------------------------------------------------
    Dashboards
@@ -2961,12 +3064,18 @@ function bindLogPage(){
    Rendern
 ------------------------------------------------------------------ */
 function bindStandbyAdmin(){
- const groupForm=document.getElementById('standby-group-form'),timeForm=document.getElementById('standby-time-form');
- if(groupForm)groupForm.onsubmit=e=>{e.preventDefault();const name=document.getElementById('standby-group-name').value.trim();if(!name)return;if(standbyGroups.some(g=>g.name.toLowerCase()===name.toLowerCase())){toast('Diese Bereitschaftsgruppe gibt es bereits.');return;}standbyGroups.push({id:makeId(),name});persistStandbyConfig();audit('Erstellt','Bereitschaftsgruppen',name);render();toast('Bereitschaftsgruppe hinzugefügt.');};
- if(timeForm)timeForm.onsubmit=e=>{e.preventDefault();const groupId=document.getElementById('standby-time-group').value,name=document.getElementById('standby-time-name').value.trim(),start=document.getElementById('standby-time-start').value,end=document.getElementById('standby-time-end').value;if(!standbyGroups.some(g=>g.id===groupId)||!name||!start||!end){toast('Bitte alle Angaben ausfüllen.');return;}if(start===end){toast('Beginn und Ende dürfen nicht gleich sein.');return}standbyTimes.push({id:makeId(),groupId,name,start,end,color:'#159da8'});persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${name} (${start}–${end})`);render();toast('Bereitschaftszeit hinzugefügt.');};
- content.querySelectorAll('[data-delete-standby-group]').forEach(b=>b.onclick=async()=>{const id=b.dataset.deleteStandbyGroup,g=standbyGroups.find(x=>x.id===id);if(!await ask('Bereitschaftsgruppe samt zugehörigen Bereitschaftszeiten löschen?'))return;standbyGroups=standbyGroups.filter(g=>g.id!==id);standbyTimes=standbyTimes.filter(t=>t.groupId!==id);persistStandbyConfig();audit('Gelöscht','Bereitschaftsgruppen',g?.name||id);render();toast('Bereitschaftsgruppe gelöscht.');});
- content.querySelectorAll('[data-delete-standby-time]').forEach(b=>b.onclick=async()=>{const t=standbyTimes.find(x=>x.id===b.dataset.deleteStandbyTime);if(!t||!await ask(`Zeitfenster „${t.name}“ löschen?`))return;standbyTimes=standbyTimes.filter(x=>x.id!==t.id);persistStandbyConfig();audit('Gelöscht','Bereitschaftszeiten',`${t.name} (${t.start}–${t.end})`);render();toast('Zeitfenster gelöscht.')});
- content.querySelectorAll('[data-standby-team-color]').forEach(input=>input.onchange=()=>{const team=teamById(input.dataset.standbyTeamColor);if(!team)return;team.standbyColor=input.value;persistTeams();audit('Geändert','Teamfarben',`${team.name} → ${input.value}`);render();toast('Bereitschaftsfarbe für '+team.name+' gespeichert.');});
+ const on=(sel,fn)=>content.querySelectorAll(sel).forEach(fn);
+ ['sb-new-group','sb-new-group-empty'].forEach(id=>{const b=document.getElementById(id);if(b)b.onclick=()=>openStandbyGroup(null)});
+ const nt=document.getElementById('sb-new-time');if(nt)nt.onclick=()=>openStandbyTime(null);
+ on('[data-sb-add-time]',b=>b.onclick=()=>openStandbyTime(null,b.dataset.sbAddTime));
+ on('[data-sb-edit-group]',b=>b.onclick=()=>openStandbyGroup(b.dataset.sbEditGroup));
+ on('[data-sb-edit-time]',b=>b.onclick=()=>openStandbyTime(b.dataset.sbEditTime));
+ on('[data-sb-color]',b=>b.onclick=()=>openStandbyColor(b.dataset.sbColor));
+ on('[data-sb-delete-group]',b=>b.onclick=async()=>{if(!standbyTimesEditable())return;const id=b.dataset.sbDeleteGroup,g=standbyGroups.find(x=>x.id===id);if(!g)return;const n=standbyTimes.filter(t=>t.groupId===id).length;
+  if(!await ask(`Bereitschaftsgruppe „${g.name}“${n?` samt ${n} ${n===1?'Zeitfenster':'Zeitfenstern'}`:''} löschen? Bestehende Bereitschaftseinträge bleiben erhalten.`,'Löschen'))return;
+  standbyGroups=standbyGroups.filter(x=>x.id!==id);standbyTimes=standbyTimes.filter(t=>t.groupId!==id);persistStandbyConfig();audit('Gelöscht','Bereitschaftsgruppen',g.name,{title:'Bereitschaftsgruppe gelöscht',object:g.name});render();toast('Bereitschaftsgruppe gelöscht.')});
+ on('[data-sb-delete-time]',b=>b.onclick=async()=>{if(!standbyTimesEditable())return;const t=standbyTimes.find(x=>x.id===b.dataset.sbDeleteTime);if(!t||!await ask(`Zeitfenster „${t.name}“ löschen? Bestehende Bereitschaftseinträge bleiben erhalten.`,'Löschen'))return;
+  standbyTimes=standbyTimes.filter(x=>x.id!==t.id);persistStandbyConfig();audit('Gelöscht','Bereitschaftszeiten',`${t.name} (${t.start}–${t.end})`,{title:'Bereitschaftszeit gelöscht',object:t.name,before:`${t.start}–${t.end}`});render();toast('Zeitfenster gelöscht.')});
 }
 function render(){
  if(currentPage!=='Dashboard'&&dashEditing){dashEditing=false;dashDraft=null}
@@ -2979,7 +3088,7 @@ function render(){
  if(currentPage==='Einstellungen')bindSettings();
  if(currentPage==='Dashboard')bindDashboard();
  if(currentPage==='Dienstzeiten'&&document.getElementById('shift-rows'))bindShiftTimes();
- if(currentPage==='Bereitschaft verwalten'){if(canEdit('Bereitschaft verwalten'))bindStandbyAdmin();else{content.querySelectorAll('.standby-management-layout form,[data-delete-standby-group],#create-standby-group').forEach(x=>x.hidden=true);content.querySelectorAll('.standby-management-layout input,.standby-management-layout select,input[type=color]').forEach(x=>x.disabled=true);const h=content.querySelector('.page-heading');if(h&&!content.querySelector('.readonly-note'))h.insertAdjacentHTML('afterend','<div class="readonly-note">'+icon('eye')+'Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>')}}
+ if(currentPage==='Bereitschaft verwalten')bindStandbyAdmin();
  if(currentPage==='Administration'&&canView('Administration'))bindAdministration();
  if(currentPage==='Kontakte')bindContacts();
  if(currentPage==='Berichte / Export')bindReports();

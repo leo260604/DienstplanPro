@@ -2202,3 +2202,28 @@ input[data-color-input]:disabled{cursor:default;opacity:.6}
 .perm.n.static{color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);font-weight:700}
 body.dark-mode .perm.r{background:color-mix(in srgb,var(--ink) 12%,var(--surface));color:var(--ink)}
 body.dark-mode .perm.e{background:color-mix(in srgb,var(--accent-color) 30%,var(--surface));color:color-mix(in srgb,var(--accent-color) 45%,#fff)}
+/* Bereitschaft verwalten – Gruppen/Zeitfenster als Tabelle, Teamfarben als Karten */
+.sb-stats .stat-value{white-space:nowrap}
+.sb-toolbar{align-items:center}.sb-toolbar h2{margin:0;font-size:16px}.sb-toolbar .sub{margin:2px 0 0}
+.sb-group-row td{padding:6px 14px!important}
+.sb-group-line{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;min-height:32px}
+.sb-group-line .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);vertical-align:1px}
+.sb-group-actions{display:inline-flex;align-items:center;gap:4px;text-transform:none;letter-spacing:0;font-size:12.5px}
+.sb-group-actions .btn{color:var(--accent-color)}.sb-group-actions .btn .ic{width:14px;height:14px}
+.sb-empty{display:grid;gap:12px;justify-items:center;padding:34px 20px!important}
+.sb-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.sb-color-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:12px;width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;position:relative;overflow:hidden}
+.sb-color-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--team)}
+button.sb-color-card{cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+button.sb-color-card:hover{border-color:color-mix(in srgb,var(--team) 55%,var(--line));box-shadow:0 8px 22px -14px var(--team)}
+button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline-offset:2px}
+.sb-color-txt{min-width:0}.sb-color-txt b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sb-color-txt small{color:var(--muted);font-size:12px}
+.sb-color-hex{display:inline-flex;align-items:center;gap:5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted)}
+.sb-color-hex i{width:10px;height:10px;border-radius:3px}
+.sb-color-edit{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:650;color:var(--accent-color);white-space:nowrap}.sb-color-edit .ic{width:14px;height:14px;transform:rotate(180deg);transition:transform .15s}button.sb-color-card:hover .sb-color-edit .ic{transform:rotate(180deg) translateX(-2px)}
+.sb-time-sum .sb-sum-txt{flex:1;min-width:0;display:grid;gap:3px}.sb-time-sum .mini-scale{margin-top:5px;min-width:0}
+.sb-time-sum small.bad{color:var(--red,#d14343)}
+.sb-color-preview{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.sb-color-preview .calendar-assignment{position:static;flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border-radius:9px;font-size:12.5px}
+.sb-color-preview .sb-color-hex{margin-left:auto}
+@media (max-width:700px){.sb-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sb-color-grid{grid-template-columns:1fr}.sb-group-actions .btn span{display:none}}
