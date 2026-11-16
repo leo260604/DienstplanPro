@@ -2891,11 +2891,17 @@ const tcHsl=hex=>{const [r,g,b]=tcHexRgb(hex).map(v=>v/255),mx=Math.max(r,g,b),m
 const tcFromHsl=(h,s,l)=>{h=((h%360)+360)%360;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return '#'+[f(0),f(8),f(4)].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('')};
 // Team, dessen Farbe der Farbe c zu ähnlich ist (oder null)
 function teamColorClash(c,exceptId){let best=null,bd=999;teams.forEach(t=>{if(t.id===exceptId)return;const d=tcDiff(c,teamColor(t));if(d<bd){bd=d;best=t}});return bd<TC_MIN_DIFF?best:null}
-// Liefert c unverändert, wenn sie sich deutlich von allen anderen Teamfarben unterscheidet – sonst eine klar unterscheidbare Abwandlung
+// Liefert c unverändert, wenn sie sich deutlich von allen anderen Teamfarben unterscheidet – sonst die kleinstmögliche
+// Abwandlung im GLEICHEN Farbton (heller/dunkler bzw. kräftiger/blasser), die sich gut sichtbar von den anderen Teams abhebt
 function distinctTeamColor(c,exceptId){
  if(!tcHexRgb(c))c='#14a1a9';c=c.toLowerCase();if(!teamColorClash(c,exceptId))return c;
- let [h,sat,l]=tcHsl(c);sat=Math.max(.45,Math.min(.85,sat));l=Math.max(.32,Math.min(.55,l));
- for(const dl of [0,-.1,.1]){for(let step=1;step<12;step++){for(const dir of [1,-1]){const x=tcFromHsl(h+dir*step*30,sat,Math.max(.25,Math.min(.62,l+dl)));if(!teamColorClash(x,exceptId))return x}}}
+ const [h,s0,l0]=tcHsl(c);let best=null,bd=1e9;
+ for(let dl=-.42;dl<=.42001;dl+=.02)for(const ds of [0,.12,-.12,.25,-.25])for(const dh of [0,-6,6]){
+  const l=l0+dl,sat=Math.max(0,Math.min(1,s0+ds));if(l<.14||l>.86)continue;
+  const x=tcFromHsl(h+dh,sat,l);if(teamColorClash(x,exceptId))continue;
+  const d=tcDiff(x,c)+Math.abs(dh)*.8+Math.abs(ds)*10;if(d<bd){bd=d;best=x}}
+ if(best)return best;
+ for(let step=1;step<12;step++)for(const dir of [1,-1]){const x=tcFromHsl(h+dir*step*30,Math.max(.45,s0),Math.max(.32,Math.min(.55,l0)));if(!teamColorClash(x,exceptId))return x}
  return TEAM_COLORS.map(x=>x.toLowerCase()).find(x=>!teamColorClash(x,exceptId))||c}
 // Freie Farbvorschläge: unterscheiden sich deutlich von allen Teams und voneinander
 function freeTeamColors(exceptId,max=10){const pool=[...TEAM_COLORS,...STANDBY_COLORS];for(const l of [.45,.36,.54])for(let h=0;h<360;h+=20)pool.push(tcFromHsl(h,.62,l));
