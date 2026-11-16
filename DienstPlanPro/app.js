@@ -866,7 +866,7 @@ function calendar(){
  <div class="modal-backdrop" id="duty-modal" hidden><div class="modal wp-modal duty-modal" role="dialog" aria-modal="true" aria-labelledby="duty-title"><div class="wp-head"><span class="wp-head-icon" id="duty-head-ic">${icon(isDuty?'cal':'moon')}</span><div><h2 id="duty-title">${!isDuty?'Bereitschaft einteilen':'Neuen Dienst einteilen'}</h2><p class="small muted">${!isDuty?'Wird an jedem Tag im Zeitraum eingetragen.':'Wird an jedem Arbeitstag im Zeitraum eingetragen.'}</p></div><button class="icon-btn" id="close-duty" type="button" aria-label="Schließen">×</button></div>
  <form id="duty-form" class="wp-form" novalidate>
   <div class="te-two"><div class="wp-field"><span class="wp-label">Team</span><select id="duty-team">${entryTeams().map(t=>`<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`).join('')}</select></div><div class="wp-field"><span class="wp-label">Mitarbeiter</span><select id="duty-employee"></select></div></div>
-  ${!isDuty?`<div class="wp-field"><span class="wp-label">Bereitschaftsgruppe</span><select id="duty-standby-group"></select></div>`:''}
+
   <div class="wp-field"><span class="wp-label">${!isDuty?'Bereitschaftszeit':'Dienst'}</span><select id="duty-shift"></select></div>
   <div class="wp-field" id="duty-time-override" hidden><span class="wp-label">Uhrzeit für diesen Eintrag</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="duty-start-time"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="duty-end-time"></label></div><small class="wp-note" id="duty-time-hint" hidden>Die Uhrzeiten gelten nur für diesen Eintrag und ändern die hinterlegte Dienstzeit nicht.</small></div>
   <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Von</small><input type="date" id="duty-date-from" value="${isoDate(new Date())}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Bis</small><input type="date" id="duty-date-to" value="${isoDate(new Date())}" required></label></div></div>
@@ -926,10 +926,11 @@ async function swapStandby(teamName,ids){
  createAssignmentNotifications(affected);toast(`${affected.length} ${affected.length===1?'Tag':'Tage'} an ${res.emp} übergeben.`);render();
 }
 /* Teamauswahl als Dropdown (mehrere Teams wählbar) – zeigt nur Teams, für die man Berechtigungen hat */
-function teamDropdown(list,pre){
- return `<div class="wp-field"><span class="wp-label">Teams</span><details class="team-dd dlg-team-dd"><summary><span class="pp-team dlg-dd-ic">${icon('users')}</span><span class="team-dd-text"></span>${icon('down')}</summary><div class="team-dd-panel">
+function teamDropdown(list,pre,opt={}){
+ const allLabel=opt.allLabel||'Alle meine Teams';
+ return `<div class="wp-field"><span class="wp-label">${escapeHtml(opt.label||'Teams')}</span><details class="team-dd dlg-team-dd" data-all-label="${escapeHtml(allLabel)}" data-empty-label="${escapeHtml(opt.empty||'Team auswählen …')}"><summary><span class="pp-team dlg-dd-ic">${icon('users')}</span><span class="team-dd-text"></span>${icon('down')}</summary><div class="team-dd-panel">
   ${list.length>5?`<label class="team-dd-search">${icon('search')}<input type="search" class="dlg-dd-q" placeholder="Team suchen …" autocomplete="off"></label>`:''}
-  ${list.length>1?`<label class="check team-dd-all"><input type="checkbox" data-dd-all><span>Alle meine Teams</span></label>`:''}
+  ${list.length>1?`<label class="check team-dd-all"><input type="checkbox" data-dd-all><span>${escapeHtml(allLabel)}</span></label>`:''}
   <div class="dlg-dd-list">${list.map(t=>`<label class="check" data-q="${escapeHtml(t.name.toLowerCase())}"><input type="checkbox" name="team:${escapeHtml(t.name)}" data-dd-team="${escapeHtml(t.name)}" ${pre.includes(t.name)?'checked':''}><i class="dot" style="--c:${teamColor(t)}"></i><span>${escapeHtml(t.name)}</span><small>${t.memberIds.length}</small></label>`).join('')}<div class="team-dd-empty" hidden>Kein Team gefunden</div></div></div></details></div>`;
 }
 /* Team-Mehrfachauswahl in Dialogen (Rotation automatisch planen) */
@@ -937,7 +938,7 @@ function bindDialogTeamDropdown(){
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),dd=layer?.querySelector('.team-dd');if(!dd)return;
  const boxes=[...dd.querySelectorAll('[data-dd-team]')],all=dd.querySelector('[data-dd-all]'),text=dd.querySelector('.team-dd-text');
  const update=()=>{const sel=boxes.filter(b=>b.checked).map(b=>b.dataset.ddTeam);
-  text.textContent=!sel.length?'Team auswählen …':sel.length===boxes.length&&boxes.length>1?`Alle meine Teams (${sel.length})`:sel.length>2?`${sel.slice(0,2).join(', ')} +${sel.length-2}`:sel.join(', ');
+  text.textContent=!sel.length?(dd.dataset.emptyLabel||'Team auswählen …'):sel.length===boxes.length&&boxes.length>1?`${dd.dataset.allLabel||'Alle meine Teams'} (${sel.length})`:sel.length>2?`${sel.slice(0,2).join(', ')} +${sel.length-2}`:sel.join(', ');
   text.classList.toggle('muted',!sel.length);const ic=dd.querySelector('.dlg-dd-ic');if(ic)ic.style.setProperty('--c',sel.length===1?teamColor(teamByName(sel[0])):'var(--accent-color)');
   if(all){all.checked=sel.length===boxes.length;all.indeterminate=sel.length>0&&sel.length<boxes.length}
   // Dienste anzeigen, die es in den gewählten Teams gibt
@@ -989,7 +990,7 @@ async function autoRotation(){
   <div class="wp-field"><span class="wp-label">Wechsel</span><div class="wp-types rot-modes" role="radiogroup" aria-label="Wechsel"><label class="wp-type"><input type="radio" name="mode" value="week" checked><span class="wp-type-card"><span class="wp-type-ic">${icon('cal')}</span><b>Wöchentlich</b><small>Wechsel jeden Montag</small><i class="wp-type-check">${icon('check')}</i></span></label><label class="wp-type"><input type="radio" name="mode" value="day"><span class="wp-type-card"><span class="wp-type-ic">${icon('refresh')}</span><b>Täglich</b><small>Wechsel jeden Tag</small><i class="wp-type-check">${icon('check')}</i></span></label></div></div>
   <label class="check wp-check"><input type="checkbox" name="keep" checked><span><b>Bestehende Einträge behalten</b><small class="muted block">Nur Lücken füllen – bereits geplante Tage bleiben unverändert.</small></span></label>
   <small class="wp-note rot-note">${icon('alert')}<span>Die Reihenfolge setzt dort fort, wo die letzte Bereitschaft vor dem Zeitraum endete. Ganztägig abwesende Personen werden für diesen Tag automatisch vertreten.</span></small>`,'Rotation erstellen','Verteilt die Bereitschaft gleichmäßig auf alle Teammitglieder.',{icon:'refresh',cls:'rot-modal'});
- fancySelect(document.getElementById('rot-time'),{kind:'shift',placeholder:'Bereitschaftszeit auswählen',meta:o=>{const x=standbyTimes.find(y=>String(y.id)===o.value);const g=x&&standbyGroups.find(gr=>gr.id===x.groupId);return x?{label:x.name,sub:`${tRange(x,' – ')}${g?' · '+g.name:''}`,icon:'moon'}:{}}});
+ fancySelect(document.getElementById('rot-time'),{kind:'shift',placeholder:'Bereitschaftszeit auswählen',meta:o=>{const x=standbyTimes.find(y=>String(y.id)===o.value);return x?{label:x.name,sub:`${tRange(x,' – ')} · ${standbyTimeAllTeams(x)?'Alle Teams':standbyTimeTeams(x).length+' Teams'}`,icon:'moon'}:{}}});
  {const rt=document.getElementById('rot-time'),box=document.getElementById('rot-var-time'),sync=()=>{const x=standbyTimes.find(y=>String(y.id)===rt.value);box.hidden=!isVariableStandby(x)};rt.addEventListener('change',sync);sync();
   box.closest('.app-dialog')?.addEventListener('submit',e=>{const x=standbyTimes.find(y=>String(y.id)===rt.value);if(!isVariableStandby(x))return;const a=document.getElementById('rot-vstart'),b=document.getElementById('rot-vend');if(!a.value||!b.value||a.value===b.value){e.preventDefault();e.stopPropagation();toast(!a.value||!b.value?`${x.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`:'Beginn und Ende dürfen nicht gleich sein.');(a.value?b:a).focus()}},true)}
  bindDialogTeamDropdown();const res=await dlg;
@@ -997,6 +998,7 @@ async function autoRotation(){
  const chosen=teamsAvail.filter(t=>res['team:'+t.name]);if(!chosen.length){toast('Bitte mindestens ein Team wählen.');return}
  if(res.to<res.from){toast('Das Enddatum darf nicht vor dem Startdatum liegen.');return}
  const st=standbyTimes.find(x=>String(x.id)===res.time),group=standbyGroups.find(g=>g.id===st?.groupId);if(!st)return;
+ {const bad=chosen.filter(t=>!standbyTimeForTeam(st,t.name));if(bad.length){toast(`„${st.name}“ ist für ${bad.map(t=>t.name).join(', ')} nicht freigegeben. Bitte diese Teams abwählen oder eine andere Bereitschaftszeit wählen.`);return}}
  const rotVar=isVariableStandby(st),rotStart=rotVar?res.vstart:st.start,rotEnd=rotVar?res.vend:st.end;
  if(rotVar&&(!/^\d\d:\d\d$/.test(rotStart||'')||!/^\d\d:\d\d$/.test(rotEnd||'')||rotStart===rotEnd)){toast(`${st.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`);return}
  const keep=!!res.keep,dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1))dates.push(isoDate(c));
@@ -1219,94 +1221,89 @@ const fmtHours=h=>{const mm=Math.round(h*60),H=Math.floor(mm/60),M=mm%60;return 
 function standbyManagementPage(){
  if(!canView('Bereitschaft verwalten'))return `${heading('Zugriff nicht möglich','Diese Seite ist für deine Rolle nicht freigegeben.')}`;
  const admin=standbyTimesEditable(),colorTeams=standbyColorTeams(),listTeams=standbyListTeams();
- const groupCount=standbyGroups.length,timeCount=standbyTimes.length,cover=standbyCoverage();
- const sub=admin?'Gruppen, Zeitfenster und Teamfarben – unabhängig von den regulären Dienstzeiten.'
-  :colorTeams.length?`Bereitschaftsfarbe für ${colorTeams.length===1?'dein Team':'deine '+colorTeams.length+' Teams'} festlegen. Gruppen und Zeitfenster legt die Administration fest.`
-  :'Gruppen, Zeitfenster und Teamfarben im Überblick.';
- const actions=admin?`<button class="btn" id="sb-new-group">${icon('sliders')}Gruppe anlegen</button><button class="btn primary" id="sb-new-time" ${groupCount?'':'disabled title="Zuerst eine Gruppe anlegen"'}>${icon('plus')}Bereitschaftszeit anlegen</button>`:'';
- const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th class="hide-sm scale-head"><span>00</span><span>12</span><span>24</span></th>${admin?'<th>Aktionen</th>':''}</tr>`,cols=admin?6:5;
- const rows=standbyGroups.map(g=>{const times=standbyTimes.filter(t=>t.groupId===g.id).sort((a,b)=>isVariableStandby(a)-isVariableStandby(b)||(a.start||'').localeCompare(b.start||'')||a.name.localeCompare(b.name,'de'));
-  let h=`<tr class="group-row sb-group-row"><td colspan="${cols}"><div class="sb-group-line"><span><i class="dot" style="--c:var(--accent-color)"></i> <b>${escapeHtml(g.name)}</b> <span class="muted">· ${times.length} Zeitfenster</span></span>${admin?`<span class="sb-group-actions"><button class="btn ghost small" type="button" data-sb-add-time="${escapeHtml(g.id)}">${icon('plus')}Zeit hinzufügen</button><button class="icon-btn" type="button" data-sb-edit-group="${escapeHtml(g.id)}" title="Gruppe umbenennen" aria-label="Gruppe ${escapeHtml(g.name)} umbenennen">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-group="${escapeHtml(g.id)}" title="Gruppe löschen" aria-label="Gruppe ${escapeHtml(g.name)} löschen">${icon('trash')}</button></span>`:''}</div></td></tr>`;
-  h+=times.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]];
-   const vari=isVariableStandby(t);
-   return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('')
-   ||`<tr><td colspan="${cols}" class="muted small">Noch keine Zeitfenster in dieser Gruppe.</td></tr>`;
-  return h}).join('');
+ const timeCount=standbyTimes.length,varCount=standbyTimes.filter(isVariableStandby).length,cover=standbyCoverage();
+ const covered=teams.filter(t=>standbyTimes.some(x=>standbyTimeForTeam(x,t.name))).length;
+ const sub=admin?'Bereitschaftszeiten je Team und Teamfarben – unabhängig von den regulären Dienstzeiten.'
+  :colorTeams.length?`Bereitschaftsfarbe für ${colorTeams.length===1?'dein Team':'deine '+colorTeams.length+' Teams'} festlegen. Bereitschaftszeiten legt die Administration fest.`
+  :'Bereitschaftszeiten und Teamfarben im Überblick.';
+ const actions=admin?`<button class="btn primary" id="sb-new-time">${icon('plus')}Bereitschaftszeit anlegen</button>`:'';
+ const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Teams</th><th class="hide-sm scale-head"><span>00</span><span>12</span><span>24</span></th>${admin?'<th>Aktionen</th>':''}</tr>`;
+ const sorted=[...standbyTimes].sort((a,b)=>isVariableStandby(a)-isVariableStandby(b)||(a.start||'').localeCompare(b.start||'')||a.name.localeCompare(b.name,'de'));
+ const rows=sorted.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]],vari=isVariableStandby(t);
+  return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
  const colorCards=listTeams.map(t=>{const c=standbyHex(t),ed=colorTeams.includes(t),n=(t.memberIds||[]).length;
   const inner=`<span class="ta-mark" style="--team:${c}">${standbyBadge(t)}</span><span class="sb-color-txt"><b>${escapeHtml(t.name)}</b><small><span class="sb-color-hex"><i style="background:${c}"></i>${escapeHtml(c.toLowerCase())}</span> · ${n} ${n===1?'Mitglied':'Mitglieder'}</small></span>${ed?`<span class="sb-color-edit">Ändern${icon('chev')}</span>`:''}`;
   return ed?`<button type="button" class="sb-color-card" data-sb-color="${escapeHtml(t.id)}" style="--team:${c}" aria-label="Bereitschaftsfarbe für ${escapeHtml(t.name)} ändern">${inner}</button>`:`<div class="sb-color-card" style="--team:${c}">${inner}</div>`}).join('');
  return `${heading('Bereitschaft verwalten',sub,actions)}
  ${!admin&&!colorTeams.length?`<div class="readonly-note">${icon('eye')}Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>`:''}
  <div class="stats sb-stats">
-  <div class="stat-card"><div><div class="stat-label">Gruppen</div><div class="stat-value">${groupCount}</div><div class="stat-note">Organisatorische Bereiche</div></div></div>
-  <div class="stat-card"><div><div class="stat-label">Bereitschaftszeiten</div><div class="stat-value">${timeCount}</div><div class="stat-note">Zeitfenster gesamt</div></div></div>
+  <div class="stat-card"><div><div class="stat-label">Bereitschaftszeiten</div><div class="stat-value">${timeCount}</div><div class="stat-note">${timeCount-varCount} fix · ${varCount} variabel</div></div></div>
+  <div class="stat-card"><div><div class="stat-label">Teams mit Bereitschaft</div><div class="stat-value">${covered} / ${teams.length}</div><div class="meter ${covered<teams.length?'warn':''}"><i style="width:${teams.length?covered/teams.length*100:0}%"></i></div></div></div>
   <div class="stat-card"><div><div class="stat-label">Tagesabdeckung</div><div class="stat-value">${Math.round(cover*10)/10} / 24 Std.</div><div class="meter ${cover<24?'warn':''}"><i style="width:${Math.min(100,cover/24*100)}%"></i></div></div></div>
-  <div class="stat-card"><div><div class="stat-label">${admin||!colorTeams.length?'Teams':'Deine Teams'}</div><div class="stat-value">${listTeams.length}</div><div class="stat-note">${colorTeams.length?(admin?'Farben bearbeitbar':'Farbe bearbeitbar'):'mit Bereitschaftsfarbe'}</div></div></div>
+  <div class="stat-card"><div><div class="stat-label">${admin||!colorTeams.length?'Teamfarben':'Deine Teams'}</div><div class="stat-value">${listTeams.length}</div><div class="stat-note">${colorTeams.length?(admin?'Farben bearbeitbar':'Farbe bearbeitbar'):'mit Bereitschaftsfarbe'}</div></div></div>
  </div>
  <section class="panel flush sb-times-panel">
-  <div class="panel-toolbar sb-toolbar"><div><h2>Gruppen und Zeitfenster</h2><p class="sub">${admin?'Zeitfenster auf einer 24-Stunden-Skala. Über Mitternacht ist möglich.':'Zeitfenster auf einer 24-Stunden-Skala. Änderungen nimmt die Administration vor.'}</p></div><span class="pill push-right">${groupCount} ${groupCount===1?'Gruppe':'Gruppen'} · ${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
-  ${groupCount?`<div class="table-wrap borderless shift-times-table-wrap"><table class="sb-times-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`
-   :`<div class="empty-note sb-empty">${admin?`Noch keine Bereitschaftsgruppen. Lege zuerst eine Gruppe an, z. B. „Rufbereitschaft Nord“.<div><button class="btn primary" type="button" id="sb-new-group-empty">${icon('plus')}Gruppe anlegen</button></div>`:'Es sind noch keine Bereitschaftsgruppen angelegt.'}</div>`}
+  <div class="panel-toolbar sb-toolbar"><div><h2>Bereitschaftszeiten</h2><p class="sub">${admin?'Jede Bereitschaftszeit steht nur den ausgewählten Teams zur Verfügung.':'Welche Bereitschaftszeit welches Team hat. Änderungen nimmt die Administration vor.'}</p></div><span class="pill push-right">${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
+  ${timeCount?`<div class="table-wrap borderless shift-times-table-wrap"><table class="sb-times-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`
+   :`<div class="empty-note sb-empty">${admin?`Noch keine Bereitschaftszeiten. Lege die erste an und wähle die Teams, die sie haben sollen.<div><button class="btn primary" type="button" id="sb-new-time-empty">${icon('plus')}Bereitschaftszeit anlegen</button></div>`:'Es sind noch keine Bereitschaftszeiten angelegt.'}</div>`}
  </section>
- <section class="panel sb-colors-panel"><div class="panel-head"><div><h2>Bereitschaftsfarben</h2><p class="sub">${admin?'Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.':colorTeams.length?'Diese Farbe wird für alle Bereitschaftseinträge deines Teams verwendet.':'Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.'}</p></div></div>
+ <section class="panel sb-colors-panel"><div class="panel-head"><div><h2>Bereitschaftsfarben</h2><p class="sub">${colorTeams.length&&!admin?'Diese Farbe wird für alle Bereitschaftseinträge deines Teams verwendet.':'Diese Farbe wird für alle Bereitschaftseinträge des Teams verwendet.'}</p></div></div>
   ${listTeams.length?`<div class="sb-color-grid">${colorCards}</div>`:'<div class="empty-note">Es sind noch keine Teams angelegt.</div>'}</section>`;
 }
-function durationHoursStart(hhmm){const [h,m]=String(hhmm||'0:0').split(':').map(Number);return h+(m||0)/60}
-/* Dialog: Bereitschaftsgruppe anlegen / umbenennen (nur Admin) */
-async function openStandbyGroup(id){
- if(!standbyTimesEditable()){toast('Bereitschaftsgruppen kann nur ein Admin verwalten.');return}
- const ex=id?standbyGroups.find(g=>g.id===id):null;if(id&&!ex)return;
- const dlg=formDialog(ex?'Gruppe umbenennen':'Bereitschaftsgruppe anlegen',`
-  <div class="wp-field"><label class="wp-label" for="sbg-name">Name der Gruppe</label>
-   <div class="nt-input"><span class="nt-input-ic">${icon('sliders')}</span><input id="sbg-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Rufbereitschaft Nord" value="${escapeHtml(ex?.name||'')}" required><span class="nt-count" id="sbg-count">0/60</span></div>
-   <small class="wp-note nt-msg" id="sbg-msg">Ein organisatorischer Bereich, z. B. ein Standort oder Fachbereich.</small></div>`,ex?'Speichern':'Gruppe anlegen',ex?'Der neue Name erscheint auch bei bestehenden Bereitschaftseinträgen.':'Danach fügst du der Gruppe ihre Bereitschaftszeiten hinzu.',{icon:'sliders',cls:'nt-modal'});
- const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x),name=$('sbg-name'),msg=$('sbg-msg');
- const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(standbyGroups.some(g=>g.id!==id&&g.name.toLowerCase()===v.toLowerCase()))return 'Diese Bereitschaftsgruppe gibt es bereits.';return ''};
- const upd=()=>{const pr=problem();$('sbg-count').textContent=`${name.value.length}/60`;msg.textContent=pr&&pr!=='empty'?pr:'Ein organisatorischer Bereich, z. B. ein Standort oder Fachbereich.';msg.classList.toggle('bad',!!pr&&pr!=='empty');name.closest('.nt-input').classList.toggle('bad',!!pr&&pr!=='empty');layer.querySelector('button[type=submit]').disabled=!!pr};
- name.oninput=upd;upd();layer.addEventListener('submit',e=>{if(problem()){e.preventDefault();e.stopPropagation();name.focus()}},true);setTimeout(()=>name.focus(),30);
- const res=await dlg;if(!res)return;const nm=res.name.trim().slice(0,60);
- if(!nm||standbyGroups.some(g=>g.id!==id&&g.name.toLowerCase()===nm.toLowerCase()))return;
- if(ex){const before=ex.name;if(before===nm)return;ex.name=nm;assignments.forEach(a=>{if(a.groupId===ex.id)a.groupName=nm});persistStandbyConfig();persistAssignments();audit('Geändert','Bereitschaftsgruppen',`${before} → ${nm}`,{title:'Bereitschaftsgruppe umbenannt',object:nm,before,after:nm});render();toast('Gruppe umbenannt.');return}
- const g={id:makeId(),name:nm};standbyGroups.push(g);persistStandbyConfig();audit('Erstellt','Bereitschaftsgruppen',nm,{title:'Bereitschaftsgruppe angelegt',object:nm});render();toast('Bereitschaftsgruppe angelegt.');openStandbyTime(null,g.id);
+/* Teams einer Bereitschaftszeit: ohne teamIds gilt sie für alle Teams (auch später angelegte) */
+const standbyTimeAllTeams=t=>!Array.isArray(t?.teamIds);
+const standbyTimeTeams=t=>standbyTimeAllTeams(t)?teams:teams.filter(x=>t.teamIds.includes(x.id));
+const standbyTimeForTeam=(t,teamName)=>{if(!t)return false;if(standbyTimeAllTeams(t))return true;const x=teamByName(teamName);return !!x&&t.teamIds.includes(x.id)};
+function standbyTeamsCell(t){
+ if(standbyTimeAllTeams(t))return '<span class="pill sb-all-teams">Alle Teams</span>';
+ const list=standbyTimeTeams(t);if(!list.length)return '<span class="muted">Kein Team</span>';
+ const names=list.map(x=>x.name).join(', ');
+ return `<span class="sb-team-stack" title="${escapeHtml(names)}">${list.slice(0,4).map(x=>`<span class="ta-mark sm" style="--team:${teamColor(x)}">${standbyBadge(x)}</span>`).join('')}${list.length>4?`<span class="sb-team-more">+${list.length-4}</span>`:''}<span class="sb-team-names">${list.length===1?escapeHtml(list[0].name):`${list.length} Teams`}</span></span>`;
 }
-/* Dialog: Bereitschaftszeit anlegen / bearbeiten (nur Admin) */
-async function openStandbyTime(id,groupId){
+function durationHoursStart(hhmm){const [h,m]=String(hhmm||'0:0').split(':').map(Number);return h+(m||0)/60}
+/* Dialog: Bereitschaftszeit anlegen / bearbeiten (nur Admin) – mit Auswahl der Teams */
+async function openStandbyTime(id){
  if(!standbyTimesEditable()){toast('Bereitschaftszeiten kann nur ein Admin verwalten.');return}
- if(!standbyGroups.length){toast('Bitte zuerst eine Bereitschaftsgruppe anlegen.');return}
+ if(!teams.length){toast('Bitte zuerst unter „Administration“ ein Team anlegen.');return}
  const ex=id?standbyTimes.find(t=>t.id===id):null;if(id&&!ex)return;
- const g0=ex?.groupId||groupId||standbyGroups[0].id,c0=shiftHexColor(ex?.color||'#159da8'),type0=ex&&isVariableStandby(ex)?'variabel':'fix';
+ const c0=shiftHexColor(ex?.color||'#159da8'),type0=ex&&isVariableStandby(ex)?'variabel':'fix',pre=ex?standbyTimeTeams(ex).map(t=>t.name):[];
  const dlg=formDialog(ex?`${ex.name} bearbeiten`:'Bereitschaftszeit anlegen',`
   <label class="wp-field"><span class="wp-label">Bezeichnung</span><input id="sbt-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Nachtbereitschaft" value="${escapeHtml(ex?.name||'')}" required></label>
-  <div class="wp-field"><span class="wp-label">Gruppe</span><select id="sbt-group" name="group">${standbyGroups.map(g=>`<option value="${escapeHtml(g.id)}" ${g.id===g0?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}</select></div>
+  ${teamDropdown(teams,pre,{label:'Teams mit dieser Bereitschaft',allLabel:'Alle Teams',empty:'Teams auswählen …'})}
+  <small class="wp-note sb-team-note" id="sbt-team-note"></small>
   <div class="wp-field"><span class="wp-label">Art der Bereitschaft</span><select id="sbt-type" name="type"><option value="fix" ${type0==='fix'?'selected':''}>Fix</option><option value="variabel" ${type0==='variabel'?'selected':''}>Variabel</option></select></div>
   <div class="wp-field" id="sbt-range-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="sbt-start" name="start" value="${escapeHtml(ex?.start||'')}"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="sbt-end" name="end" value="${escapeHtml(ex?.end||'')}"></label></div></div>
   <div class="wp-summary sb-time-sum"><span class="wp-sum-ic">${icon('clock')}</span><div class="sb-sum-txt"><b id="sbt-dur"></b><small id="sbt-msg"></small><div class="mini-scale" id="sbt-scale"></div></div></div>
-  <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft als Auswahl zur Verfügung.',{icon:'clock',cls:'sb-time-modal'});
+  <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft für die gewählten Teams zur Auswahl.',{icon:'clock',cls:'sb-time-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x);
- const grp=$('sbt-group'),typ=$('sbt-type'),rangeF=$('sbt-range-field'),name=$('sbt-name'),st=$('sbt-start'),en=$('sbt-end'),col=$('sbt-color'),pick=$('sbt-color-pick'),head=layer.querySelector('.wp-head-icon');
- if(typeof fancySelect==='function')fancySelect(grp,{kind:'dept',placeholder:'Gruppe wählen',meta:o=>{const n=standbyTimes.filter(t=>t.groupId===o.value).length;return{pic:'shift',icon:'sliders',color:'var(--accent-color)',sub:`${n} Zeitfenster`}}});
+ const typ=$('sbt-type'),rangeF=$('sbt-range-field'),name=$('sbt-name'),st=$('sbt-start'),en=$('sbt-end'),col=$('sbt-color'),pick=$('sbt-color-pick'),head=layer.querySelector('.wp-head-icon');
+ bindDialogTeamDropdown();
+ const selTeams=()=>[...layer.querySelectorAll('[data-dd-team]')].filter(b=>b.checked).map(b=>b.dataset.ddTeam);
  const isVar=()=>typ.value==='variabel';
  if(typeof fancySelect==='function')fancySelect(typ,{kind:'shift',placeholder:'Art wählen',meta:o=>o.value==='variabel'?{label:'Variabel',sub:'Uhrzeit wird beim Einteilen eingegeben',icon:'refresh',color:'#9b69c8'}:{label:'Fix',sub:'Mit fester Uhrzeit (Beginn – Ende)',icon:'clock',color:'var(--accent-color)'}});
- const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}if(standbyTimes.some(t=>t.id!==id&&t.groupId===grp.value&&t.name.toLowerCase()===v.toLowerCase()))return 'In dieser Gruppe gibt es bereits ein Zeitfenster mit diesem Namen.';return ''};
- const upd=()=>{const pr=problem(),c=col.value,vr=isVar(),s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s;
+ const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===v.toLowerCase()))return 'Es gibt bereits eine Bereitschaftszeit mit diesem Namen.';if(!selTeams().length)return 'Bitte mindestens ein Team auswählen.';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}return ''};
+ const upd=()=>{const pr=problem(),c=col.value,vr=isVar(),s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s,sel=selTeams();
   rangeF.hidden=vr;
+  const tn=$('sbt-team-note');tn.textContent=!sel.length?'Nur die gewählten Teams können diese Bereitschaft einteilen.':sel.length===teams.length?'Alle Teams ausgewählt – gilt auch für später angelegte Teams.':`${sel.length} von ${teams.length} Teams können diese Bereitschaft einteilen.`;tn.classList.toggle('bad',!sel.length&&pr==='Bitte mindestens ein Team auswählen.'&&!!name.value.trim());
   $('sbt-dur').textContent=vr?'Variable Bereitschaft':st.value&&en.value&&st.value!==en.value?fmtHours(durationHours(st.value,en.value))+(over?' · über Mitternacht':''):'Uhrzeit eingeben';
-  const m=$('sbt-msg');m.textContent=pr&&pr!=='empty'&&(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0)?pr:(vr?'Ohne feste Uhrzeit – sie wird erst beim Einteilen eingegeben.':!st.value||!en.value?'Bei fixer Bereitschaft sind Beginn und Ende Pflicht.':over?`Endet am Folgetag um ${en.value} Uhr.`:'Innerhalb eines Tages.');m.classList.toggle('bad',!!pr&&pr!=='empty'&&!!(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0));
+  const timeProblem=pr&&pr!=='empty'&&pr!=='Bitte mindestens ein Team auswählen.';
+  const m=$('sbt-msg');m.textContent=timeProblem&&(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0)?pr:(vr?'Ohne feste Uhrzeit – sie wird erst beim Einteilen eingegeben.':!st.value||!en.value?'Bei fixer Bereitschaft sind Beginn und Ende Pflicht.':over?`Endet am Folgetag um ${en.value} Uhr.`:'Innerhalb eines Tages.');m.classList.toggle('bad',!!timeProblem&&!!(st.value||en.value||pr.indexOf('Beginn und Ende angeben')<0));
   $('sbt-scale').classList.toggle('is-variable',vr);$('sbt-scale').innerHTML=!vr&&st.value&&en.value&&st.value!==en.value?(e>s?[[s,e]]:[[s,24],[0,e]]).map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join(''):'';
   head.style.background=c;head.style.boxShadow=`0 6px 16px -6px ${c}`;head.style.color='#fff';
   layer.querySelectorAll('.shift-color-presets .color-swatch[data-color]').forEach(b=>b.classList.toggle('active',b.dataset.color.toLowerCase()===c.toLowerCase()));
   layer.querySelector('button[type=submit]').disabled=!!pr};
  const setColor=c=>{col.value=c;pick.value=c;upd()};
  layer.querySelectorAll('.shift-color-presets .color-swatch[data-color]').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=pick.onchange=()=>setColor(pick.value);
- [name,st,en].forEach(x=>{x.addEventListener('input',upd);x.addEventListener('change',upd)});grp.addEventListener('change',upd);typ.addEventListener('change',()=>{upd();if(!isVar()&&!st.value)setTimeout(()=>st.focus(),30)});upd();
+ [name,st,en].forEach(x=>{x.addEventListener('input',upd);x.addEventListener('change',upd)});layer.addEventListener('dd-teams',upd);layer.querySelectorAll('[data-dd-team],[data-dd-all]').forEach(b=>b.addEventListener('change',()=>setTimeout(upd)));typ.addEventListener('change',()=>{upd();if(!isVar()&&!st.value)setTimeout(()=>st.focus(),30)});upd();
  layer.addEventListener('submit',e=>{const pr=problem();if(pr){e.preventDefault();e.stopPropagation();if(pr!=='empty'&&!isVar()&&(!st.value||!en.value)){const m=$('sbt-msg');m.textContent=pr;m.classList.add('bad');(st.value?en:st).focus()}else name.focus()}},true);setTimeout(()=>name.focus(),30);
  const res=await dlg;if(!res)return;
- const vr=res.type==='variabel';
- const data={groupId:res.group,name:String(res.name||'').trim().slice(0,60),type:vr?'variabel':'fix',start:vr?'':res.start,end:vr?'':res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8'};
- if(!standbyGroups.some(g=>g.id===data.groupId)||!data.name||(!vr&&(!/^\d\d:\d\d$/.test(data.start)||!/^\d\d:\d\d$/.test(data.end)||data.start===data.end))){toast('Bitte alle Angaben prüfen.');return}
- const gName=standbyGroups.find(g=>g.id===data.groupId).name;
- if(ex){const before=`${ex.name} (${tRange(ex)})`;Object.assign(ex,data);persistStandbyConfig();audit('Geändert','Bereitschaftszeiten',`${gName} · ${data.name} (${tRange(data)})`,{title:'Bereitschaftszeit geändert',object:gName,before,after:`${data.name} (${tRange(data)})`});render();toast('Bereitschaftszeit gespeichert.');return}
- standbyTimes.push({id:makeId(),...data});persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${gName} · ${data.name} (${tRange(data)})`,{title:'Bereitschaftszeit angelegt',object:gName,after:`${data.name} (${tRange(data)})`});render();toast('Bereitschaftszeit angelegt.');
+ const vr=res.type==='variabel',chosen=teams.filter(t=>res['team:'+t.name]);
+ const data={name:String(res.name||'').trim().slice(0,60),type:vr?'variabel':'fix',start:vr?'':res.start,end:vr?'':res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8'};
+ if(!chosen.length||!data.name||standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===data.name.toLowerCase())||(!vr&&(!/^\d\d:\d\d$/.test(data.start)||!/^\d\d:\d\d$/.test(data.end)||data.start===data.end))){toast('Bitte alle Angaben prüfen.');return}
+ const allSel=chosen.length===teams.length,teamTxt=allSel?'Alle Teams':chosen.map(t=>t.name).join(', ');
+ if(ex){const before=`${ex.name} (${tRange(ex)}) · ${standbyTimeAllTeams(ex)?'Alle Teams':standbyTimeTeams(ex).map(t=>t.name).join(', ')}`;Object.assign(ex,data);if(allSel)delete ex.teamIds;else ex.teamIds=chosen.map(t=>t.id);
+  persistStandbyConfig();audit('Geändert','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit geändert',object:data.name,before,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit gespeichert.');return}
+ const item={id:makeId(),...data};if(!allSel)item.teamIds=chosen.map(t=>t.id);standbyTimes.push(item);persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit angelegt',object:data.name,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit angelegt.');
 }
 /* Dialog: Bereitschaftsfarbe eines Teams (Admin: alle Teams, Teamleitung: eigene Teams) */
 async function openStandbyColor(teamId){
@@ -2114,8 +2111,8 @@ function bindDutyModal(){
  }
  function refreshShifts(){
   const t=team.value;
-  const types=currentPage==='Bereitschaft'?standbyTimes.filter(x=>!standbyGroup||x.groupId===standbyGroup.value):shiftTypes.filter(x=>x.team===t);
-  shift.innerHTML=types.length?'<option value="">Bitte auswählen</option>'+types.map(x=>`<option value="${x.id}">${escapeHtml(x.name)} (${tRange(x)})</option>`).join(''):`<option value="">${currentPage==='Bereitschaft'?'Keine Bereitschaftszeiten für diese Gruppe angelegt':'Keine Dienstzeiten für dieses Team angelegt'}</option>`;
+  const types=currentPage==='Bereitschaft'?standbyTimes.filter(x=>standbyTimeForTeam(x,t)):shiftTypes.filter(x=>x.team===t);
+  shift.innerHTML=types.length?'<option value="">Bitte auswählen</option>'+types.map(x=>`<option value="${x.id}">${escapeHtml(x.name)} (${tRange(x)})</option>`).join(''):`<option value="">${currentPage==='Bereitschaft'?'Für dieses Team ist keine Bereitschaftszeit angelegt':'Keine Dienstzeiten für dieses Team angelegt'}</option>`;
   updateTimeFields();
  }
  function updateTimeFields(){const source=currentPage==='Bereitschaft'?standbyTimes:shiftTypes;const service=source.find(x=>String(x.id)===String(shift.value));if(timeBox)timeBox.hidden=!service;if(timeHint)timeHint.hidden=!service;if(service){startTime.value=service.start||'';endTime.value=service.end||'';}if(timeHint)timeHint.textContent=service&&isVariableStandby(service)?'Variable Bereitschaft – bitte Beginn und Ende für diesen Eintrag eingeben.':'Die Uhrzeiten gelten nur für diesen Eintrag und ändern die hinterlegte Dienstzeit nicht.';if(timeBox)timeBox.classList.toggle('needs-time',!!service&&isVariableStandby(service));updateDutySummary()}
@@ -2156,7 +2153,7 @@ function bindDutyModal(){
   const fArea=currentPage==='Bereitschaft'?'Bereitschaft':'Dienstplan';
   if(!canEditEntry(team.value,person[0],fArea)){toast(selfEditAllowed(team.value,fArea)?'Du darfst nur deine eigenen Einträge anlegen und bearbeiten.':'Du darfst nur Teams bearbeiten, für die du als Teamleiter oder Deputy zugeordnet bist.');return}
   if(editingDutyId){const orig=assignments.find(a=>String(a.id)===String(editingDutyId));if(orig&&!canEditEntry(orig.team,orig.employee,areaOf(orig))){toast('Du darfst diesen Eintrag nicht bearbeiten.');return}}
-  if(!service){toast(currentPage==='Bereitschaft'?'Bitte zuerst als Admin eine Bereitschaftsgruppe und Bereitschaftszeit anlegen.':'Bitte zuerst unter „Dienstzeiten“ eine Dienstzeit für dieses Team anlegen.');return}
+  if(!service){toast(currentPage==='Bereitschaft'?'Für dieses Team ist noch keine Bereitschaftszeit angelegt. Das erledigt die Administration unter „Bereitschaft verwalten“.':'Bitte zuerst unter „Dienstzeiten“ eine Dienstzeit für dieses Team anlegen.');return}
   if(!dateFrom){toast('Bitte ein Startdatum auswählen.');return}
   if(!validDateInput(dateFrom)||!validDateInput(dateTo)){toast(DATE_RANGE_MSG);return}
   const startDate=new Date(dateFrom+'T12:00:00'),endDate=new Date(dateTo+'T12:00:00');
@@ -2173,7 +2170,8 @@ function bindDutyModal(){
   if(!customStart||!customEnd){toast(variableSb?`${service.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`:'Bitte Beginn und Ende festlegen.');(customStart?endTime:startTime)?.focus();return}
   if(variableSb&&customStart===customEnd){toast('Beginn und Ende dürfen nicht gleich sein.');return}
   if(currentPage!=='Bereitschaft'&&customStart===customEnd){toast('Beginn und Ende dürfen nicht gleich sein.');return}
-  const group=currentPage==='Bereitschaft'?standbyGroups.find(g=>g.id===standbyGroup?.value):null;
+  if(currentPage==='Bereitschaft'&&!standbyTimeForTeam(service,team.value)){toast(`„${service.name}“ ist für ${team.value} nicht freigegeben.`);return}
+  const group=currentPage==='Bereitschaft'?standbyGroups.find(g=>g.id===service.groupId):null;
   for(const date of dates){const conflicts=assignments.filter(a=>a.employee===person[0]&&a.date===date&&String(a.id)!==String(editingDutyId));
    if(conflicts.some(a=>a.kind===currentPage&&!a.isAbsence)){toast(`${person[0]} hat am ${fmt(new Date(date+'T12:00:00'))} bereits ${currentPage==='Bereitschaft'?'eine Bereitschaft':'einen Dienst'}.`);return}
    const abs=conflicts.find(a=>a.isAbsence&&!['Abwesend untertägig','Arztbesuch','Urlaub 1/2 Tag'].includes(a.shift));
@@ -2217,7 +2215,7 @@ function openEditDuty(id){
  const team=document.getElementById('duty-team');team.value=item.team;team.disabled=false;team.dispatchEvent(new Event('change'));
  document.getElementById('duty-employee').value=String(staff.findIndex(p=>p[0]===item.employee));
  if(item.kind==='Bereitschaft'){const group=document.getElementById('duty-standby-group');if(group){group.value=item.groupId||'';group.dispatchEvent(new Event('change'));}}
- const service=(item.kind==='Bereitschaft'?standbyTimes:shiftTypes).find(x=>(item.kind==='Bereitschaft'?x.groupId===item.groupId:x.team===item.team)&&x.name===item.shift);
+ const service=item.kind==='Bereitschaft'?(standbyTimes.filter(x=>x.name===item.shift&&standbyTimeForTeam(x,item.team)).sort((a,b)=>((b.groupId||'')===(item.groupId||''))-((a.groupId||'')===(item.groupId||'')))[0]):shiftTypes.find(x=>x.team===item.team&&x.name===item.shift);
  if(service){const sel=document.getElementById('duty-shift');sel.value=String(service.id);sel.dispatchEvent(new Event('change'));document.getElementById('duty-start-time').value=item.start;document.getElementById('duty-end-time').value=item.end;}
  document.getElementById('duty-date-from').value=item.date;document.getElementById('duty-date-to').value=item.date;
  document.getElementById('duty-title').textContent='Eintrag bearbeiten';
@@ -3188,17 +3186,11 @@ function bindLogPage(){
 ------------------------------------------------------------------ */
 function bindStandbyAdmin(){
  const on=(sel,fn)=>content.querySelectorAll(sel).forEach(fn);
- ['sb-new-group','sb-new-group-empty'].forEach(id=>{const b=document.getElementById(id);if(b)b.onclick=()=>openStandbyGroup(null)});
- const nt=document.getElementById('sb-new-time');if(nt)nt.onclick=()=>openStandbyTime(null);
- on('[data-sb-add-time]',b=>b.onclick=()=>openStandbyTime(null,b.dataset.sbAddTime));
- on('[data-sb-edit-group]',b=>b.onclick=()=>openStandbyGroup(b.dataset.sbEditGroup));
+ ['sb-new-time','sb-new-time-empty'].forEach(id=>{const b=document.getElementById(id);if(b)b.onclick=()=>openStandbyTime(null)});
  on('[data-sb-edit-time]',b=>b.onclick=()=>openStandbyTime(b.dataset.sbEditTime));
  on('[data-sb-color]',b=>b.onclick=()=>openStandbyColor(b.dataset.sbColor));
- on('[data-sb-delete-group]',b=>b.onclick=async()=>{if(!standbyTimesEditable())return;const id=b.dataset.sbDeleteGroup,g=standbyGroups.find(x=>x.id===id);if(!g)return;const n=standbyTimes.filter(t=>t.groupId===id).length;
-  if(!await ask(`Bereitschaftsgruppe „${g.name}“${n?` samt ${n} ${n===1?'Zeitfenster':'Zeitfenstern'}`:''} löschen? Bestehende Bereitschaftseinträge bleiben erhalten.`,'Löschen'))return;
-  standbyGroups=standbyGroups.filter(x=>x.id!==id);standbyTimes=standbyTimes.filter(t=>t.groupId!==id);persistStandbyConfig();audit('Gelöscht','Bereitschaftsgruppen',g.name,{title:'Bereitschaftsgruppe gelöscht',object:g.name});render();toast('Bereitschaftsgruppe gelöscht.')});
- on('[data-sb-delete-time]',b=>b.onclick=async()=>{if(!standbyTimesEditable())return;const t=standbyTimes.find(x=>x.id===b.dataset.sbDeleteTime);if(!t||!await ask(`Zeitfenster „${t.name}“ löschen? Bestehende Bereitschaftseinträge bleiben erhalten.`,'Löschen'))return;
-  standbyTimes=standbyTimes.filter(x=>x.id!==t.id);persistStandbyConfig();audit('Gelöscht','Bereitschaftszeiten',`${t.name} (${tRange(t)})`,{title:'Bereitschaftszeit gelöscht',object:t.name,before:`${tRange(t)}`});render();toast('Zeitfenster gelöscht.')});
+ on('[data-sb-delete-time]',b=>b.onclick=async()=>{if(!standbyTimesEditable())return;const t=standbyTimes.find(x=>x.id===b.dataset.sbDeleteTime);if(!t||!await ask(`Bereitschaftszeit „${t.name}“ löschen? Bestehende Bereitschaftseinträge bleiben erhalten.`,'Löschen'))return;
+  standbyTimes=standbyTimes.filter(x=>x.id!==t.id);persistStandbyConfig();audit('Gelöscht','Bereitschaftszeiten',`${t.name} (${tRange(t)})`,{title:'Bereitschaftszeit gelöscht',object:t.name,before:tRange(t)});render();toast('Bereitschaftszeit gelöscht.')});
 }
 /* ==================================================================
    Hilfe – Anleitungen zu allen Bereichen, passend zur Rolle
@@ -3258,17 +3250,16 @@ const HELP_SECTIONS=[
  ]},
  {id:'bereitschaft',page:'Bereitschaft',icon:'moon',title:'Bereitschaft',intro:'Wer wann Bereitschaft hat – und wie man sie einteilt.',items:[
   {t:'Ansichten und Zeitleiste',s:['Wähle Tag, Woche, Monat oder Zeitleiste.','Die Zeitleiste zeigt pro Team, wer an welchem Tag Bereitschaft hat.','Mit ‹ › und „Heute“ wechselst du den Zeitraum.']},
-  {t:'Bereitschaft einteilen',when:c=>c.planSb||c.selfSb,s:['Klicke auf „Bereitschaft einteilen“ – oder im Kalender bei der Person und dem Tag auf „+“.','Wähle Team, Mitarbeiter, Bereitschaftsgruppe und Bereitschaftszeit.','Bei einer fixen Bereitschaft wird die Uhrzeit übernommen. Bei einer variablen Bereitschaft musst du Beginn und Ende selbst eingeben.','Wähle das Datum bzw. den Zeitraum und speichere.']},
-  {t:'Bereitschafts-Rotation planen',when:c=>c.planSb,s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Bereitschaftszeit, Zeitraum und ob wöchentlich oder täglich gewechselt wird.','Bei einer variablen Bereitschaft gibst du die Uhrzeit einmal für alle Einträge ein.','Mit „Bestehende Einträge behalten“ werden nur Lücken gefüllt.']},
+  {t:'Bereitschaft einteilen',when:c=>c.planSb||c.selfSb,s:['Klicke auf „Bereitschaft einteilen“ – oder im Kalender bei der Person und dem Tag auf „+“.','Wähle Team, Mitarbeiter und Bereitschaftszeit – angeboten werden nur die Bereitschaftszeiten, die für dieses Team freigegeben sind.','Bei einer fixen Bereitschaft wird die Uhrzeit übernommen. Bei einer variablen Bereitschaft musst du Beginn und Ende selbst eingeben.','Wähle das Datum bzw. den Zeitraum und speichere.']},
+  {t:'Bereitschafts-Rotation planen',when:c=>c.planSb,s:['Klicke auf „Rotation automatisch planen“.','Wähle Teams, Bereitschaftszeit, Zeitraum und ob wöchentlich oder täglich gewechselt wird. Die Bereitschaftszeit muss für alle gewählten Teams freigegeben sein.','Bei einer variablen Bereitschaft gibst du die Uhrzeit einmal für alle Einträge ein.','Mit „Bestehende Einträge behalten“ werden nur Lücken gefüllt.']},
   {t:'Bereitschaft bearbeiten oder löschen',when:c=>c.planSb||c.selfSb,s:['Klicke auf den Eintrag oder auf „⋯“.','Wähle „Bearbeiten“, „Auf nächsten Tag kopieren“ oder „Löschen“.']},
   {t:'Bereitschaft erreichen',s:['Fahre über einen Bereitschaftseintrag oder öffne ihn.','Über die Telefonnummer bzw. „Anrufen“ erreichst du die Person direkt.']}
  ]},
- {id:'sbadmin',page:'Bereitschaft verwalten',icon:'sliders',title:'Bereitschaft verwalten',intro:'Gruppen, Bereitschaftszeiten und Teamfarben.',items:[
-  {t:'Bereitschaftsgruppe anlegen',when:c=>c.sbTimes,s:['Klicke oben auf „Gruppe anlegen“.','Gib einen Namen ein, z. B. „Rufbereitschaft Nord“, und klicke auf „Gruppe anlegen“.','Danach öffnet sich direkt der Dialog für die erste Bereitschaftszeit.']},
-  {t:'Bereitschaftszeit anlegen (fix oder variabel)',when:c=>c.sbTimes,s:['Klicke auf „Bereitschaftszeit anlegen“ oder in der Tabelle bei einer Gruppe auf „Zeit hinzufügen“.','Gib eine Bezeichnung ein und wähle die Gruppe.','Wähle die Art: „Fix“ – Beginn und Ende sind Pflicht (über Mitternacht möglich). „Variabel“ – ohne Uhrzeit, sie wird erst beim Einteilen eingegeben.','Wähle eine Farbe für die Übersicht und speichere.']},
-  {t:'Gruppen und Zeiten ändern oder löschen',when:c=>c.sbTimes,s:['In der Tabelle „Gruppen und Zeitfenster“ benennst du Gruppen mit dem Stift um oder löschst sie mit dem Papierkorb.','Bei jeder Zeit gibt es ebenfalls Stift (bearbeiten) und Papierkorb (löschen).'],tip:'Bereits eingeteilte Bereitschaften bleiben beim Ändern oder Löschen erhalten.'},
-  {t:'Bereitschaftsfarbe eines Teams ändern',when:c=>c.sbColors,s:['Klicke unter „Bereitschaftsfarben“ bei deinem Team auf „Ändern“.','Wähle eine Farbe oder „Eigene“ – die Vorschau zeigt, wie der Eintrag im Kalender aussieht.','Klicke auf „Speichern“. Die Farbe gilt für alle Bereitschaftseinträge des Teams.'],tip:c=>c.admin?'Als Admin änderst du die Farbe aller Teams.':'Du kannst die Farbe der Teams ändern, die du leitest. Gruppen und Zeiten legt die Administration fest.'},
-  {t:'Übersicht lesen',when:c=>!c.sbTimes,s:['Die Tabelle zeigt alle Gruppen mit ihren Zeitfenstern auf einer 24-Stunden-Skala.','„Fix“ bedeutet feste Uhrzeit, „Variabel“ eine Uhrzeit, die beim Einteilen eingegeben wird.','„Tagesabdeckung“ zeigt, wie viele der 24 Stunden durch fixe Zeiten abgedeckt sind.']}
+ {id:'sbadmin',page:'Bereitschaft verwalten',icon:'sliders',title:'Bereitschaft verwalten',intro:'Bereitschaftszeiten je Team und Teamfarben.',items:[
+  {t:'Bereitschaftszeit anlegen',when:c=>c.sbTimes,s:['Klicke oben auf „Bereitschaftszeit anlegen“.','Gib eine Bezeichnung ein, z. B. „Nachtbereitschaft“.','Wähle unter „Teams mit dieser Bereitschaft“ die Teams aus – nur diese Teams können die Bereitschaft später einteilen. „Alle Teams“ gilt auch für später angelegte Teams.','Wähle die Art: „Fix“ – Beginn und Ende sind Pflicht (über Mitternacht möglich). „Variabel“ – ohne Uhrzeit, sie wird erst beim Einteilen eingegeben.','Wähle eine Farbe für die Übersicht und klicke auf „Bereitschaftszeit anlegen“.']},
+  {t:'Bereitschaftszeit ändern oder löschen',when:c=>c.sbTimes,s:['In der Tabelle „Bereitschaftszeiten“ klickst du beim Eintrag auf den Stift, um Bezeichnung, Teams, Art, Uhrzeit oder Farbe zu ändern.','Mit dem Papierkorb löschst du die Bereitschaftszeit.'],tip:'Bereits eingeteilte Bereitschaften bleiben beim Ändern oder Löschen erhalten.'},
+  {t:'Bereitschaftsfarbe eines Teams ändern',when:c=>c.sbColors,s:['Klicke unter „Bereitschaftsfarben“ bei deinem Team auf „Ändern“.','Wähle eine Farbe oder „Eigene“ – die Vorschau zeigt, wie der Eintrag im Kalender aussieht.','Klicke auf „Speichern“. Die Farbe gilt für alle Bereitschaftseinträge des Teams.'],tip:c=>c.admin?'Als Admin änderst du die Farbe aller Teams.':'Du kannst die Farbe der Teams ändern, die du leitest. Bereitschaftszeiten legt die Administration fest.'},
+  {t:'Übersicht lesen',when:c=>!c.sbTimes,s:['Die Tabelle zeigt alle Bereitschaftszeiten mit Uhrzeit und den Teams, für die sie gelten.','„Fix“ bedeutet feste Uhrzeit, „Variabel“ eine Uhrzeit, die beim Einteilen eingegeben wird.','„Teams mit Bereitschaft“ zeigt, wie viele Teams mindestens eine Bereitschaftszeit haben.']}
  ]},
  {id:'dienstzeiten',page:'Dienstzeiten',icon:'clock',title:'Dienstzeiten',intro:'Schichtmodelle pro Team, die beim Einteilen zur Auswahl stehen.',items:[
   {t:'Dienstzeit erstellen',when:c=>c.shifts,s:['Klicke auf „Dienstzeit erstellen“.','Wähle das Team und gib eine Bezeichnung ein, z. B. „Frühdienst“.','Lege Beginn und Ende fest – die Netto-Arbeitszeit (abzüglich Mittagspause) wird angezeigt.','Lege fest, ob der Dienst mehrfach am Tag besetzt werden darf, wähle eine Farbe und speichere.']},
@@ -3346,7 +3337,6 @@ function bindHelp(){
  if(helpFocus){const el=document.getElementById('help-'+helpFocus);helpFocus='';if(el){if(el.tagName==='DETAILS')el.open=true;setTimeout(()=>el.scrollIntoView({block:'center'}),40);el.classList.add('help-flash');setTimeout(()=>el.classList.remove('help-flash'),1600)}}
 }
 function openHelp(id){helpFocus=id||'';helpQuery='';go('Hilfe')}
-
 function render(){
  if(currentPage!=='Dashboard'&&dashEditing){dashEditing=false;dashDraft=null}
  document.body.classList.toggle('settings-mode',currentPage==='Einstellungen');

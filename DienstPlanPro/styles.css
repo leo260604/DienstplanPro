@@ -2325,3 +2325,11 @@ button.sb-color-card:focus-visible{outline:2px solid var(--accent-color);outline
 .help-flash{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-color) 45%,transparent)}
 @media (max-width:700px){.help-toc{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.help-toc-item{flex:none}}
 @media (max-width:700px){.help-top{flex-wrap:wrap}.help-search{max-width:none}.help-sec-head .help-open{margin-left:54px}}
+/* Bereitschaftszeiten: Teams-Spalte */
+.sb-team-stack{display:inline-flex;align-items:center;gap:0}
+.sb-team-stack .ta-mark.sm{width:24px;height:24px;border-radius:7px;font-size:9.5px;margin-right:-6px;border:2px solid var(--surface);box-shadow:none}
+.sb-team-more{margin-left:10px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.sb-team-names{margin-left:14px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.sb-team-more+.sb-team-names{margin-left:6px}
+.pill.sb-all-teams{background:color-mix(in srgb,var(--accent-color) 14%,var(--surface));color:var(--accent-color);font-weight:700}
+.sb-team-note{margin-top:-6px}.sb-team-note.bad{color:var(--red,#d14343)}
