@@ -743,8 +743,8 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
 /* ------------------------------------------------------------------
    Gemeinsame Bausteine
 ------------------------------------------------------------------ */
-const pageKicker={'Dashboard':'ÜBERSICHT','Dienstplan':'PLANUNG','Bereitschaft':'RUFBEREITSCHAFT','Dienstzeiten':'PLANUNG','Kontakte':'TEAM','Berichte / Export':'AUSWERTUNG','Einstellungen':'PERSÖNLICH','Bereitschaft verwalten':'ADMINISTRATION · BEREITSCHAFT','Hilfe':'SUPPORT'};
-function heading(title,sub,actions=''){return `<div class="page-heading"><div><div class="eyebrow">${pageKicker[currentPage]||'VERWALTUNG'}</div><h1>${title}</h1><p class="sub">${sub}</p></div><div class="btn-row">${actions}</div></div>`}
+const pageKicker={'Dashboard':'ÜBERSICHT','Dienstplan':'','Bereitschaft':'RUFBEREITSCHAFT','Dienstzeiten':'PLANUNG','Kontakte':'TEAM','Berichte / Export':'AUSWERTUNG','Einstellungen':'PERSÖNLICH','Bereitschaft verwalten':'ADMINISTRATION · BEREITSCHAFT','Hilfe':'SUPPORT'};
+function heading(title,sub,actions=''){return `<div class="page-heading"><div>${pageKicker[currentPage]===''?'':`<div class="eyebrow">${pageKicker[currentPage]||'VERWALTUNG'}</div>`}<h1>${title}</h1><p class="sub">${sub}</p></div><div class="btn-row">${actions}</div></div>`}
 function teamColor(t){if(!t)return '#14A1A9';return /^#[0-9a-f]{6}$/i.test(t.standbyColor||'')?t.standbyColor:(shiftHexColor(shiftTypes.find(s=>s.team===t.name)?.color)||'#14A1A9')}
 function avatarHtml(name,color,size=30){const p=staff.find(x=>x[0]===name);return `<span class="av" style="--c:${color};width:${size}px;height:${size}px;font-size:${Math.round(size*.36)}px">${p&&p[9]?`<img src="${escapeHtml(p[9])}" alt="">`:escapeHtml(initials(name))}</span>`}
 function shiftHexColor(value){
