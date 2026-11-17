@@ -650,6 +650,66 @@ applyTheme(localStorage.getItem('dienstplanTheme')||'light');
 applyFontScale(localStorage.getItem('dienstplanFontScale')||'normal');
 applyCompact(false);
 document.getElementById('theme-toggle').onclick=()=>{applyTheme(document.body.classList.contains('dark-mode')?'light':'dark');render();};
+
+/* ===== Neuigkeiten (Änderungen der aktuellen Version) – Knopf in der Kopfzeile ===== */
+const CHANGELOG=[
+ {v:'2026.11.17',date:'17.11.2026',title:'Feiertage, neue Datumsauswahl & aufgeräumte Oberfläche',items:[
+  ['neu','Kalender','Feiertagskalender Österreich','Feiertage sind im Kalender markiert, Dienste an Feiertagen gesperrt.'],
+  ['neu','Kalender','Datum im Kalenderkopf anklickbar','Tag, Woche (KW) oder Monat direkt auswählen.'],
+  ['neu','Kalender','Neue Datumsauswahl','Übersichtlicher Kalender für alle Datumsfelder.'],
+  ['neu','Kontakte','Mitarbeiterliste für Admins','Sortieren, bearbeiten, löschen und mehrere auf einmal auswählen.'],
+  ['neu','Bereitschaft','Wochentage je Bereitschaftszeit','Inklusive Option „Feiertage“ für die Samstags-Freigabe.'],
+  ['neu','Einstellungen','Wochenende in der Bereitschaft','Eigene Einstellung, getrennt vom Dienstplan.'],
+  ['neu','Notizen','Notiz-Vorschau','Beim Darüberfahren sichtbar, Verfasser wird immer angezeigt.'],
+  ['neu','Oberfläche','„Nach oben“-Knopf','Bei Kontakte, Audit Log, Administration und Berichte.'],
+  ['neu','Oberfläche','Neuigkeiten','Dieses Fenster zeigt die Änderungen jeder Version.'],
+  ['neu','Oberfläche','Neues Logo','Inklusive Homescreen-Symbol fürs Handy.'],
+  ['verbessert','Kalender','Monatsansicht','Gleichmäßig skaliert – Einträge und Feiertage vollständig lesbar.'],
+  ['verbessert','Bereitschaft','Angezeigte Wochentage','Die Bereitschaft zeigt nur die eingestellten Tage.'],
+  ['verbessert','Bereitschaft','Bereitschaftszeit-Dialog','Am PC zweispaltig, ohne Scrollen.'],
+  ['verbessert','Dashboard','„Dashboard anpassen“','Neu gestaltet mit Karten und Ein/Aus-Schaltern.'],
+  ['verbessert','Dashboard','Start nach dem Neuladen','Immer Dashboard – Standardansichten bleiben erhalten.'],
+  ['verbessert','Anmeldung','Ohne Rollenauswahl','Die Rolle kommt automatisch aus dem Benutzerprofil.'],
+  ['verbessert','Team','Stellvertretung','„Deputy“ heißt jetzt „Stellvertretung“, Teamleitung wird aus der Rolle gesetzt.'],
+  ['verbessert','Oberfläche','Aufgeräumt','Infotexte, Untertitel, Fußzeile, Suchleiste und Rückgängig-Knopf entfernt.'],
+  ['verbessert','Oberfläche','Seitenmenü','Schmaler, Version und Copyright unten im Menü.'],
+  ['verbessert','Einstellungen','Live-Sync','Alle Einstellungen werden zwischen offenen Tabs abgeglichen.']]},
+ {v:'2026.11.16',date:'16.11.2026',title:'Notizen, Rotation & Team-Ansicht',items:[
+  ['neu','Notizen','Notizen im Dienstplan','Inklusive Teamnotizen unter dem Datum.'],
+  ['neu','Team','Eigene Mitarbeiter-Reihenfolge','Per Drag & Drop in der Team-Ansicht.'],
+  ['neu','Bereitschaft','Faire Rotation','Teamleitung wird automatisch erkannt und ausgenommen.'],
+  ['neu','Bereitschaft','Kontakt-Popup','Mit Anruf und Teams-Chat direkt aus dem Kalender.'],
+  ['neu','Team','Eindeutige Teamfarben','Plus Admin-Schalter für die Rotation.'],
+  ['verbessert','Kalender','Kalender passt ins Fenster','Was keinen Platz hat, steht unter „+ x weitere“.'],
+  ['verbessert','Team','Team-Ansicht','Gleich große Felder, Dienst vor Bereitschaft.'],
+  ['verbessert','Kalender','Getrennte Teamfilter','Dienstplan und Bereitschaft merken sich ihre Auswahl.'],
+  ['verbessert','Kalender','Uhrzeit neben dem Dienst','In Klammern, z. B. „Tagdienst (06:00–14:00)“.'],
+  ['verbessert','Einstellungen','Live-Sync zwischen Tabs','Änderungen erscheinen sofort in allen offenen Tabs.']]}
+];
+const APP_VERSION=CHANGELOG[0].v;
+const WN_AREA_IC={Kalender:'cal',Bereitschaft:'moon',Kontakte:'users',Dashboard:'grid',Anmeldung:'lock',Oberfläche:'sliders',Einstellungen:'gear',Notizen:'chat',Team:'users'};
+function updateWhatsNewDot(){const d=document.getElementById('whatsnew-dot');if(d)d.hidden=localStorage.getItem('dienstplanSeenVersion')===APP_VERSION}
+function openWhatsNew(){
+ const seenBefore=localStorage.getItem('dienstplanSeenVersion');
+ localStorage.setItem('dienstplanSeenVersion',APP_VERSION);updateWhatsNewDot();
+ const TL={neu:'Neu',verbessert:'Verbessert'};
+ const item=x=>`<li class="wn-item" data-type="${x[0]}"><span class="wn-ic wn-${x[0]}">${icon(WN_AREA_IC[x[1]]||'spark')}</span><div class="wn-item-main"><div class="wn-item-top"><b>${escapeHtml(x[2])}</b><span class="wn-tag wn-${x[0]}">${TL[x[0]]}</span></div><p>${escapeHtml(x[3])}</p><small>${escapeHtml(x[1])}</small></div></li>`;
+ const cnt=(r,t)=>r.items.filter(x=>x[0]===t).length;
+ const cur=CHANGELOG[0];
+ const hero=`<div class="wn-hero"><div class="wn-hero-top"><span class="wn-hero-badge">${seenBefore===APP_VERSION?'Aktuelle Version':'Neu für dich'}</span><span class="wn-hero-date">${escapeHtml(cur.date)}</span></div><div class="wn-hero-ver">Version ${escapeHtml(cur.v)}</div><div class="wn-hero-title">${escapeHtml(cur.title||'')}</div><div class="wn-hero-stats"><span><b>${cnt(cur,'neu')}</b> neu</span><span><b>${cnt(cur,'verbessert')}</b> verbessert</span></div></div>`;
+ const filter=`<div class="wn-filter" role="tablist"><button type="button" class="active" data-wnf="all">Alle</button><button type="button" data-wnf="neu">Neu</button><button type="button" data-wnf="verbessert">Verbessert</button></div>`;
+ const older=CHANGELOG.slice(1).map(r=>`<details class="wn-old"><summary><span class="wn-old-dot"></span><span class="wn-old-main"><b>Version ${escapeHtml(r.v)}</b><small>${escapeHtml(r.date)}${r.title?' · '+escapeHtml(r.title):''}</small></span><span class="wn-old-stats">${cnt(r,'neu')} neu · ${cnt(r,'verbessert')} verbessert</span>${icon('down')}</summary><ul class="wn-items">${r.items.map(item).join('')}</ul></details>`).join('');
+ const body=`${hero}${filter}<ul class="wn-items wn-current">${cur.items.map(item).join('')}</ul>`;
+ const layer=document.createElement('div');layer.className='modal-backdrop app-dialog';
+ layer.innerHTML=`<div class="modal form-dialog wp-modal wn-modal" role="dialog" aria-modal="true" aria-label="Neuigkeiten"><div class="wp-head"><span class="wp-head-icon">${icon('news')}</span><div><h2>Neuigkeiten</h2></div><button type="button" class="icon-btn" data-dlg="close" aria-label="Schließen">×</button></div><div class="wp-form"><div class="wn-body">${body}</div><div class="btn-row modal-actions wp-actions"><span></span><span class="wp-actions-right"><button type="button" class="btn primary" data-dlg="close">Alles klar</button></span></div></div></div>`;
+ document.body.appendChild(layer);
+ layer.querySelectorAll('[data-wnf]').forEach(b=>b.onclick=()=>{layer.querySelectorAll('[data-wnf]').forEach(x=>x.classList.toggle('active',x===b));const f=b.dataset.wnf;layer.querySelectorAll('.wn-item').forEach(li=>li.hidden=f!=='all'&&li.dataset.type!==f)});
+ const close=()=>{layer.remove();document.removeEventListener('keydown',key,true)};
+ const key=e=>{if(e.key==='Escape'){e.stopPropagation();close()}};document.addEventListener('keydown',key,true);
+ layer.addEventListener('click',e=>{if(e.target===layer||e.target.closest('[data-dlg="close"]'))close()});
+ setTimeout(()=>layer.querySelector('.wp-actions [data-dlg="close"]')?.focus(),20);
+}
+{const b=document.getElementById('whatsnew-btn');if(b)b.onclick=openWhatsNew;updateWhatsNewDot()}
 function updateTopDate(){document.getElementById('top-date').textContent=fmtShortWd(new Date())+' · KW '+isoWeek(new Date())}
 updateTopDate();
 
@@ -748,7 +808,7 @@ function openGlobalSearch(){
  layer.addEventListener('click',e=>{if(e.target===layer)close()});
  input.oninput=()=>{sel=0;build()};build();setTimeout(()=>input.focus(),20);
 }
-document.getElementById('global-search-btn').onclick=openGlobalSearch;
+{const gs=document.getElementById('global-search-btn');if(gs)gs.onclick=openGlobalSearch}
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){if(!document.getElementById('login-modal').hidden)return;e.preventDefault();openGlobalSearch()}});
 
 /* ------------------------------------------------------------------
@@ -3524,7 +3584,7 @@ const HELP_SECTIONS=[
  {id:'start',page:null,icon:'spark',title:'Erste Schritte',intro:'Grundlagen, die auf jeder Seite gelten.',items:[
   {t:'Im Menü navigieren',s:['Links im Menü findest du alle Bereiche, die deine Rolle nutzen darf – oben die Arbeitsbereiche, darunter „Verwaltung“.','Mit dem Pfeil am Menürand klappst du das Menü auf schmale Symbole zusammen.','Am Handy öffnest du das Menü über das Symbol ☰ oben links.'],tip:'Was du nicht siehst, ist für deine Rolle nicht freigegeben. Freigaben verwaltet die Administration unter „Team Berechtigungen“.'},
   {t:'Anmelden und Benutzer wechseln',s:['Klicke oben rechts auf dein Profilbild und dann auf „Benutzer wechseln“.','Wähle die Person aus und bestätige mit „Anmelden“ – die Rolle ist im Benutzerprofil hinterlegt.','Die Seite passt sich sofort an die gewählte Rolle an.']},
-  {t:'Schnellsuche (Strg K)',s:['Drücke Strg K (am Mac ⌘ K) oder klicke oben auf das Suchfeld.','Tippe einen Namen, ein Team, einen Dienst oder eine Seite – auch Anleitungen aus dieser Hilfe werden gefunden.','Mit ↑ ↓ wählen, mit Enter öffnen, mit Esc schließen.']},
+  {t:'Schnellsuche (Strg K)',s:['Drücke Strg K (am Mac ⌘ K).','Tippe einen Namen, ein Team, einen Dienst oder eine Seite – auch Anleitungen aus dieser Hilfe werden gefunden.','Mit ↑ ↓ wählen, mit Enter öffnen, mit Esc schließen.']},
   {t:'Benachrichtigungen',s:['Die Glocke oben rechts zeigt neue Hinweise, z. B. wenn du eingeteilt wurdest oder eine Tauschanfrage bekommst.','Klicke auf einen Hinweis, um direkt zum Eintrag zu springen.','Welche Hinweise du bekommst, stellst du in „Mein Konto“ → „Benachrichtigungen“ ein.']},
   {t:'Mein Konto und Profilbild',s:['Klicke oben rechts auf deinen Avatar.','Unter „Konto“ änderst du Profilbild, E-Mail und Telefonnummer.','Unter „Benachrichtigungen“ legst du fest, worüber du informiert wirst.']},
   {t:'Hell- und Dunkelmodus',s:['Klicke oben rechts auf das Sonnen- bzw. Mond-Symbol.','Weitere Darstellungsoptionen (Akzentfarbe, Schriftgröße) findest du in den Einstellungen.']},
