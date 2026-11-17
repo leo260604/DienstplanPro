@@ -1060,7 +1060,7 @@ function bindDialogShiftDropdown(){
 }
 async function autoRotation(){
  const teamsAvail=manageableTeams('Bereitschaft');if(!teamsAvail.length||!standbyTimes.length)return;
- const d=new Date(currentDate),from=isoDate(new Date(d.getFullYear(),d.getMonth(),1)),to=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));
+ const d=new Date(currentDate),from=isoDate(new Date());let to=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));if(to<from){const t=new Date();to=isoDate(new Date(t.getFullYear(),t.getMonth()+1,0))}
  const pre=calendarTeams.length?calendarTeams:teamsAvail.map(t=>t.name);
  const dlg=formDialog('Rotation automatisch planen',`${teamDropdown(teamsAvail,pre)}
   <small class="wp-note rot-lead-note">${icon('alert')}Teamleiter werden nicht eingeteilt – sie haben keine Bereitschaft.</small>
@@ -1111,7 +1111,7 @@ async function autoRotation(){
    dadurch schließen aufeinanderfolgende Zeiträume nahtlos aneinander an. */
 async function dutyRotation(){
  const teamsAvail=manageableTeams('Dienstplan').filter(t=>shiftTypes.some(s=>s.team===t.name));if(!teamsAvail.length)return;
- const d=new Date(currentDate),from=isoDate(new Date(d.getFullYear(),d.getMonth(),1)),to=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));
+ const d=new Date(currentDate),from=isoDate(new Date());let to=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));if(to<from){const t=new Date();to=isoDate(new Date(t.getFullYear(),t.getMonth()+1,0))}
  const pre=calendarTeams.length?calendarTeams.filter(n=>teamsAvail.some(t=>t.name===n)):teamsAvail.map(t=>t.name);
  const names=[...new Set(shiftTypes.filter(s=>teamsAvail.some(t=>t.name===s.team)).map(s=>s.name))];
  const shiftLabel=n=>{const x=shiftTypes.find(s=>s.name===n&&teamsAvail.some(t=>t.name===s.team));return x?`${escapeHtml(n)} <small class="muted">${tRange(x)}${shiftMulti(x)?'':' · 1× pro Tag'}</small>`:escapeHtml(n)};
@@ -3121,7 +3121,7 @@ function openExportDialog(preset){
  sync();m.hidden=false;setTimeout(()=>m.querySelector('.export-opt.on')?.focus({preventScroll:true}),30);
 }
 function reportExportPage(){
- if(!reportFrom&&!reportTo){const d=new Date();reportFrom=isoDate(new Date(d.getFullYear(),d.getMonth(),1));reportTo=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));}
+ if(!reportFrom&&!reportTo){const d=new Date();reportFrom=isoDate(d);reportTo=isoDate(new Date(d.getFullYear(),d.getMonth()+1,0));}
  const filtered=reportRows(),ids=new Set(filtered.map(a=>a.id));reportSel.forEach(id=>{if(!ids.has(id))reportSel.delete(id)});
  const pages=Math.max(1,Math.ceil(filtered.length/REPORT_PAGE));reportPage=Math.min(reportPage,pages-1);
  const shown=filtered.slice(reportPage*REPORT_PAGE,(reportPage+1)*REPORT_PAGE);
@@ -3704,10 +3704,10 @@ function render(){
  const swapNew=document.getElementById('swap-new-btn');if(swapNew)swapNew.onclick=()=>openSwapRequest();
  document.getElementById('add-note')?.addEventListener('click',()=>openNoteDialog(null,isoDate(currentView==='Tag'?currentDate:new Date())));
  const workplaceAdd=document.getElementById('add-workplace'),workplaceModal=document.getElementById('workplace-modal'),workplaceForm=document.getElementById('workplace-form');
- if(workplaceAdd)workplaceAdd.onclick=()=>{const date=isoDate(currentDate);openWorkplaceModal({from:date,to:date})};
+ if(workplaceAdd)workplaceAdd.onclick=()=>{const date=isoDate(new Date());openWorkplaceModal({from:date,to:date})};
  if(workplaceModal&&workplaceForm)bindWorkplaceModal(workplaceModal,workplaceForm);
 
- const add=document.getElementById('add');if(add)add.onclick=()=>openDutyModalFor({date:isoDate(currentDate)});
+ const add=document.getElementById('add');if(add)add.onclick=()=>openDutyModalFor({date:isoDate(new Date())});
  content.querySelectorAll('[data-quick-add]').forEach(b=>b.onclick=e=>{e.stopPropagation();openDutyModalFor({team:b.dataset.team,empIndex:+b.dataset.emp,date:b.dataset.quickAdd})});
  // Kalender- und Berichtsfilter
  const teamFilterEl=document.getElementById('team-filter');if(teamFilterEl)teamFilterEl.onchange=()=>{calendarTeamFilter=teamFilterEl.value;const validNames=staff.filter(s=>calendarTeamFilter==='Alle Teams'||teams.some(t=>t.name===calendarTeamFilter&&t.memberIds.includes(s[8]))).map(s=>s[0]);if(calendarMemberFilter!=='Alle Mitarbeiter'&&!validNames.includes(calendarMemberFilter))calendarMemberFilter='Alle Mitarbeiter';render()};
