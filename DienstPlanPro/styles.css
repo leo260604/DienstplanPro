@@ -2667,3 +2667,5 @@ body.dp-range-dragging{cursor:cell}
  body:not(.cal-tight) .month-cell .calendar-assignment small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  body:not(.cal-tight) .month-cell .calendar-assignment .ca-foot>small{display:block}
 }
+/* Breadcrumb „Arbeitsbereich / …“ oben ausblenden (Platz bleibt für das Layout der Kopfzeile) */
+.breadcrumbs{visibility:hidden}
