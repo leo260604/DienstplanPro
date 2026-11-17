@@ -3836,17 +3836,15 @@ function renderAccountPanel(){
  accountPanel.innerHTML=`
   <div class="acc-head">
    <div class="acc-photo">${avatarHtml(me[0],teamColor(teamByName(currentUserTeamNames()[0]))||'#14A1A9',64)}<label class="acc-photo-btn" title="Profilbild ändern" aria-label="Profilbild ändern">${icon('upload')}<input type="file" id="acc-photo-input" accept="image/*" hidden></label></div>
-   <div class="acc-id"><b>${escapeHtml(me[0])}</b><small>${escapeHtml(currentRole)} · ${escapeHtml(teamsTxt)}</small>${me[9]?`<button type="button" class="link-btn" id="acc-photo-remove">Profilbild entfernen</button>`:`<small class="muted">Tippe auf das Symbol, um ein Profilbild hochzuladen.</small>`}</div>
+   <div class="acc-id"><b>${escapeHtml(me[0])}</b><small>${escapeHtml(currentRole)} · ${escapeHtml(teamsTxt)}</small>${me[9]?`<button type="button" class="link-btn" id="acc-photo-remove">Profilbild entfernen</button>`:''}</div>
    <button type="button" class="icon-btn acc-close" id="acc-close" aria-label="Schließen">×</button>
   </div>
   <div class="segmented acc-tabs" role="tablist"><button type="button" role="tab" data-acc-tab="konto" class="${accountTab==='konto'?'active':''}">${icon('users')}Konto</button><button type="button" role="tab" data-acc-tab="notify" class="${accountTab==='notify'?'active':''}">${icon('bell')}Benachrichtigungen</button></div>
   <div class="acc-body">${accountTab==='konto'?`
-   <p class="acc-sub">Deine Kontaktdaten – sichtbar für dein Team unter „Kontakte“.</p>
    <label class="field">E-Mail<input type="email" id="account-email" value="${escapeHtml(me[6]||'')}" autocomplete="email"></label>
    <label class="field">Bereitschaftsnummer<input type="text" inputmode="tel" id="account-phone" value="${escapeHtml(me[7]||'')}" autocomplete="tel"></label>
    <label class="field">Teams-Telefonnummer<input type="text" inputmode="tel" id="account-teams-phone" value="${escapeHtml(me[11]||'')}" autocomplete="off" placeholder="+43 …"></label>
    <button class="btn primary acc-save" id="account-save">Kontaktdaten speichern</button>`:`
-   <p class="acc-sub">Welche Meldungen du über die Glocke oben rechts erhältst.</p>
    <div class="setting-row"><div><b>Neue Einteilungen für mich</b><small>Dienste und Bereitschaften, die für dich angelegt werden</small></div>${tog('notify-own',np.own)}</div>
    <div class="setting-row"><div><b>Neue Dienste in meinen Teams</b><small>Nur für Teamleiter und Deputys</small></div>${tog('notify-team',np.team)}</div>
    <div class="setting-row"><div><b>Abwesenheiten in meinen Teams</b><small>Urlaub, Arztbesuch, Berufsschule …</small></div>${tog('notify-absence',np.absence)}</div>`}
@@ -4033,7 +4031,7 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
    Gemeinsame Bausteine
 ------------------------------------------------------------------ */
 const pageKicker={'Dashboard':'ÜBERSICHT','Dienstplan':'','Bereitschaft':'RUFBEREITSCHAFT','Dienstzeiten':'PLANUNG','Kontakte':'TEAM','Berichte / Export':'AUSWERTUNG','Einstellungen':'PERSÖNLICH','Bereitschaft verwalten':'ADMINISTRATION · BEREITSCHAFT','Hilfe':'SUPPORT'};
-function heading(title,sub,actions=''){return `<div class="page-heading"><div><h1>${title}</h1><p class="sub">${sub}</p></div><div class="btn-row">${actions}</div></div>`}
+function heading(title,sub,actions=''){return `<div class="page-heading"><div><h1>${title}</h1></div><div class="btn-row">${actions}</div></div>`}
 function teamColor(t){if(!t)return '#14A1A9';return /^#[0-9a-f]{6}$/i.test(t.standbyColor||'')?t.standbyColor:(shiftHexColor(shiftTypes.find(s=>s.team===t.name)?.color)||'#14A1A9')}
 function avatarHtml(name,color,size=30){const p=staff.find(x=>x[0]===name);return `<span class="av" style="--c:${color};width:${size}px;height:${size}px;font-size:${Math.round(size*.36)}px">${p&&p[9]?`<img src="${escapeHtml(p[9])}" alt="">`:escapeHtml(initials(name))}</span>`}
 function shiftHexColor(value){
@@ -4189,7 +4187,7 @@ function calendar(){
  // PC: nur der Hauptbutton bleibt sichtbar, die übrigen Aktionen liegen im Menü „Aktionen“ (wie mobil)
  const secCount=(actionsRaw.match(/class="btn"/g)||[]).length;
  const actions=actionsRaw?`<span class="dp-actions${secCount?'':' no-secondary'}">${actionsRaw}</span><button type="button" class="btn dp-actions-toggle${secCount?'':' no-secondary'}" id="dp-actions-toggle" aria-haspopup="menu">${icon('grid','dp-act-ic')}<span>Aktionen</span>${icon('down','dp-act-caret')}</button>`:actionsRaw;
- const sub=isDuty?'':(currentView==='Zeitleiste'||currentView==='Woche'?`KW ${isoWeek(ws)} · ${fmt(ws)} – ${fmt(we)}${currentView==='Zeitleiste'?' · Wer hat wann Bereitschaft?':''}`:currentView==='Monat'?`${monthName(d)} · Rotationsübersicht aller Teams`:fmtWithWeekday(d));
+ const sub=''; // Untertitel unter „Dienstplan“/„Bereitschaft“ entfernt
  let nowBlock='';// Bereich „Jetzt in Bereitschaft“ entfernt – Kontakt über Klick auf eine Bereitschaft
 
  const memberOptions=staff.filter(s=>!calendarTeams.length||teams.some(t=>calendarTeams.includes(t.name)&&t.memberIds.includes(s[8]))).map(s=>`<option value="${escapeHtml(s[0])}">`).join('');
@@ -4200,7 +4198,7 @@ function calendar(){
   ${calendarMemberFilter!=='Alle Mitarbeiter'||calendarTeams.length||onlyConflicts?`<button type="button" class="link-btn" id="reset-calendar-filters">Filter zurücksetzen</button>`:''}
   <div class="legend push-right"><span><i class="dot" style="--c:#3974c6"></i>Dienst</span><span><i class="lg-standby"></i>Bereitschaft</span><span><i class="lg-absence">Abw.</i>Abwesenheit</span><span>${icon('home')}Homeoffice</span></div>
  </div>`;
- const tip=isDuty&&canAdd?`<div class="cal-tip"><span>Tipp: ${currentView==='Team'?'„+“ in leerer Zelle = Dienst anlegen':'Mehrere Tage per Ziehen markieren = Arbeitsort'} · Strg Z = rückgängig</span>${undoStack.length?`<button type="button" class="btn small" id="undo-btn">${icon('undo')}Rückgängig (${undoStack.length})</button>`:''}</div>`:(!isDuty&&canAdd?`<div class="cal-tip"><span>${currentView==='Zeitleiste'?'Tipp: „+“ = einteilen · „Lücke“ anklicken = Tag besetzen · Strg Z = rückgängig':''}</span>${undoStack.length?`<button type="button" class="btn small" id="undo-btn">${icon('undo')}Rückgängig (${undoStack.length})</button>`:''}</div>`:'');
+ const tip=''; // keine Tipp-Texte unter dem Kalender
  const controls=`<div class="calendar-toolbar"><div class="calendar-nav"><button class="btn" id="prev" aria-label="Zurück">‹</button><strong>${range}</strong><button class="btn" id="next" aria-label="Weiter">›</button><button class="btn" id="today">Heute</button></div><div class="view-switch">${views.map(v=>`<button data-view="${v}" class="${currentView===v?'active':''}">${v}</button>`).join('')}</div></div>`;
  return `${heading(title,sub,actions)}${nowBlock}
  <div class="calendar-shell panel standby-shell${isDuty?' duty-shell':''}">${controls}${filterbar}<div class="calendar-card ${currentView==='Monat'?'month-compact-card':''} view-${currentView.toLowerCase()}"><div class="calendar-scroll">${body}</div></div>${tip}</div>
@@ -4606,7 +4604,7 @@ function standbyManagementPage(){
   <div class="stat-card"><div><div class="stat-label">Tagesabdeckung</div><div class="stat-value">${Math.round(cover*10)/10} / 24 Std.</div><div class="meter ${cover<24?'warn':''}"><i style="width:${Math.min(100,cover/24*100)}%"></i></div></div></div>
  </div>
  <section class="panel flush sb-times-panel">
-  <div class="panel-toolbar sb-toolbar"><div><h2>Bereitschaftszeiten</h2><p class="sub">${admin?'Jede Bereitschaftszeit steht nur den ausgewählten Teams zur Verfügung.':'Welche Bereitschaftszeit welches Team hat. Änderungen nimmt die Administration vor.'}</p></div><span class="pill push-right">${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
+  <div class="panel-toolbar sb-toolbar"><div><h2>Bereitschaftszeiten</h2></div><span class="pill push-right">${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
   ${timeCount?`<div class="table-wrap borderless shift-times-table-wrap"><table class="sb-times-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`
    :`<div class="empty-note sb-empty">${admin?`Noch keine Bereitschaftszeiten. Lege die erste an und wähle die Teams, die sie haben sollen.<div><button class="btn primary" type="button" id="sb-new-time-empty">${icon('plus')}Bereitschaftszeit anlegen</button></div>`:'Es sind noch keine Bereitschaftszeiten angelegt.'}</div>`}
  </section>`;
@@ -4929,8 +4927,8 @@ function dashboard(){
  const wrap=w=>`<div class="dash-w dash-${w.size}" data-widget="${w.id}" data-size="${w.size}" ${w.action?'data-dash-action tabindex="0" role="button"':''}>${w.render(c)}${grip}</div>`;
  const body=visible.map(wrap).join('');
  const tools=`<button class="btn" id="dash-customize">${icon('sliders')}Dashboard anpassen</button>`;
- const head=c.lead?heading('Guten Tag, '+escapeHtml(c.name.split(' ')[0]||''),'Das passiert heute in '+(c.scope.length===teams.length?'allen '+teams.length+' Teams':'deinen Teams')+'.',dashEditing?'':(manageableTeams('Dienstplan').length?`<button class="btn primary" data-go="Dienstplan">＋ Dienst einteilen</button>`:'')+tools)
-  :heading('Hallo '+escapeHtml(c.name.split(' ')[0]||''),'Hier findest du deine persönlichen Dienste und Bereitschaften.',dashEditing?'':tools);
+ const head=c.lead?heading('Guten Tag, '+escapeHtml(c.name.split(' ')[0]||''),'',dashEditing?'':(manageableTeams('Dienstplan').length?`<button class="btn primary" data-go="Dienstplan">＋ Dienst einteilen</button>`:'')+tools)
+  :heading('Hallo '+escapeHtml(c.name.split(' ')[0]||''),'',dashEditing?'':tools);
  const bar=dashEditing?`<div class="dash-editbar"><div><b>${icon('edit')}Ansicht bearbeiten</b><small>Kacheln und Bereiche frei an eine andere Stelle ziehen. Am Handy: kurz gedrückt halten oder am Griff ziehen.</small></div><div class="btn-row"><button class="btn ghost" id="dash-edit-reset">${icon('refresh')}Standard wiederherstellen</button><button class="btn" id="dash-edit-cancel">Abbrechen</button><button class="btn primary" id="dash-edit-save">${icon('check')}Speichern</button></div></div>`:'';
  return `${head}${bar}<div class="dash dash-grid ${colored?'dash-colored':''} ${dashEditing?'dash-editing':''}" id="dash">${body||'<div class="empty-note">Alle Ansichten sind ausgeblendet. Über „Dashboard anpassen“ kannst du sie wieder einblenden.</div>'}</div>`;
 }
@@ -5065,30 +5063,30 @@ function settings(){
  <div class="settings-layout">
   <nav class="panel settings-nav">${sections.map(([id,ic,l],i)=>`<a href="#${id}" class="nav-item ${i===0?'active':''}" data-settings-jump="${id}">${icon(ic)}<em>${l}</em></a>`).join('')}</nav>
   <div class="settings-main">
-   <section class="settings-card" id="set-cal"><h2>Kalender</h2><p class="sub">Änderungen werden sofort übernommen.</p>
+   <section class="settings-card" id="set-cal"><h2>Kalender</h2>
     <div class="setting-row"><div><b>Standardansicht Dienstplan</b><small>Beim Öffnen anzeigen</small></div>${seg('def-dienstplan',[['Tag','Tag'],['Woche','Woche'],['Monat','Monat'],['Team','Team']],defaults.Dienstplan||'Woche')}</div>
     <div class="setting-row"><div><b>Standardansicht Bereitschaft</b><small>Beim Öffnen anzeigen</small></div>${seg('def-bereitschaft',[['Woche','Woche'],['Monat','Monat'],['Zeitleiste','Zeitleiste']],defaults.Bereitschaft||'Monat')}</div>
     <div class="setting-row"><div><b>Wochenende im Dienstplan</b><small>Welche Tage Woche, Monat und Team-Ansicht zeigen. Bereitschaft zeigt immer Mo–So.</small></div>${seg('duty-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],dutyDays)}</div>
     <div class="setting-row"><div><b>Darstellung der Einträge</b><small>Kompakt = Woche/Monat passen ins Fenster, Rest als „+ X weitere“ · Erweitert = alle Einträge anzeigen (Seite scrollt)</small></div>${seg('entry-density',[['compact','Kompakt'],['expanded','Erweitert']],expandedMonthView?'expanded':'compact')}</div>
    </section>
-   <section class="settings-card" id="set-look"><h2>Darstellung</h2><p class="sub">Änderungen werden sofort als Vorschau übernommen.</p>
+   <section class="settings-card" id="set-look"><h2>Darstellung</h2>
     <div class="theme-cards">${preview('light','Hell')}${preview('dark','Dunkel')}${preview('system','System')}</div>
     <div class="setting-row"><div><b>Akzentfarbe</b><small>Für Buttons, Markierungen und aktive Elemente</small></div><div class="swatch-row" id="accent-color-mode">${Object.entries(ACCENTS).map(([k,c])=>`<button type="button" class="accent-option ${acc===k?'active':''}" data-accent="${k}" style="--sw:${c[0]}" aria-pressed="${acc===k}"><i></i>${ACCENT_LABEL[k]}</button>`).join('')}</div></div>
     <div class="setting-row"><div><b>Schriftgröße</b><small>Bessere Lesbarkeit auf großen Bildschirmen</small></div>${seg('font-scale',[['small','Klein'],['normal','Normal'],['large','Groß']],fs)}</div>
    </section>
-   <section class="settings-card" id="set-lang"><h2>Sprache &amp; Datum</h2><p class="sub">Änderungen werden sofort übernommen.</p>
+   <section class="settings-card" id="set-lang"><h2>Sprache &amp; Datum</h2>
     <div class="setting-row"><div><b>Sprache</b><small>Sprache der gesamten Oberfläche.</small></div><select class="form-select" id="language-select" data-no-translate><option value="de">Deutsch</option><option value="en">English</option></select></div>
     <div class="setting-row"><div><b>Datumsformat</b><small>So werden Datumswerte in der App und in Exporten angezeigt.</small></div><select class="form-select" id="date-format-select" data-no-translate>${dfOpts}</select></div>
     <div class="date-preview"><span>Beispiel:</span> <b>${escapeHtml(fmtWithWeekday(new Date()))}</b></div>
    </section>
-   ${currentRole==='Admin'?`<section class="settings-card" id="set-feat"><h2>Funktionen</h2><p class="sub">Gilt für alle Benutzer. Nur Admins sehen und ändern diesen Bereich.</p>
+   ${currentRole==='Admin'?`<section class="settings-card" id="set-feat"><h2>Funktionen</h2>
     <div class="setting-row"><div><b>„Rotation automatisch planen“ im Dienstplan</b><small>Button oben im Dienstplan anzeigen</small></div>${tog('feat-rot-duty',featureOn('rotationDuty'))}</div>
     <div class="setting-row"><div><b>„Rotation automatisch planen“ in der Bereitschaft</b><small>Button oben in der Bereitschaft anzeigen</small></div>${tog('feat-rot-sb',featureOn('rotationStandby'))}</div>
    </section>`:''}
-   ${currentRole==='Admin'?`<section class="settings-card link-admin" id="link-admin"><div class="panel-head"><div><h2>${icon('external')}Links &amp; Weiterleitungen</h2><p class="sub">Ziele der Link-Kacheln im Dashboard. Nur Admins sehen und ändern diesen Bereich.</p></div></div>
+   ${currentRole==='Admin'?`<section class="settings-card link-admin" id="link-admin"><div class="panel-head"><div><h2>${icon('external')}Links &amp; Weiterleitungen</h2></div></div>
   <div class="link-row"><span class="link-ic">${icon('external')}</span><div class="link-txt"><b>Mein Porsche Cockpit</b><small>Kachel „Ich@Porsche“ · Übersicht: Homeoffice- &amp; Bürotage</small>${cockpitLink.url?`<a href="${escapeHtml(cockpitLink.url)}" target="_blank" rel="noopener noreferrer" class="link-url">${escapeHtml(cockpitLink.url)}</a><small class="muted">Zuletzt geändert von ${escapeHtml(cockpitLink.by||'—')}${cockpitLink.at?' am '+escapeHtml(fmtWithWeekday(new Date(cockpitLink.at))):''}</small>`:'<span class="pill amber">Noch kein Link hinterlegt</span>'}</div>
   <div class="btn-row">${cockpitLink.url?`<button type="button" class="btn small" id="cockpit-link-test">${icon('external')}Öffnen</button>`:''}<button type="button" class="btn small primary" id="cockpit-link-edit">${icon('edit')}${cockpitLink.url?'Ändern':'Link festlegen'}</button></div></div></section>`:''}
-   <section class="settings-card" id="set-data"><h2>Daten &amp; Sicherung</h2><p class="sub">Alle Daten liegen lokal in diesem Browser. Sichere sie regelmäßig.</p>
+   <section class="settings-card" id="set-data"><h2>Daten &amp; Sicherung</h2>
     <div class="info-box">${icon('download')}Letzte Sicherung: <b>${localStorage.getItem('dienstplanLastBackup')?fmtDateTime(+localStorage.getItem('dienstplanLastBackup')):'noch nie'}</b> · Speicher belegt: ${(used/1048576).toLocaleString(LOC(),{maximumFractionDigits:1})} MB von ~5 MB</div>
     ${used>=STORAGE_LIMIT*0.8?`<div class="info-box warn">${icon('alert')}Der Browserspeicher ist zu ${Math.round(used/STORAGE_LIMIT*100)} % belegt. Archiviere alte Einträge, damit neue Einträge weiter gespeichert werden können.</div>`:''}
     <div class="btn-row"><button class="btn primary" id="backup-export">Sicherung herunterladen (.json)</button><label class="btn" for="backup-import">Sicherung einspielen</label><input type="file" id="backup-import" accept="application/json,.json" hidden>${currentRole==='Admin'?'<button class="btn danger push-right" id="reset-demo">Demo-Daten zurücksetzen</button>':''}</div>
@@ -6491,9 +6489,8 @@ function rolesPage(){
    ${roles.map((r,i)=>`<div class="role-item ${r===roleSel?'active':''}" data-role-sel="${escapeHtml(r)}" role="button" tabindex="0"><span class="role-ic">${icon('shield')}</span><span class="role-txt"><b>${escapeHtml(r)}</b><small>${staff.filter(s=>(s[10]||'Mitarbeiter')===r).length} Personen</small></span>${r==='Admin'?`<span class="muted" title="Geschützt">${icon('lock')}</span>`:editable?`<span class="role-actions"><button type="button" class="icon-btn" data-edit-role="${i}" title="Umbenennen" aria-label="Umbenennen">${icon('edit')}</button><button type="button" class="icon-btn danger" data-delete-role="${i}" title="Löschen" aria-label="Löschen">${icon('trash')}</button></span>`:''}</div>`).join('')}
   </section>
   <section class="panel flush perm-card">
-   <div class="panel-toolbar"><div><b class="title">Berechtigungsmatrix</b><small class="muted block">Klick auf ein Feld wechselt: — → Lesen → Bearbeiten</small></div><div class="perm-legend push-right" aria-label="Legende"><span class="perm-leg"><span class="perm e static">${icon('edit')}</span>Bearbeiten</span><span class="perm-leg"><span class="perm r static">${icon('eye')}</span>Lesen</span><span class="perm-leg"><span class="perm n static">—</span>Kein Zugriff</span></div>${changes?`<span class="pill warn-pill">${icon('alert')}${changes} ungespeicherte ${changes===1?'Änderung':'Änderungen'}</span><button class="btn small" id="perm-reset">Verwerfen</button>`:''}${editable?`<button class="btn primary small" id="perm-save" ${changes?'':'disabled'}>Speichern</button>`:''}</div>
+   <div class="panel-toolbar"><div><b class="title">Berechtigungsmatrix</b></div><div class="perm-legend push-right" aria-label="Legende"><span class="perm-leg"><span class="perm e static">${icon('edit')}</span>Bearbeiten</span><span class="perm-leg"><span class="perm r static">${icon('eye')}</span>Lesen</span><span class="perm-leg"><span class="perm n static">—</span>Kein Zugriff</span></div>${changes?`<span class="pill warn-pill">${icon('alert')}${changes} ungespeicherte ${changes===1?'Änderung':'Änderungen'}</span><button class="btn small" id="perm-reset">Verwerfen</button>`:''}${editable?`<button class="btn primary small" id="perm-save" ${changes?'':'disabled'}>Speichern</button>`:''}</div>
    <div class="table-wrap borderless perm-table"><table><thead><tr><th>Bereich</th>${roles.map(r=>`<th class="${r===roleSel?'sel':''}" title="${escapeHtml(r)}">${escapeHtml(PERM_SHORT[r]||r)}</th>`).join('')}</tr></thead><tbody>${PERM_AREAS.map(a=>`<tr><td><b>${escapeHtml(a)}</b></td>${roles.map(r=>`<td class="${r===roleSel?'sel':''}">${cell(r,a)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-   <div class="perm-note">${icon('alert')}<span>Datenumfang: <b>Teamleiter &amp; Deputy</b> bearbeiten nur <u>eigene Teams</u> · <b>Mitarbeiter</b> sehen nur eigene Einträge auf dem Dashboard · <b>Admin</b> ist geschützt und hat immer vollen Zugriff.</span></div>
   </section>
  </div>`;
 }
