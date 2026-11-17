@@ -2662,3 +2662,8 @@ body.dp-range-dragging{cursor:cell}
  .view-switch button{padding:7px 16px}
 }
 @media (min-width:701px){.dp-sheet-layer.dp-pop{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important}.dp-pop .dp-sheet{margin:0}}
+/* Monatsansicht am PC: Einträge vollständig wie in der Woche (Name, Dienstart + Uhrzeit, Team) */
+@media (min-width:701px){
+ body:not(.cal-tight) .month-cell .calendar-assignment small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ body:not(.cal-tight) .month-cell .calendar-assignment .ca-foot>small{display:block}
+}

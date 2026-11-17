@@ -3604,8 +3604,7 @@ function fitCalendar(){
  if(calFitBusy)return;
  if(!window.__calFit||window.__calFit.key!==fk){rer(limit+1)}
  let l=window.__calFit.limit,guard=0;while(l>1&&clipped()&&guard++<12){l--;rer(l)}
- // Monat: passt kein ganzer Eintrag hinein → kompakte Einträge (nur Name + Zeit) verwenden
- if(currentView==='Monat'&&l<=1&&clipped()&&!document.body.classList.contains('cal-tight')){document.body.classList.add('cal-tight');window.__calFit.tight=true;let t=3;rer(t);guard=0;while(t>1&&clipped()&&guard++<12){t--;rer(t)}}
+ // Monat: Einträge bleiben vollständig (Name, Dienstart + Uhrzeit, Team) – lieber „+ x weitere“ bzw. höherer Kalender als kompakte Einträge
  // passt selbst ein Eintrag nicht hinein → Kalender darf höher werden (mind. 1 Eintrag bleibt sichtbar)
  if(clipped())growCalendar();
 }
