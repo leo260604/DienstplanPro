@@ -3470,7 +3470,7 @@ const noteKeyOf=a=>noteEmp(a)+'|'+a.date;
 const noteFoot=(small,chip)=>chip?`<div class="ca-foot">${small}${chip}</div>`:small;
 const notesForKey=k=>{const i=k.lastIndexOf('|'),emp=k.slice(0,i),date=k.slice(i+1);return assignments.filter(a=>a.kind==='Notiz'&&noteEmp(a)===emp&&a.date===date)};
 // Knopf „Notizen“ an einem Eintrag – der Text erscheint erst im Popup
-function noteChip(k,n){return `<button type="button" class="note-chip" data-notes-open="${escapeHtml(k)}" title="${n>1?n+' Notizen':'Notiz'} anzeigen" aria-label="${n>1?n+' Notizen':'Notiz'} anzeigen">${icon('chat')}${n>1?`<span>${n}</span>`:''}</button>`}
+function noteChip(k,n){return `<button type="button" class="note-chip" data-notes-open="${escapeHtml(k)}" aria-label="${n>1?n+' Notizen':'Notiz'} anzeigen">${icon('chat')}${n>1?`<span>${n}</span>`:''}</button>`}
 // Notizen ohne Eintrag am selben Tag: kleine Karte „Notizen“ mit Name
 function noteStub(g,agenda){const n=g.notes.length;return `<button type="button" class="calendar-assignment note-assignment note-stub${agenda?' note-agenda':''}" data-notes-open="${escapeHtml(noteKeyOf(g))}" title="Notizen von ${escapeHtml(g.employee)} anzeigen"><span class="note-indicator">${icon('chat')}Notizen${n>1?` (${n})`:''}</span><b>${escapeHtml(g.employee)}</b><small>${escapeHtml(g.team||'')}</small></button>`}
 function noteCard(a,agenda){return noteStub({employee:a.employee,team:a.team,date:a.date,notes:notesForKey(noteKeyOf(a))},agenda)}
@@ -3506,6 +3506,20 @@ async function openNoteDialog(id,date,forWho){
  render()}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-note-open]');if(!b||e.target.closest('.duty-actions'))return;e.preventDefault();e.stopPropagation();openNoteDialog(b.dataset.noteOpen)},true);
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-note-open]')){e.preventDefault();openNoteDialog(e.target.dataset.noteOpen)}});
+/* Notiz-Vorschau beim Darüberfahren (nur Maus/Trackpad) */
+{let tipEl=null,tipFor=null,tipT=null;
+ const hideTip=()=>{clearTimeout(tipT);tipFor=null;if(tipEl)tipEl.classList.remove('show')};
+ const showTip=b=>{const k=b.dataset.notesOpen;if(!k)return;const list=notesForKey(k);if(!list.length)return;
+  if(!tipEl){tipEl=document.createElement('div');tipEl.className='note-tip';tipEl.setAttribute('role','tooltip');document.body.appendChild(tipEl)}
+  const emp=k.slice(0,k.lastIndexOf('|'));
+  tipEl.innerHTML=`<div class="note-tip-head">${icon('chat')}<b>${list.length>1?list.length+' Notizen':'Notiz'}</b></div>${list.slice(0,4).map(n=>`<div class="note-tip-item"><p>${escapeHtml(n.note||'')}</p>${n.author&&n.author!==emp?`<small>von ${escapeHtml(n.author)}</small>`:''}</div>`).join('')}${list.length>4?`<small class="note-tip-more">+${list.length-4} weitere – klicken zum Öffnen</small>`:''}`;
+  tipEl.style.left='0px';tipEl.style.top='0px';tipEl.classList.add('show');
+  const r=b.getBoundingClientRect(),w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8),y=r.top-h-8;if(y<8)y=r.bottom+8;
+  tipEl.style.left=x+'px';tipEl.style.top=y+'px'};
+ const canHover=()=>window.matchMedia('(hover: hover)').matches;
+ document.addEventListener('mouseover',e=>{if(!canHover())return;const b=e.target.closest&&e.target.closest('[data-notes-open]');if(b===tipFor)return;hideTip();if(!b)return;tipFor=b;tipT=setTimeout(()=>{if(tipFor===b&&b.isConnected)showTip(b)},180)});
+ document.addEventListener('mousedown',hideTip,true);window.addEventListener('scroll',hideTip,true);document.addEventListener('keydown',hideTip,true)}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-notes-open]');if(!b)return;e.preventDefault();e.stopPropagation();openNotesPopup(b.dataset.notesOpen)},true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-note-add]');if(!b)return;e.preventDefault();e.stopPropagation();const m=b.closest('.duty-actions-menu'),own=m?._dutyOwner||b.closest('details');if(own){if(m&&m.parentNode===document.body)own.appendChild(m);own.open=false}
  const v=b.dataset.noteAdd,i=v.lastIndexOf('|');openNoteDialog(null,v.slice(i+1),v.slice(0,i)||undefined)},true);
