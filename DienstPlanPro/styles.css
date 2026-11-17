@@ -2815,7 +2815,7 @@ button.dpk-day:focus-visible{outline:none}button.dpk-day:focus-visible>span{box-
 .dpk-btn.compact:hover,.dpk-btn.compact.open,.dpk-btn.compact:focus-visible{background:var(--accent-soft);color:var(--accent-dark);box-shadow:none}
 @media (max-width:900px){.date-range .dpk-btn.compact{flex:1;justify-content:center}}
 /* Datumsauswahl im Kalenderkopf (Tag / Woche / Monat) */
-.cal-pick{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;height:32px;padding:0 8px 0 4px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;transition:background .12s}
+.cal-pick{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;height:32px;padding:0 4px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;transition:background .12s}
 .cal-pick strong{pointer-events:none}
 .cal-pick .cal-pick-chev{width:14px;height:14px;color:var(--muted);flex:none;transition:transform .15s}
 .cal-pick:hover,.cal-pick.open{background:var(--surface)}
