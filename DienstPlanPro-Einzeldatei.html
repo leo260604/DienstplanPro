@@ -11,7 +11,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="DienstPlan">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>DienstPlan Pro – Dienst- & Bereitschaftsmanagement</title>
+  <title>DienstPlan Pro</title>
   <style>
 /* =====================================================================
    DienstPlan Pro – Stylesheet (überarbeitet 11/2026)
@@ -53,7 +53,7 @@ h3{margin:0}
 
 /* ---------- Grundlayout ---------- */
 .app-shell{min-height:100vh}
-.sidebar{position:fixed;inset:0 auto 0 0;width:252px;height:100dvh;background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 12px 12px;z-index:50;transition:width .2s ease,transform .22s ease}
+.sidebar{position:fixed;inset:0 auto 0 0;width:226px;height:100dvh;background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 12px 12px;z-index:50;transition:width .2s ease,transform .22s ease}
 .brand{display:flex;align-items:center;gap:11px;padding:0 8px 20px;min-width:0}
 .brand-mark{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(140deg,var(--accent-color),var(--accent-dark));box-shadow:0 4px 12px var(--accent-ring)}
 .brand-mark .ic{width:20px;height:20px}
@@ -86,7 +86,7 @@ body.dark-mode .nav-item.active{background:var(--surface-3)}
 .sidebar.collapsed .profile{justify-content:center;padding:6px;border:0;background:transparent}
 .sidebar.collapsed .sidebar-collapse .ic{transform:rotate(180deg)}
 .sidebar.collapsed #main-nav{padding-top:10px}
-.main{margin-left:252px;min-height:100vh;display:flex;flex-direction:column;transition:margin-left .2s ease}
+.main{margin-left:226px;min-height:100vh;display:flex;flex-direction:column;transition:margin-left .2s ease}
 .sidebar.collapsed~.main{margin-left:72px}
 .topbar{position:sticky;top:0;z-index:40;height:62px;display:flex;align-items:center;gap:14px;padding:0 28px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .mobile-menu{display:none}
@@ -624,7 +624,7 @@ body.dark-mode .mt-tile.is-absence{background:repeating-linear-gradient(135deg,#
 @media(min-width:1700px){
   body{font-size:15px}
   .nav-item{font-size:14px;padding:10px 12px}
-  .sidebar{width:268px}.main{margin-left:268px}
+  .sidebar{width:242px}.main{margin-left:242px}
   h1{font-size:28px}
   .stat-value{font-size:31px}
   .calendar-assignment{padding:8px 28px 8px 10px;margin-bottom:6px}
@@ -639,7 +639,7 @@ body.dark-mode .mt-tile.is-absence{background:repeating-linear-gradient(135deg,#
 }
 @media(min-width:2200px){
   body{font-size:16px}
-  .sidebar{width:288px}.main{margin-left:288px}
+  .sidebar{width:250px}.main{margin-left:250px}
   .content{padding:32px 40px 48px}
   .calendar-assignment b{font-size:14.5px}.calendar-assignment>span{font-size:13.5px}
 }
@@ -2916,7 +2916,7 @@ button.dpk-day:focus-visible{outline:none}button.dpk-day:focus-visible>span{box-
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="brand-mark"><svg class="ic"><use href="#i-logo"/></svg></div>
-        <div><strong>DienstPlan <span>Pro</span></strong><small>Dienst- &amp; Bereitschaftsmanagement</small></div>
+        <div><strong>DienstPlan <span>Pro</span></strong></div>
       </div>
       <button class="sidebar-collapse" id="sidebar-collapse" type="button" aria-label="Menü einklappen" title="Menü einklappen"><svg class="ic"><use href="#i-chev"/></svg></button>
       <div class="workspace-label">ARBEITSBEREICH</div>

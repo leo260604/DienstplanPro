@@ -1,7 +1,7 @@
 {
   "name": "DienstPlan Pro",
   "short_name": "DienstPlan",
-  "description": "Dienst- & Bereitschaftsmanagement",
+  "description": "DienstPlan Pro",
   "start_url": "../",
   "scope": "../",
   "display": "standalone",
