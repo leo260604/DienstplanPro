@@ -2677,6 +2677,15 @@ body.dp-range-dragging{cursor:cell}
 }
 /* Breadcrumb „Arbeitsbereich / …“ oben ausblenden (Platz bleibt für das Layout der Kopfzeile) */
 .breadcrumbs{visibility:hidden}
+/* Zeitleiste in Dienstzeiten/Bereitschaftszeiten: Beschriftung exakt über der Skala (0/6/12/18/24 Uhr) */
+.scale-head .scale-labels{position:relative;height:14px;min-width:140px}
+.scale-head .scale-labels span{position:absolute;top:0;width:auto!important;font-size:10px;transform:translateX(-50%);text-align:center!important}
+.scale-head .scale-labels span:nth-child(1){left:0;transform:none}
+.scale-head .scale-labels span:nth-child(2){left:25%}
+.scale-head .scale-labels span:nth-child(3){left:50%}
+.scale-head .scale-labels span:nth-child(4){left:75%}
+.scale-head .scale-labels span:nth-child(5){left:100%;transform:translateX(-100%)}
+.mini-scale:not(.is-variable){background:linear-gradient(90deg,transparent calc(25% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(25% - .5px) calc(25% + .5px),transparent calc(25% + .5px) calc(50% - .5px),color-mix(in srgb,var(--muted) 45%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px) calc(75% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(75% - .5px) calc(75% + .5px),transparent calc(75% + .5px)),var(--surface-3)}
 
 </style>
 </head>
@@ -4545,7 +4554,7 @@ function standbyManagementPage(){
  const sub=admin?'Bereitschaftszeiten je Team – unabhängig von den regulären Dienstzeiten. Bereitschaften verwenden die Teamfarbe.'
   :'Bereitschaftszeiten im Überblick. Bereitschaften verwenden die Teamfarbe.';
  const actions=admin?`<button class="btn primary" id="sb-new-time">${icon('plus')}Bereitschaftszeit anlegen</button>`:'';
- const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Teams</th><th class="hide-sm scale-head"><span>00</span><span>12</span><span>24</span></th>${admin?'<th>Aktionen</th>':''}</tr>`;
+ const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Teams</th><th class="hide-sm scale-head"><div class="scale-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></th>${admin?'<th>Aktionen</th>':''}</tr>`;
  const sorted=[...standbyTimes].sort((a,b)=>isVariableStandby(a)-isVariableStandby(b)||(a.start||'').localeCompare(b.start||'')||a.name.localeCompare(b.name,'de'));
  const rows=sorted.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]],vari=isVariableStandby(t);
   return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
@@ -5142,7 +5151,7 @@ function shiftTimes(){
  <div class="split-layout no-side">
   <section class="panel flush">
    <div class="panel-toolbar"><label class="search-field">${icon('search')}<input id="shift-search" type="search" placeholder="Dienstzeit suchen …"></label>${teamFilterDropdown(shiftTeamCtx)}<span class="muted small push-right" id="shift-count"></span></div>
-   <div class="table-wrap borderless shift-times-table-wrap"><table><thead><tr><th>Bezeichnung</th><th>Zeit</th><th>Dauer</th><th class="hide-sm scale-head"><span>00</span><span>12</span><span>24</span></th><th class="hide-sm">Genutzt</th><th>Aktionen</th></tr></thead><tbody id="shift-rows"></tbody></table></div>
+   <div class="table-wrap borderless shift-times-table-wrap"><table><thead><tr><th>Bezeichnung</th><th>Zeit</th><th>Dauer</th><th class="hide-sm scale-head"><div class="scale-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></th><th class="hide-sm">Genutzt</th><th>Aktionen</th></tr></thead><tbody id="shift-rows"></tbody></table></div>
   </section>
   ${canEditAny?`<div class="modal-backdrop" id="shift-editor-modal" hidden><div class="modal wp-modal shift-modal" id="shift-editor" role="dialog" aria-modal="true" aria-labelledby="shift-modal-title">
    <div class="wp-head"><span class="wp-head-icon shift-head-ic" id="shift-head-ic">${icon('clock')}</span><div><h2 id="shift-modal-title">Neue Dienstzeit</h2><p class="small muted">Steht beim Einteilen als Auswahl zur Verfügung.</p></div><button type="button" class="icon-btn" id="close-shift" aria-label="Schließen" title="Schließen">×</button></div>

@@ -2669,3 +2669,12 @@ body.dp-range-dragging{cursor:cell}
 }
 /* Breadcrumb „Arbeitsbereich / …“ oben ausblenden (Platz bleibt für das Layout der Kopfzeile) */
 .breadcrumbs{visibility:hidden}
+/* Zeitleiste in Dienstzeiten/Bereitschaftszeiten: Beschriftung exakt über der Skala (0/6/12/18/24 Uhr) */
+.scale-head .scale-labels{position:relative;height:14px;min-width:140px}
+.scale-head .scale-labels span{position:absolute;top:0;width:auto!important;font-size:10px;transform:translateX(-50%);text-align:center!important}
+.scale-head .scale-labels span:nth-child(1){left:0;transform:none}
+.scale-head .scale-labels span:nth-child(2){left:25%}
+.scale-head .scale-labels span:nth-child(3){left:50%}
+.scale-head .scale-labels span:nth-child(4){left:75%}
+.scale-head .scale-labels span:nth-child(5){left:100%;transform:translateX(-100%)}
+.mini-scale:not(.is-variable){background:linear-gradient(90deg,transparent calc(25% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(25% - .5px) calc(25% + .5px),transparent calc(25% + .5px) calc(50% - .5px),color-mix(in srgb,var(--muted) 45%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px) calc(75% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(75% - .5px) calc(75% + .5px),transparent calc(75% + .5px)),var(--surface-3)}
