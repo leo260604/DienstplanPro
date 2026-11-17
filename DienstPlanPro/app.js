@@ -3579,7 +3579,7 @@ document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.tar
 function calTargetHeight(card){const c=document.getElementById('content'),main=c&&c.parentElement;const pf=c.style.flex,pm=c.style.minHeight;c.style.flex='none';c.style.minHeight='0';
  let bottom=0;[...(main?main.children:[])].forEach(e=>{if(e.offsetParent||getComputedStyle(e).position==='sticky'){const r=e.getBoundingClientRect();if(r.height)bottom=Math.max(bottom,r.bottom+window.scrollY)}});
  const h=card.getBoundingClientRect().height;c.style.flex=pf;c.style.minHeight=pm;return Math.floor(h+(window.innerHeight-bottom)-2)}
-function growCalendar(){const card=document.querySelector('#content .calendar-card');if(!card)return;const rows={};document.querySelectorAll('#content .week-day-cell,#content .month-cell').forEach(c=>{if(!c.offsetParent)return;const k=Math.round(c.getBoundingClientRect().top),o=c.scrollHeight-c.clientHeight;if(o>0)rows[k]=Math.max(rows[k]||0,o)});const allRows=new Set([...document.querySelectorAll('#content .week-day-cell,#content .month-cell')].filter(c=>c.offsetParent).map(c=>Math.round(c.getBoundingClientRect().top))).size||1,extra=Math.ceil(Math.max(0,...Object.values(rows))*allRows);if(extra>0)card.style.height=(card.offsetHeight+extra+2)+'px'}
+function growCalendar(){const card=document.querySelector('#content .calendar-card');if(!card)return;const rows={};document.querySelectorAll('#content .week-day-cell,#content .month-cell').forEach(c=>{if(!c.offsetParent)return;const k=Math.round(c.getBoundingClientRect().top),o=c.scrollHeight-c.clientHeight;if(o>0)rows[k]=Math.max(rows[k]||0,o)});const allRows=(currentView==='Monat'&&window.__calFrRows)||new Set([...document.querySelectorAll('#content .week-day-cell,#content .month-cell')].filter(c=>c.offsetParent).map(c=>Math.round(c.getBoundingClientRect().top))).size||1,extra=Math.ceil(Math.max(0,...Object.values(rows))*allRows);if(extra>0)card.style.height=(card.offsetHeight+extra+2)+'px'}
 /* ===== Kalender an die Fensterhöhe anpassen (Seite ohne Scrollen, Rest als „+ x weitere“) ===== */
 let calFitBusy=false,calFitTimer=null;
 function fitCalendar(){
@@ -3590,6 +3590,12 @@ function fitCalendar(){
  const fillView=!(expandedMonthView&&(currentView==='Monat'||currentView==='Woche'));
  if(!fillView)return;
  document.body.classList.add('cal-fit');
+ // Monat: Wochen ohne Einträge bleiben niedrig, nur Wochen mit Einträgen teilen sich die restliche Höhe
+ window.__calFrRows=0;
+ if(currentView==='Monat'){const g=card.querySelector('.month-grid');if(g){const cols=getComputedStyle(g).gridTemplateColumns.split(' ').length||7,cells=[...g.children].filter(c=>c.classList.contains('month-cell')),rows=[];
+  for(let i=0;i<cells.length;i+=cols)rows.push(cells.slice(i,i+cols).some(c=>c.querySelector('.calendar-assignment,.calendar-more,.tn-chip')));
+  const fr=rows.filter(Boolean).length;window.__calFrRows=fr;g.style.gridTemplateRows='auto '+rows.map(h=>h?'minmax(0,1fr)':'var(--month-empty-row,64px)').join(' ');
+  if(!fr){card.style.height='';card.style.minHeight='0';return}}}
  const tgt=calTargetHeight(card);if(tgt<280){document.body.classList.remove('cal-fit','cal-tight');window.__calFit=null;if(window.__calFitWasOn){window.__calFitWasOn=false;if(!calFitBusy){calFitBusy=true;render();calFitBusy=false}}return}window.__calFitWasOn=true;card.style.height=tgt+'px';card.style.minHeight='0';
  if(currentView!=='Woche'&&currentView!=='Monat')return;
  // Platz pro Tag messen und passende Anzahl Einträge bestimmen
