@@ -2773,3 +2773,19 @@ button.dpk-day:hover{background:var(--accent-soft);color:var(--accent-dark)}
 .dpk-day.off{color:var(--muted);opacity:.28;cursor:default;text-decoration:line-through}
 .wd-chip.wd-hol span{min-width:auto;border-style:dashed}
 .wd-chip.wd-hol input:checked+span{border-style:solid}
+/* Bereitschaftszeit-Dialog: zweispaltig am PC, ohne Scrollen */
+.sbt-grid{display:flex;flex-direction:column;gap:16px}
+.sbt-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sbt-col>.sb-team-note{margin-top:-10px}
+@media (min-width:900px){
+ .wp-modal.sb-time-modal{width:min(880px,calc(100vw - 48px))}
+ .sb-time-modal .wp-form{gap:14px;padding:16px 24px 18px}
+ .sb-time-modal .sbt-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;align-items:start}
+ .sb-time-modal .sbt-col{gap:14px}
+ .sb-time-modal .sbt-col+.sbt-col{border-left:1px solid var(--line);padding-left:28px}
+ .sb-time-modal .wd-chips{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) auto;gap:5px}
+ .sb-time-modal .wd-chip span{display:grid;min-width:0;width:100%;box-sizing:border-box;height:34px;padding:0;font-size:12.5px}
+ .sb-time-modal .wd-chip.wd-hol{margin-left:4px}
+ .sb-time-modal .wd-chip.wd-hol span{padding:0 10px}
+ .sb-time-modal .wp-head{padding:16px 24px}
+}

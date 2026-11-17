@@ -2788,6 +2788,22 @@ button.dpk-day:hover{background:var(--accent-soft);color:var(--accent-dark)}
 .dpk-day.off{color:var(--muted);opacity:.28;cursor:default;text-decoration:line-through}
 .wd-chip.wd-hol span{min-width:auto;border-style:dashed}
 .wd-chip.wd-hol input:checked+span{border-style:solid}
+/* Bereitschaftszeit-Dialog: zweispaltig am PC, ohne Scrollen */
+.sbt-grid{display:flex;flex-direction:column;gap:16px}
+.sbt-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sbt-col>.sb-team-note{margin-top:-10px}
+@media (min-width:900px){
+ .wp-modal.sb-time-modal{width:min(880px,calc(100vw - 48px))}
+ .sb-time-modal .wp-form{gap:14px;padding:16px 24px 18px}
+ .sb-time-modal .sbt-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;align-items:start}
+ .sb-time-modal .sbt-col{gap:14px}
+ .sb-time-modal .sbt-col+.sbt-col{border-left:1px solid var(--line);padding-left:28px}
+ .sb-time-modal .wd-chips{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) auto;gap:5px}
+ .sb-time-modal .wd-chip span{display:grid;min-width:0;width:100%;box-sizing:border-box;height:34px;padding:0;font-size:12.5px}
+ .sb-time-modal .wd-chip.wd-hol{margin-left:4px}
+ .sb-time-modal .wd-chip.wd-hol span{padding:0 10px}
+ .sb-time-modal .wp-head{padding:16px 24px}
+}
 
 </style>
 </head>
@@ -4740,14 +4756,16 @@ async function openStandbyTime(id){
  const ex=id?standbyTimes.find(t=>t.id===id):null;if(id&&!ex)return;
  const c0=shiftHexColor(ex?.color||'#159da8'),type0=ex&&isVariableStandby(ex)?'variabel':'fix',pre=ex?standbyTimeTeams(ex).map(t=>t.name):[];
  const dlg=formDialog(ex?`${ex.name} bearbeiten`:'Bereitschaftszeit anlegen',`
+  <div class="sbt-grid"><div class="sbt-col">
   <label class="wp-field"><span class="wp-label">Bezeichnung</span><input id="sbt-name" name="name" maxlength="60" autocomplete="off" placeholder="z. B. Nachtbereitschaft" value="${escapeHtml(ex?.name||'')}" required></label>
   ${teamDropdown(teams,pre,{label:'Teams mit dieser Bereitschaft',allLabel:'Alle Teams',empty:'Teams auswählen …'})}
   <small class="wp-note sb-team-note" id="sbt-team-note"></small>
   <div class="wp-field"><span class="wp-label">Art der Bereitschaft</span><select id="sbt-type" name="type"><option value="fix" ${type0==='fix'?'selected':''}>Fix</option><option value="variabel" ${type0==='variabel'?'selected':''}>Variabel</option></select></div>
   <div class="wp-field" id="sbt-range-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="sbt-start" name="start" value="${escapeHtml(ex?.start||'')}"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="sbt-end" name="end" value="${escapeHtml(ex?.end||'')}"></label></div></div>
+  </div><div class="sbt-col">
   <div class="wp-field"><span class="wp-label">Mögliche Tage</span><div class="wd-chips" id="sbt-days">${WD_SHORT.map((d,i)=>`<label class="wd-chip"><input type="checkbox" name="wd:${i}" value="1" ${standbyDays(ex).includes(i)?'checked':''}><span>${d}</span></label>`).join('')}<label class="wd-chip wd-hol" title="An gesetzlichen Feiertagen (Österreich)"><input type="checkbox" name="wd:hol" value="1" ${standbyHol(ex)?'checked':''}><span>Feiertage</span></label></div><small class="wp-note" id="sbt-days-note"></small></div>
   <div class="wp-summary sb-time-sum"><span class="wp-sum-ic">${icon('clock')}</span><div class="sb-sum-txt"><b id="sbt-dur"></b><small id="sbt-msg"></small><div class="mini-scale" id="sbt-scale"></div></div></div>
-  <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft für die gewählten Teams zur Auswahl.',{icon:'clock',cls:'sb-time-modal'});
+  <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div></div></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft für die gewählten Teams zur Auswahl.',{icon:'clock',cls:'sb-time-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x);
  const typ=$('sbt-type'),rangeF=$('sbt-range-field'),name=$('sbt-name'),st=$('sbt-start'),en=$('sbt-end'),col=$('sbt-color'),pick=$('sbt-color-pick'),head=layer.querySelector('.wp-head-icon');
  bindDialogTeamDropdown();
