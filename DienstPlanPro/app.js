@@ -1711,11 +1711,17 @@ function issuesPopup(c){
 /* Dashboard anpassen: was angezeigt wird */
 async function customizeDashboard(){
  const hidden=dashHidden(),list=dashWidgetsForRole(),sizeLabel={tile:'Kachel',half:'Bereich',full:'Banner'};
- const row=w=>`<div class="dash-cfg-row" data-cfg="${w.id}"><label class="check"><input type="checkbox" name="w:${w.id}" ${hidden.includes(w.id)?'':'checked'}><span><b>${escapeHtml(w.title)}</b><small class="muted block">${escapeHtml(w.desc||'')}</small></span></label><span class="pill">${sizeLabel[w.size]}</span></div>`;
- const dlg=formDialog('Dashboard anpassen',`<div class="dash-cfg-list">${list.map(row).join('')}</div>
-  <div class="dash-cfg-actions"><button type="button" class="btn" id="dash-cfg-edit">${icon('edit')}Ansicht bearbeiten</button><button type="button" class="btn ghost" id="dash-cfg-reset">${icon('refresh')}Standard wiederherstellen</button></div>`,'Speichern','Wähle aus, was du auf deinem Dashboard siehst.');
+ const IC={today:'sun',kDuties:'cal',kStandby:'moon',kAbsence:'plane',kIssues:'alert',kSwaps:'refresh',kHours:'external',kTeamDuty:'users',kTeamStandby:'moon',kWorkplace:'home',myDuties:'cal',myStandby:'moon',teamToday:'users',standbyToday:'shield',weekLoad:'chart'};
+ const short=d=>String(d||'').split(' · ')[0];
+ const card=w=>`<label class="dcfg-card"><span class="dcfg-ic">${icon(IC[w.id]||'grid')}</span><span class="dcfg-txt"><b>${escapeHtml(w.title)}</b><small>${escapeHtml(short(w.desc))}</small></span><input type="checkbox" name="w:${w.id}" ${hidden.includes(w.id)?'':'checked'}><span class="dcfg-switch" aria-hidden="true"></span></label>`;
+ const groups=[['full','Banner'],['tile','Kacheln'],['half','Bereiche']].map(([k,label])=>{const ws=list.filter(w=>w.size===k);if(!ws.length)return'';return `<section class="dcfg-group" data-group="${k}"><div class="dcfg-group-head"><b>${label}</b><span class="dcfg-count"></span></div><div class="dcfg-grid">${ws.map(card).join('')}</div></section>`}).join('');
+ const dlg=formDialog('Dashboard anpassen',`<div class="dcfg">${groups}</div>`,'Speichern','',{icon:'grid',cls:'dcfg-modal'});
+ {const L=[...document.querySelectorAll('.app-dialog')].pop(),act=L.querySelector('.wp-actions');
+  act.insertAdjacentHTML('afterbegin',`<span class="dcfg-tools"><button type="button" class="btn ghost small" id="dash-cfg-edit">${icon('edit')}Ansicht bearbeiten</button><button type="button" class="btn ghost small" id="dash-cfg-reset">${icon('refresh')}Standard</button></span>`);
+  const upd=()=>L.querySelectorAll('.dcfg-group').forEach(g=>{const all=g.querySelectorAll('input[type=checkbox]'),on=[...all].filter(x=>x.checked).length;g.querySelector('.dcfg-count').textContent=`${on} von ${all.length} aktiv`});
+  upd();L.addEventListener('change',upd);L.__dcfgUpd=upd}
  const layer=[...document.querySelectorAll('.app-dialog')].pop();let reset=false,toEdit=false;
- layer.querySelector('#dash-cfg-reset').onclick=()=>{reset=true;list.forEach(w=>{layer.querySelector(`[name="w:${w.id}"]`).checked=!w.hidden});toast('Standard ausgewählt – mit „Speichern“ übernehmen.')};
+ layer.querySelector('#dash-cfg-reset').onclick=()=>{reset=true;list.forEach(w=>{layer.querySelector(`[name="w:${w.id}"]`).checked=!w.hidden});layer.__dcfgUpd&&layer.__dcfgUpd();toast('Standard ausgewählt – mit „Speichern“ übernehmen.')};
  layer.querySelector('#dash-cfg-edit').onclick=()=>{toEdit=true;layer.querySelector('form').requestSubmit()};
  const res=await dlg;if(!res)return;
  const newHidden=list.filter(w=>!res['w:'+w.id]).map(w=>w.id);

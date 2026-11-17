@@ -2911,3 +2911,36 @@ body.dark-mode .staff-table .role-pill.role-admin{color:#c39be6}body.dark-mode .
  .staff-table td[data-label]::before{content:attr(data-label);font-size:11.5px;font-weight:700;color:var(--muted)}
  .staff-table td[data-label]>.role-pill{justify-self:start}
 }
+/* ===== Dashboard anpassen – Popup ===== */
+.wp-modal.dcfg-modal{width:min(760px,100%);max-height:min(88dvh,860px);display:flex;flex-direction:column;overflow:hidden}
+.dcfg-modal .wp-form{display:flex;flex-direction:column;min-height:0;flex:1;padding-bottom:14px}
+.dcfg{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:18px;margin:0 -4px 12px;padding:2px 4px}
+.dcfg-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 2px 8px}
+.dcfg-group-head b{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.dcfg-count{font-size:11.5px;color:var(--muted)}
+.dcfg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dcfg-card{position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;min-width:0}
+.dcfg-card:hover{border-color:color-mix(in srgb,var(--accent-color) 45%,var(--line))}
+.dcfg-card:has(input:checked){border-color:color-mix(in srgb,var(--accent-color) 55%,var(--line));background:color-mix(in srgb,var(--accent-color) 7%,var(--surface))}
+.dcfg-card:has(input:focus-visible){box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-color) 30%,transparent)}
+.dcfg-ic{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--surface-3);color:var(--muted);transition:background .15s,color .15s}
+.dcfg-ic .ic{width:17px;height:17px}
+.dcfg-card:has(input:checked) .dcfg-ic{background:color-mix(in srgb,var(--accent-color) 16%,var(--surface));color:var(--accent-dark)}
+.dcfg-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dcfg-txt b{font-size:13.5px;line-height:1.25}
+.dcfg-txt small{font-size:11.5px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.dcfg-card input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.dcfg-switch{flex:none;position:relative;width:36px;height:21px;border-radius:999px;background:var(--line);transition:background .15s}
+.dcfg-switch::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.dcfg-card input:checked~.dcfg-switch{background:var(--accent-color)}
+.dcfg-card input:checked~.dcfg-switch::after{transform:translateX(15px)}
+.dcfg-group[data-group="full"] .dcfg-grid{grid-template-columns:1fr}
+.dcfg-modal .wp-actions{border-top:1px solid var(--line-2);padding-top:12px}
+.dcfg-tools{display:flex;gap:4px;flex-wrap:wrap}
+@media (max-width:600px){
+  .dcfg-grid{grid-template-columns:1fr}
+  .wp-modal.dcfg-modal{max-height:92dvh}
+  .dcfg-tools{width:100%;justify-content:space-between}
+  .dcfg-modal .wp-actions-right{width:100%;display:flex;gap:8px}.dcfg-modal .wp-actions-right .btn{flex:1}
+}
+.modal label.dcfg-card{display:flex;flex-direction:row;align-items:center;gap:11px;margin:0;font-size:inherit;font-weight:500;color:var(--ink);text-align:left}
