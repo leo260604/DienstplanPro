@@ -2678,3 +2678,8 @@ body.dp-range-dragging{cursor:cell}
 .scale-head .scale-labels span:nth-child(4){left:75%}
 .scale-head .scale-labels span:nth-child(5){left:100%;transform:translateX(-100%)}
 .mini-scale:not(.is-variable){background:linear-gradient(90deg,transparent calc(25% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(25% - .5px) calc(25% + .5px),transparent calc(25% + .5px) calc(50% - .5px),color-mix(in srgb,var(--muted) 45%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px) calc(75% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(75% - .5px) calc(75% + .5px),transparent calc(75% + .5px)),var(--surface-3)}
+/* Handy: Menü beginnt unter der fixen Kopfzeile, damit das Logo vollständig sichtbar ist */
+@media(max-width:700px){
+ .sidebar{top:var(--mobile-topbar-h,56px)!important;bottom:0;height:auto!important;max-height:calc(100dvh - var(--mobile-topbar-h,56px))}
+ .sidebar.open{border-top-right-radius:0}
+}

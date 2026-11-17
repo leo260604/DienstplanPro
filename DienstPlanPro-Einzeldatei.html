@@ -2686,6 +2686,11 @@ body.dp-range-dragging{cursor:cell}
 .scale-head .scale-labels span:nth-child(4){left:75%}
 .scale-head .scale-labels span:nth-child(5){left:100%;transform:translateX(-100%)}
 .mini-scale:not(.is-variable){background:linear-gradient(90deg,transparent calc(25% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(25% - .5px) calc(25% + .5px),transparent calc(25% + .5px) calc(50% - .5px),color-mix(in srgb,var(--muted) 45%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px) calc(75% - .5px),color-mix(in srgb,var(--muted) 35%,transparent) calc(75% - .5px) calc(75% + .5px),transparent calc(75% + .5px)),var(--surface-3)}
+/* Handy: Menü beginnt unter der fixen Kopfzeile, damit das Logo vollständig sichtbar ist */
+@media(max-width:700px){
+ .sidebar{top:var(--mobile-topbar-h,56px)!important;bottom:0;height:auto!important;max-height:calc(100dvh - var(--mobile-topbar-h,56px))}
+ .sidebar.open{border-top-right-radius:0}
+}
 
 </style>
 </head>
@@ -6899,6 +6904,7 @@ function reorderMember(teamId,moveId,targetId,after){const t=teams.find(x=>x.id=
 {const _render=render;render=function(){_render.apply(this,arguments);if(!calFitBusy)requestAnimationFrame(fitCalendar);else fitCalendarSizeOnly()}}
 function fitCalendarSizeOnly(){const card=document.querySelector('#content .calendar-card');if(!card||window.innerWidth<901||!document.body.classList.contains('cal-fit'))return;card.style.height='';card.style.height=Math.max(280,calTargetHeight(card))+'px';card.style.minHeight='0'}
 let calFitW=window.innerWidth,calFitH=window.innerHeight;window.addEventListener('resize',()=>{clearTimeout(calFitTimer);calFitTimer=setTimeout(()=>{const was=calFitW>=901,now=window.innerWidth>=901,changed=calFitW!==window.innerWidth||calFitH!==window.innerHeight;calFitW=window.innerWidth;calFitH=window.innerHeight;if(changed&&(was||now)&&['Dienstplan','Bereitschaft'].includes(currentPage)&&!document.querySelector('.modal-backdrop.open,dialog[open]')&&!(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))render()},150)});
+{const setTopH=()=>{const t=document.querySelector('.topbar');if(t)document.documentElement.style.setProperty('--mobile-topbar-h',Math.round(t.getBoundingClientRect().height)+'px')};setTopH();window.addEventListener('resize',setTopH)}
 /* ===== Live-Sync: Änderungen aus anderen Fenstern/Tabs sofort übernehmen (storage-Ereignis) ===== */
 const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},dienstplanTeamNotes:()=>{teamNotes=__ld_teamNotes()},dienstplanFeatures:()=>{features=__ld_features()},
  dienstplanShiftTypes:()=>{const v=__ld_shiftTypesParse(load('dienstplanShiftTypes',null));if(v)shiftTypes=v},dienstplanStandbyGroups:()=>{standbyGroups=__ld_standbyGroups()},dienstplanStandbyTimes:()=>{standbyTimes=__ld_standbyTimes()},
