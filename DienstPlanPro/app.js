@@ -659,12 +659,11 @@ let hasSession=false;
 function updateSignedInUser(){
  const person=staff.find(x=>x[8]===currentUserId);
  const name=person?person[0]:'Benutzer wählen';
- document.querySelector('.profile-copy b').textContent=name;
+ {const pb=document.querySelector('.profile-copy b');if(pb)pb.textContent=name}
  const face=person&&person[9]?`<img src="${escapeHtml(person[9])}" alt="">`:escapeHtml(initials(name));
- document.querySelector('.avatar').innerHTML=face;
  document.querySelector('.top-avatar').innerHTML=face;
  if(!document.getElementById('account-panel').hidden)renderAccountPanel();
- document.getElementById('role-label').textContent=currentRole+(currentUserTeamNames()[0]?' · '+currentUserTeamNames()[0]:'');
+ {const rl=document.getElementById('role-label');if(rl)rl.textContent=currentRole+(currentUserTeamNames()[0]?' · '+currentUserTeamNames()[0]:'');}
 }
 let loginSel={userId:'',role:''};
 function openLogin(){
@@ -700,8 +699,7 @@ document.getElementById('sso-btn').onclick=()=>{
   ssoTimer=setTimeout(()=>{pr.classList.add('done');st.textContent=`Angemeldet als ${p[0]}`;
    ssoTimer=setTimeout(()=>{document.getElementById('login-form').requestSubmit();ssoReset()},450)},650)},700)};
 document.getElementById('login-demo').addEventListener('toggle',e=>{if(e.target.open&&!window.matchMedia('(pointer: coarse)').matches)setTimeout(()=>document.getElementById('login-user-search').focus(),30)});
-document.getElementById('profile-menu').onclick=e=>{e.stopPropagation();openLogin()};
-document.querySelector('.profile').addEventListener('click',()=>openLogin());
+
 document.getElementById('login-close').onclick=()=>{if(hasSession)document.getElementById('login-modal').hidden=true};
 document.getElementById('login-modal').addEventListener('keydown',e=>{if(e.key==='Escape'&&hasSession)document.getElementById('login-modal').hidden=true});
 document.getElementById('login-form').onsubmit=e=>{
@@ -3347,7 +3345,7 @@ function helpCaps(){
 const HELP_SECTIONS=[
  {id:'start',page:null,icon:'spark',title:'Erste Schritte',intro:'Grundlagen, die auf jeder Seite gelten.',items:[
   {t:'Im Menü navigieren',s:['Links im Menü findest du alle Bereiche, die deine Rolle nutzen darf – oben die Arbeitsbereiche, darunter „Verwaltung“.','Mit dem Pfeil am Menürand klappst du das Menü auf schmale Symbole zusammen.','Am Handy öffnest du das Menü über das Symbol ☰ oben links.'],tip:'Was du nicht siehst, ist für deine Rolle nicht freigegeben. Freigaben verwaltet die Administration unter „Team Berechtigungen“.'},
-  {t:'Anmelden und Benutzer wechseln',s:['Klicke unten links im Menü auf deinen Namen.','Wähle die Person und die Rolle aus und bestätige mit „Anmelden“.','Die Seite passt sich sofort an die gewählte Rolle an.']},
+  {t:'Anmelden und Benutzer wechseln',s:['Klicke oben rechts auf dein Profilbild und dann auf „Benutzer wechseln“.','Wähle die Person und die Rolle aus und bestätige mit „Anmelden“.','Die Seite passt sich sofort an die gewählte Rolle an.']},
   {t:'Schnellsuche (Strg K)',s:['Drücke Strg K (am Mac ⌘ K) oder klicke oben auf das Suchfeld.','Tippe einen Namen, ein Team, einen Dienst oder eine Seite – auch Anleitungen aus dieser Hilfe werden gefunden.','Mit ↑ ↓ wählen, mit Enter öffnen, mit Esc schließen.']},
   {t:'Benachrichtigungen',s:['Die Glocke oben rechts zeigt neue Hinweise, z. B. wenn du eingeteilt wurdest oder eine Tauschanfrage bekommst.','Klicke auf einen Hinweis, um direkt zum Eintrag zu springen.','Welche Hinweise du bekommst, stellst du in „Mein Konto“ → „Benachrichtigungen“ ein.']},
   {t:'Mein Konto und Profilbild',s:['Klicke oben rechts auf deinen Avatar.','Unter „Konto“ änderst du Profilbild, E-Mail und Telefonnummer.','Unter „Benachrichtigungen“ legst du fest, worüber du informiert wirst.']},

@@ -2713,3 +2713,7 @@ body.dark-mode{--hol:#f27a8f}
 .mobile-date-button.is-holiday.selected b,.mobile-month-day.is-holiday.selected{color:#fff}
 .mobile-date-button.is-holiday::after,.mt-day.is-holiday::after{content:"";position:absolute;top:4px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--hol)}
 .mobile-date-button,.mt-day{position:relative}
+/* Version & Copyright unten im Menü (statt Fußzeile) */
+.side-info{display:flex;flex-direction:column;gap:3px;padding:10px 12px 4px;font-size:11.5px;color:var(--muted);line-height:1.35}
+.side-info .side-ver{font-weight:650}
+.sidebar.collapsed .side-info{display:none}
