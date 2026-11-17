@@ -2861,6 +2861,71 @@ button.dpk-day:focus-visible{outline:none}button.dpk-day:focus-visible>span{box-
 .dpk-mon.today{border-color:var(--accent-color);color:var(--accent-dark)}
 .dpk-mon.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff;box-shadow:0 6px 14px -6px var(--accent-color)}
 .dpk-week .dpk-kw>span{position:relative;z-index:1}
+/* ===== Kontakte: Ansicht umschalten + Admin-Mitarbeiterliste ===== */
+.contact-view-switch{display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:var(--surface-3);flex:none}
+.contact-view-switch button{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);font:inherit;font-size:13.5px;font-weight:650;cursor:pointer;white-space:nowrap}
+.contact-view-switch button .ic{width:15px;height:15px}
+.contact-view-switch button:hover{color:var(--ink)}
+.contact-view-switch button.active{background:var(--surface);color:var(--accent-dark);box-shadow:var(--shadow-sm)}
+.staff-admin-panel{padding:0;overflow:hidden}
+.staff-admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 20px;margin:0;border-bottom:1px solid var(--line)}
+.staff-admin-head h2{margin:0;display:flex;align-items:center;gap:8px}
+.staff-admin-head small{display:block;margin-top:2px}
+.staff-admin-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.staff-bulk{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border-radius:12px;background:var(--accent-soft)}
+.staff-bulk[hidden]{display:none}
+.staff-bulk b{font-size:13px;color:var(--accent-dark)}
+.staff-bulk .btn .ic{width:14px;height:14px}
+.admin-only-pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700}
+.admin-only-pill .ic{width:13px;height:13px}
+.staff-list{overflow-x:auto}
+.staff-table{width:100%;min-width:860px;border-collapse:separate;border-spacing:0}
+.staff-table th{position:sticky;top:0;z-index:1;background:var(--surface-2,var(--surface));text-align:left;font-size:11.5px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.staff-table th.sortable button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.staff-table th.sortable button:focus-visible{outline:2px solid var(--accent-color);outline-offset:2px;border-radius:4px}
+.staff-table th .sort-ic{font-size:11px;opacity:.45}
+.staff-table th.on{color:var(--accent-dark)}.staff-table th.on .sort-ic{opacity:1}
+.staff-table td{padding:10px 12px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+.staff-table tbody tr{transition:background .1s}
+.staff-table tbody tr:hover{background:color-mix(in srgb,var(--accent-color) 5%,transparent)}
+.staff-table tbody tr.sel{background:color-mix(in srgb,var(--accent-color) 10%,transparent)}
+.staff-table tbody tr:last-child td{border-bottom:0}
+.staff-table .cb-col{width:36px;padding-right:0}
+.staff-table input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent-color);cursor:pointer}
+.st-person{display:flex;align-items:center;gap:11px;min-width:0}
+.st-person b{display:block;font-size:14px;white-space:nowrap}
+.st-person small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.st-me{font-style:normal;font-size:10.5px;font-weight:750;padding:1px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark);margin-left:4px;vertical-align:1px}
+.staff-table .role-pill.role-admin{background:color-mix(in srgb,#9b69c8 16%,transparent);color:#8a55bd}
+.staff-table .role-pill.role-teamleiter,.staff-table .role-pill.role-deputy{background:color-mix(in srgb,#d69b38 18%,transparent);color:#a96f10}
+.staff-table .role-pill.role-abteilungsleiter{background:color-mix(in srgb,#3974c6 16%,transparent);color:#2d62ad}
+body.dark-mode .staff-table .role-pill.role-admin{color:#c39be6}body.dark-mode .staff-table .role-pill.role-teamleiter,body.dark-mode .staff-table .role-pill.role-deputy{color:#f0bf6a}body.dark-mode .staff-table .role-pill.role-abteilungsleiter{color:#86aef0}
+.st-teams{display:flex;flex-wrap:wrap;gap:5px}
+.st-team{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--ink);font-size:12px;font-weight:650;white-space:nowrap}
+.st-team i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.st-team small{font-size:9.5px;font-weight:800;color:var(--muted)}
+.st-person a.st-mail{display:block;color:var(--muted);font-size:12px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}.st-person a.st-mail:hover{color:var(--accent-dark);text-decoration:underline}
+.staff-table .act-col{width:90px;text-align:right}
+.staff-table .row-actions{display:inline-flex;gap:4px;opacity:.75;transition:opacity .1s}
+.staff-table tr:hover .row-actions,.staff-table .row-actions:focus-within{opacity:1}
+.staff-table .icon-btn:disabled{opacity:.3;cursor:not-allowed}
+/* Mobil/Tablet: Zeilen als Karten */
+@media (max-width:900px){
+ .contact-search-panel .table-toolbar{flex-wrap:wrap}
+ .contact-view-switch{width:100%}.contact-view-switch button{flex:1;justify-content:center}
+ .staff-table{min-width:0}
+ .staff-table thead{display:none}
+ .staff-table,.staff-table tbody,.staff-table tr,.staff-table td{display:block;width:auto}
+ .staff-table tr{position:relative;padding:12px 14px 12px 44px;border-bottom:1px solid var(--line)}
+ .staff-table td{border:0;padding:3px 0;font-size:13px}
+ .staff-table td.cb-col{position:absolute;left:14px;top:20px;width:auto;padding:0}
+ .staff-table td.act-col{position:absolute;right:10px;top:12px;width:auto}
+ .staff-table .row-actions{opacity:1}
+ .staff-table td.st-name{padding-right:80px;margin-bottom:4px}
+ .staff-table td[data-label]{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
+ .staff-table td[data-label]::before{content:attr(data-label);font-size:11.5px;font-weight:700;color:var(--muted)}
+ .staff-table td[data-label]>.role-pill{justify-self:start}
+}
 
 </style>
 </head>
@@ -5472,15 +5537,18 @@ function bindShiftTimes(){
 /* ------------------------------------------------------------------
    Kontakte
 ------------------------------------------------------------------ */
-let contactRoleFilter='Alle';
+let contactRoleFilter='Alle',contactView='cards',staffSort={key:'name',dir:1},staffSel=new Set();
+const isAdminRole=()=>currentRole==='Admin';
 function contactsPage(){
+ if(!isAdminRole())contactView='cards';
  if(contactRoleFilter!=='Alle'&&!staff.some(s=>visibleRole(s[10])===contactRoleFilter))contactRoleFilter='Alle';
  const counts=roles.map(r=>[r,staff.filter(s=>visibleRole(s[10])===r).length]).filter(x=>x[1]);
  return `${heading('Kontakte',`${staff.length} Personen in ${teams.length} Teams`,`<button class="btn" id="export-contacts">CSV exportieren</button>${canEdit('Kontakte')?'<button class="btn primary" id="new-employee">＋ Mitarbeiter hinzufügen</button>':''}`)}
- <section class="panel contact-search-panel"><div class="table-toolbar"><input class="input" id="employee-search" type="search" placeholder="Name, Team, Telefon oder E-Mail …"><div class="chip-row contact-role-chips">${[['Alle',staff.length],...counts].map(([r,c])=>`<button type="button" class="chip ${contactRoleFilter===r?'active':''}" data-role-filter="${escapeHtml(r)}">${escapeHtml(r)} · ${c}</button>`).join('')}</div>
+ <section class="panel contact-search-panel"><div class="table-toolbar">${isAdminRole()?`<div class="contact-view-switch" role="tablist" aria-label="Ansicht"><button type="button" role="tab" data-contact-view="cards" class="${contactView==='cards'?'active':''}" aria-selected="${contactView==='cards'}">${icon('star')}<span>Kontakte</span></button><button type="button" role="tab" data-contact-view="list" class="${contactView==='list'?'active':''}" aria-selected="${contactView==='list'}">${icon('users')}<span>Mitarbeiterliste</span></button></div>`:''}<input class="input" id="employee-search" type="search" placeholder="Name, Team, Telefon oder E-Mail …"><div class="chip-row contact-role-chips">${[['Alle',staff.length],...counts].map(([r,c])=>`<button type="button" class="chip ${contactRoleFilter===r?'active':''}" data-role-filter="${escapeHtml(r)}">${escapeHtml(r)} · ${c}</button>`).join('')}</div>
  <div class="team-dd role-dd" id="role-dd"><button type="button" class="chip ${contactRoleFilter!=='Alle'?'active':''} team-dd-btn" id="role-dd-btn" aria-haspopup="listbox" aria-expanded="false">${icon('filter')}<span class="team-dd-label" id="role-dd-label">${escapeHtml(contactRoleFilter==='Alle'?'Alle Rollen':contactRoleFilter)}</span>${icon('down','team-dd-caret')}</button>
   <div class="team-dd-panel" id="role-dd-panel" hidden><div class="team-dd-list" role="listbox">${[['Alle',staff.length],...counts].map(([r,c])=>`<button type="button" class="team-dd-opt ${r==='Alle'?'all':''} ${contactRoleFilter===r?'on':''}" data-role-filter="${escapeHtml(r)}" role="option" aria-selected="${contactRoleFilter===r}"><span class="team-dd-check">${icon('check')}</span><span class="team-dd-name">${escapeHtml(r==='Alle'?'Alle Rollen':r)}</span><small>${c}</small></button>`).join('')}</div></div></div></div></section>
  <section class="panel contact-fav-panel"><div class="panel-head"><h2>${icon('star','fav-head-ic')} Meine Favoriten</h2></div><div id="contact-favorites"></div></section>
+ ${isAdminRole()?`<section class="panel staff-admin-panel" id="staff-admin-panel" ${contactView==='list'?'':'hidden'}><div class="panel-head staff-admin-head"><div><h2>${icon('users','res-head-ic')} Mitarbeiterliste</h2><small class="muted" id="staff-admin-count"></small></div><div class="staff-admin-tools"><span class="staff-bulk" id="staff-bulk" hidden><b id="staff-bulk-n"></b><button type="button" class="btn small" id="staff-bulk-clear">Auswahl aufheben</button><button type="button" class="btn small danger" id="staff-bulk-del">${icon('trash')}Löschen</button></span><span class="admin-only-pill" title="Nur für Admins sichtbar">${icon('lock')}Nur Admin</span></div></div><div id="staff-admin-list"></div></section>`:''}
  <section class="panel contact-results-panel" id="contact-results-panel" hidden><div class="panel-head"><h2>${icon('search','res-head-ic')} Suchergebnisse</h2><span class="contact-count" id="contact-count"></span></div><div id="employee-rows" class="contact-results"></div></section>
  <div class="modal-backdrop" id="contact-detail-modal" hidden><div class="modal contact-detail-modal" role="dialog" aria-modal="true" aria-label="Kontakt"><div class="panel-head"><h2>Kontakt</h2><button class="icon-btn" id="close-contact-detail" type="button" aria-label="Schließen">×</button></div><div class="contact-detail-body"></div></div></div>
  <div class="modal-backdrop" id="employee-modal" hidden><div class="modal"><div class="panel-head"><h2 id="employee-modal-title">Mitarbeiter hinzufügen</h2><button class="icon-btn" id="close-employee" type="button" aria-label="Schließen">×</button></div><form id="employee-form"><input type="hidden" id="employee-index"><label>Vor- und Nachname<input id="employee-name" required placeholder="Max Mustermann"></label><label>Benutzerrolle<select id="employee-role" required>${roles.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('')}</select></label><div class="photo-row"><div class="employee-photo-preview" id="employee-photo-preview"><span>Foto</span></div><label class="btn" for="employee-photo">Profilbild wählen</label><input id="employee-photo" type="file" accept="image/*" hidden></div><div id="employee-team" class="employee-team-field"></div><label>E-Mail<input type="email" id="employee-email" placeholder="name@example.at"></label><label>Bereitschaftsnummer<input id="employee-phone" placeholder="+43 660 …"></label><label>Teams-Telefonnummer<input id="employee-teams-phone" placeholder="+43 …"></label><div class="btn-row modal-actions"><button type="button" class="btn" id="cancel-employee">Abbrechen</button><button type="submit" class="btn primary">Speichern</button></div></form></div></div>`;
@@ -5519,7 +5587,50 @@ function bindContactTiles(root){
  });
  root.querySelectorAll('[data-fav-employee]').forEach(b=>b.onclick=()=>{const p=staff.find(s=>s[8]===b.dataset.favEmployee);const on=toggleContactFavorite(b.dataset.favEmployee);toast(on?`${p?p[0]:'Kontakt'} zu Favoriten hinzugefügt.`:`${p?p[0]:'Kontakt'} aus Favoriten entfernt.`);renderEmployees()});
  root.querySelectorAll('[data-edit-employee]').forEach(b=>b.onclick=()=>{closeContactDetail();openEmployee(+b.dataset.editEmployee)});
- root.querySelectorAll('[data-remove-employee]').forEach(b=>b.onclick=async()=>{closeContactDetail();const i=+b.dataset.removeEmployee;const removed=staff[i];if(!removed)return;if(removed[8]===currentUserId){toast('Du kannst dich nicht selbst löschen.');return}if(await ask(`Mitarbeiter „${removed[0]}“ wirklich löschen?`)){staff.splice(i,1);teams.forEach(t=>{t.memberIds=t.memberIds.filter(id=>id!==removed[8]);if(t.leaderId===removed[8])t.leaderId='';if(t.deputyId===removed[8])t.deputyId='';});const before=assignments.length;assignments=assignments.filter(a=>a.employee!==removed[0]);const gone=before-assignments.length;persistAssignments();persistStaff();persistTeams();audit('Gelöscht','Kontakte',removed[0],{title:'Mitarbeiter gelöscht',object:removed[0],before:`${gone} Einträge in Dienstplan/Bereitschaft`,after:'entfernt'});renderEmployees();toast(gone?`Mitarbeiter gelöscht – ${gone} ${gone===1?'Eintrag':'Einträge'} in Dienstplan & Bereitschaft entfernt.`:'Mitarbeiter gelöscht.')}});
+ root.querySelectorAll('[data-remove-employee]').forEach(b=>b.onclick=()=>{closeContactDetail();deleteEmployees([staff[+b.dataset.removeEmployee]?.[8]])});
+}
+/* Mitarbeiter löschen (einzeln oder mehrere) – inkl. Teamzuordnung und Einträgen */
+async function deleteEmployees(ids){
+ ids=ids.filter(Boolean);const self=ids.includes(currentUserId);ids=ids.filter(id=>id!==currentUserId);
+ if(self&&!ids.length){toast('Du kannst dich nicht selbst löschen.');return false}
+ const list=ids.map(id=>staff.find(s=>s[8]===id)).filter(Boolean);if(!list.length)return false;
+ const msg=list.length===1?`Mitarbeiter „${list[0][0]}“ wirklich löschen?`:`${list.length} Mitarbeiter wirklich löschen?`+(self?' (Dein eigenes Konto wird nicht gelöscht.)':'');
+ if(!await ask(msg))return false;
+ const names=new Set(list.map(s=>s[0])),idset=new Set(ids);
+ staff=staff.filter(s=>!idset.has(s[8]));
+ teams.forEach(t=>{t.memberIds=t.memberIds.filter(id=>!idset.has(id));if(idset.has(t.leaderId))t.leaderId='';if(idset.has(t.deputyId))t.deputyId=''});
+ const before=assignments.length;assignments=assignments.filter(a=>!names.has(a.employee));const gone=before-assignments.length;
+ persistAssignments();persistStaff();persistTeams();
+ list.forEach(p=>audit('Gelöscht','Kontakte',p[0],{title:'Mitarbeiter gelöscht',object:p[0],after:'entfernt'}));
+ if(gone)audit('Gelöscht','Kontakte',`${gone} Einträge von ${list.length===1?list[0][0]:list.length+' Mitarbeitern'} entfernt`);
+ ids.forEach(id=>staffSel.delete(id));renderEmployees();
+ const who=list.length===1?'Mitarbeiter':`${list.length} Mitarbeiter`;
+ toast(gone?`${who} gelöscht – ${gone} ${gone===1?'Eintrag':'Einträge'} in Dienstplan & Bereitschaft entfernt.`:`${who} gelöscht.`);return true}
+/* Admin: Mitarbeiterliste (Tabelle mit Sortierung, Bearbeiten, Löschen, Mehrfachauswahl) */
+function renderStaffAdminList(rows){
+ const box=document.getElementById('staff-admin-list');if(!box)return;
+ const teamsOf=s=>teams.filter(t=>t.memberIds.includes(s[8]));
+ const key={name:x=>x.s[0].toLowerCase(),role:x=>(x.s[10]==='Deputy'?'Stellvertretung':(x.s[10]||'Mitarbeiter')).toLowerCase()+' '+x.s[0].toLowerCase(),team:x=>(teamsOf(x.s).map(t=>t.name).join(', ')||'~').toLowerCase()+' '+x.s[0].toLowerCase(),mail:x=>(x.s[6]||'~').toLowerCase()}[staffSort.key]||(x=>x.s[0]);
+ rows=rows.slice().sort((a,b)=>key(a)<key(b)?-staffSort.dir:key(a)>key(b)?staffSort.dir:0);
+ staffSel.forEach(id=>{if(!staff.some(s=>s[8]===id))staffSel.delete(id)});
+ const cnt=document.getElementById('staff-admin-count');if(cnt)cnt.textContent=rows.length===staff.length?`${staff.length} Mitarbeiter`:`${rows.length} von ${staff.length} Mitarbeitern`;
+ const th=(k,l)=>`<th class="sortable${staffSort.key===k?' on':''}" data-staff-sort="${k}" aria-sort="${staffSort.key===k?(staffSort.dir>0?'ascending':'descending'):'none'}"><button type="button">${l}<span class="sort-ic">${staffSort.key===k?(staffSort.dir>0?'↑':'↓'):'↕'}</span></button></th>`;
+ const selectable=rows.filter(x=>x.s[8]!==currentUserId),allOn=selectable.length&&selectable.every(x=>staffSel.has(x.s[8]));
+ box.innerHTML=rows.length?`<div class="staff-list"><table class="staff-table"><thead><tr><th class="cb-col"><input type="checkbox" id="staff-sel-all" ${allOn?'checked':''} aria-label="Alle auswählen"></th>${th('name','Mitarbeiter')}${th('role','Rolle')}${th('team','Teams')}<th>Teams-Telefon</th><th>Bereitschaftsnr.</th><th class="act-col"><span class="sr-only">Aktionen</span></th></tr></thead><tbody>${rows.map(({s,i})=>{const ts=teamsOf(s),me=s[8]===currentUserId,col=teamColor(ts[0]);
+  return `<tr class="${staffSel.has(s[8])?'sel':''}" data-staff-row="${i}"><td class="cb-col">${me?'':`<input type="checkbox" data-staff-sel="${escapeHtml(s[8])}" ${staffSel.has(s[8])?'checked':''} aria-label="${escapeHtml(s[0])} auswählen">`}</td>
+  <td class="st-name"><div class="st-person">${avatarHtml(s[0],col,34)}<div><b>${escapeHtml(s[0])}${me?' <em class="st-me">Du</em>':''}</b>${s[6]?`<a class="st-mail" href="mailto:${escapeHtml(s[6])}">${escapeHtml(s[6])}</a>`:'<small class="muted">Keine E-Mail</small>'}</div></div></td>
+  <td data-label="Rolle"><span class="role-pill role-${escapeHtml((s[10]||'Mitarbeiter').toLowerCase())}">${escapeHtml(s[10]==='Deputy'?'Stellvertretung':(s[10]||'Mitarbeiter'))}</span></td>
+  <td data-label="Teams"><div class="st-teams">${ts.length?ts.map(t=>`<span class="st-team" style="--c:${teamColor(t)}"><i></i>${escapeHtml(t.name)}${t.leaderId===s[8]?' <small>TL</small>':t.deputyId===s[8]?' <small>STV</small>':''}</span>`).join(''):'<span class="muted">—</span>'}</div></td>
+  <td data-label="Teams-Telefon">${s[11]?escapeHtml(s[11]):'<span class="muted">—</span>'}</td>
+  <td data-label="Bereitschaftsnr.">${s[7]?escapeHtml(s[7]):'<span class="muted">—</span>'}</td>
+  <td class="act-col"><div class="row-actions"><button class="icon-btn" type="button" data-staff-edit="${i}" title="Bearbeiten" aria-label="${escapeHtml(s[0])} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-staff-del="${escapeHtml(s[8])}" ${me?'disabled title="Du kannst dich nicht selbst löschen"':'title="Löschen"'} aria-label="${escapeHtml(s[0])} löschen">${icon('trash')}</button></div></td></tr>`}).join('')}</tbody></table></div>`:'<div class="contact-empty">Keine Mitarbeiter gefunden.</div>';
+ const bulk=()=>{const n=staffSel.size,b=document.getElementById('staff-bulk');if(b){b.hidden=!n;document.getElementById('staff-bulk-n').textContent=`${n} ausgewählt`}};bulk();
+ box.querySelectorAll('[data-staff-sort]').forEach(h=>h.onclick=()=>{const k=h.dataset.staffSort;staffSort=staffSort.key===k?{key:k,dir:-staffSort.dir}:{key:k,dir:1};renderEmployees()});
+ box.querySelectorAll('[data-staff-sel]').forEach(c=>c.onchange=()=>{const id=c.dataset.staffSel;if(c.checked)staffSel.add(id);else staffSel.delete(id);c.closest('tr').classList.toggle('sel',c.checked);const all=document.getElementById('staff-sel-all');if(all)all.checked=selectable.every(x=>staffSel.has(x.s[8]));bulk()});
+ const all=document.getElementById('staff-sel-all');if(all)all.onchange=()=>{selectable.forEach(x=>{if(all.checked)staffSel.add(x.s[8]);else staffSel.delete(x.s[8])});renderStaffAdminList(rows)};
+ box.querySelectorAll('[data-staff-edit]').forEach(b=>b.onclick=()=>openEmployee(+b.dataset.staffEdit));
+ box.querySelectorAll('[data-staff-del]').forEach(b=>b.onclick=()=>deleteEmployees([b.dataset.staffDel]));
+ box.querySelectorAll('tr[data-staff-row]').forEach(r=>r.ondblclick=e=>{if(!e.target.closest('button,a,input'))openEmployee(+r.dataset.staffRow)});
 }
 let contactFavPage=0,contactFavLayoutKey='';
 function contactFavLayout(){const w=q=>window.matchMedia(q).matches;if(w('(max-width: 520px)'))return{cols:1,rows:2};if(w('(max-width: 860px)'))return{cols:2,rows:2};if(w('(max-width: 1360px)'))return{cols:3,rows:2};return{cols:4,rows:1}}
@@ -5548,6 +5659,11 @@ function renderEmployees(){
  const body=document.getElementById('employee-rows');if(!body)return;
  const q=(document.getElementById('employee-search').value||'').trim().toLowerCase();
  const favs=contactFavorites();
+ const lp=document.getElementById('staff-admin-panel'),listMode=contactView==='list'&&isAdminRole()&&!!lp;
+ if(lp)lp.hidden=!listMode;
+ if(listMode){document.getElementById('contact-results-panel').hidden=true;const fp=document.querySelector('.contact-fav-panel');if(fp)fp.hidden=true;
+  const rows=staff.map((s,i)=>({s,i,teamsText:teams.filter(t=>t.memberIds.includes(s[8])).map(t=>t.name).join(', ')})).filter(x=>(contactRoleFilter==='Alle'||visibleRole(x.s[10])===contactRoleFilter)&&[x.s[0],x.teamsText,x.s[6],x.s[7],x.s[11],x.s[10]].join(' ').toLowerCase().includes(q));
+  renderStaffAdminList(rows);return}
  const panel=document.getElementById('contact-results-panel'),cnt=document.getElementById('contact-count');
  const favPanel=document.querySelector('.contact-fav-panel');if(favPanel)favPanel.hidden=!!(q||contactRoleFilter!=='Alle');
  if(!q&&contactRoleFilter==='Alle'){body.innerHTML='';if(panel)panel.hidden=true}
@@ -5589,10 +5705,12 @@ function bindContacts(){
   content.querySelectorAll('[data-role-filter]').forEach(x=>{const on=x.dataset.roleFilter===contactRoleFilter;x.classList.toggle(x.classList.contains('team-dd-opt')?'on':'active',on);if(x.classList.contains('team-dd-opt'))x.setAttribute('aria-selected',on)});
   document.getElementById('role-dd-label').textContent=contactRoleFilter==='Alle'?'Alle Rollen':contactRoleFilter;rbtn.classList.toggle('active',contactRoleFilter!=='Alle');rClose();renderEmployees()});
  document.getElementById('export-contacts').onclick=()=>{const rows=[['Name','Rolle','Teams','Teams-Telefonnummer','Bereitschaftsnummer','E-Mail'],...staff.map(s=>[s[0],visibleRole(s[10]),teams.filter(t=>t.memberIds.includes(s[8])).map(t=>t.name).join(', '),s[11]||'',s[7],s[6]])];downloadCsv(rows,'kontakte.csv');logExport('Kontakte','CSV',staff.length,'Erfolgreich');toast('Kontakte exportiert.')};
- if(!canEdit('Kontakte'))return;
+ content.querySelectorAll('[data-contact-view]').forEach(b=>b.onclick=()=>{if(!isAdminRole())return;contactView=b.dataset.contactView;content.querySelectorAll('[data-contact-view]').forEach(x=>{const on=x===b;x.classList.toggle('active',on);x.setAttribute('aria-selected',on)});renderEmployees()});
+ {const bc=document.getElementById('staff-bulk-clear'),bd=document.getElementById('staff-bulk-del');if(bc)bc.onclick=()=>{staffSel.clear();renderEmployees()};if(bd)bd.onclick=()=>deleteEmployees([...staffSel])}
+ if(!canEdit('Kontakte')&&!isAdminRole())return;
  const add=document.getElementById('new-employee'),form=document.getElementById('employee-form'),modal=document.getElementById('employee-modal');
  const photoInput=document.getElementById('employee-photo');photoInput.onchange=()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;if(!/^image\/(png|jpe?g|gif|webp)$/.test(file.type)){toast('Bitte ein Bild im Format JPG, PNG, GIF oder WebP auswählen.');photoInput.value='';return}const reader=new FileReader();reader.onload=()=>{employeePhotoData=safePhoto(String(reader.result||''));document.getElementById('employee-photo-preview').innerHTML=`<img src="${escapeHtml(employeePhotoData)}" alt="Profilbild-Vorschau">`};reader.readAsDataURL(file)};
- add.onclick=()=>openEmployee();
+ if(add)add.onclick=()=>openEmployee();
  const closeModal=()=>{modal.hidden=true;form.reset();employeePhotoData='';document.getElementById('employee-index').value=''};
  document.getElementById('close-employee').onclick=closeModal;document.getElementById('cancel-employee').onclick=closeModal;
  form.onsubmit=e=>{

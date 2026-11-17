@@ -2846,3 +2846,68 @@ button.dpk-day:focus-visible{outline:none}button.dpk-day:focus-visible>span{box-
 .dpk-mon.today{border-color:var(--accent-color);color:var(--accent-dark)}
 .dpk-mon.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff;box-shadow:0 6px 14px -6px var(--accent-color)}
 .dpk-week .dpk-kw>span{position:relative;z-index:1}
+/* ===== Kontakte: Ansicht umschalten + Admin-Mitarbeiterliste ===== */
+.contact-view-switch{display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:var(--surface-3);flex:none}
+.contact-view-switch button{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);font:inherit;font-size:13.5px;font-weight:650;cursor:pointer;white-space:nowrap}
+.contact-view-switch button .ic{width:15px;height:15px}
+.contact-view-switch button:hover{color:var(--ink)}
+.contact-view-switch button.active{background:var(--surface);color:var(--accent-dark);box-shadow:var(--shadow-sm)}
+.staff-admin-panel{padding:0;overflow:hidden}
+.staff-admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 20px;margin:0;border-bottom:1px solid var(--line)}
+.staff-admin-head h2{margin:0;display:flex;align-items:center;gap:8px}
+.staff-admin-head small{display:block;margin-top:2px}
+.staff-admin-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.staff-bulk{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border-radius:12px;background:var(--accent-soft)}
+.staff-bulk[hidden]{display:none}
+.staff-bulk b{font-size:13px;color:var(--accent-dark)}
+.staff-bulk .btn .ic{width:14px;height:14px}
+.admin-only-pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700}
+.admin-only-pill .ic{width:13px;height:13px}
+.staff-list{overflow-x:auto}
+.staff-table{width:100%;min-width:860px;border-collapse:separate;border-spacing:0}
+.staff-table th{position:sticky;top:0;z-index:1;background:var(--surface-2,var(--surface));text-align:left;font-size:11.5px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.staff-table th.sortable button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.staff-table th.sortable button:focus-visible{outline:2px solid var(--accent-color);outline-offset:2px;border-radius:4px}
+.staff-table th .sort-ic{font-size:11px;opacity:.45}
+.staff-table th.on{color:var(--accent-dark)}.staff-table th.on .sort-ic{opacity:1}
+.staff-table td{padding:10px 12px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+.staff-table tbody tr{transition:background .1s}
+.staff-table tbody tr:hover{background:color-mix(in srgb,var(--accent-color) 5%,transparent)}
+.staff-table tbody tr.sel{background:color-mix(in srgb,var(--accent-color) 10%,transparent)}
+.staff-table tbody tr:last-child td{border-bottom:0}
+.staff-table .cb-col{width:36px;padding-right:0}
+.staff-table input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent-color);cursor:pointer}
+.st-person{display:flex;align-items:center;gap:11px;min-width:0}
+.st-person b{display:block;font-size:14px;white-space:nowrap}
+.st-person small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.st-me{font-style:normal;font-size:10.5px;font-weight:750;padding:1px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark);margin-left:4px;vertical-align:1px}
+.staff-table .role-pill.role-admin{background:color-mix(in srgb,#9b69c8 16%,transparent);color:#8a55bd}
+.staff-table .role-pill.role-teamleiter,.staff-table .role-pill.role-deputy{background:color-mix(in srgb,#d69b38 18%,transparent);color:#a96f10}
+.staff-table .role-pill.role-abteilungsleiter{background:color-mix(in srgb,#3974c6 16%,transparent);color:#2d62ad}
+body.dark-mode .staff-table .role-pill.role-admin{color:#c39be6}body.dark-mode .staff-table .role-pill.role-teamleiter,body.dark-mode .staff-table .role-pill.role-deputy{color:#f0bf6a}body.dark-mode .staff-table .role-pill.role-abteilungsleiter{color:#86aef0}
+.st-teams{display:flex;flex-wrap:wrap;gap:5px}
+.st-team{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--ink);font-size:12px;font-weight:650;white-space:nowrap}
+.st-team i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.st-team small{font-size:9.5px;font-weight:800;color:var(--muted)}
+.st-person a.st-mail{display:block;color:var(--muted);font-size:12px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}.st-person a.st-mail:hover{color:var(--accent-dark);text-decoration:underline}
+.staff-table .act-col{width:90px;text-align:right}
+.staff-table .row-actions{display:inline-flex;gap:4px;opacity:.75;transition:opacity .1s}
+.staff-table tr:hover .row-actions,.staff-table .row-actions:focus-within{opacity:1}
+.staff-table .icon-btn:disabled{opacity:.3;cursor:not-allowed}
+/* Mobil/Tablet: Zeilen als Karten */
+@media (max-width:900px){
+ .contact-search-panel .table-toolbar{flex-wrap:wrap}
+ .contact-view-switch{width:100%}.contact-view-switch button{flex:1;justify-content:center}
+ .staff-table{min-width:0}
+ .staff-table thead{display:none}
+ .staff-table,.staff-table tbody,.staff-table tr,.staff-table td{display:block;width:auto}
+ .staff-table tr{position:relative;padding:12px 14px 12px 44px;border-bottom:1px solid var(--line)}
+ .staff-table td{border:0;padding:3px 0;font-size:13px}
+ .staff-table td.cb-col{position:absolute;left:14px;top:20px;width:auto;padding:0}
+ .staff-table td.act-col{position:absolute;right:10px;top:12px;width:auto}
+ .staff-table .row-actions{opacity:1}
+ .staff-table td.st-name{padding-right:80px;margin-bottom:4px}
+ .staff-table td[data-label]{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
+ .staff-table td[data-label]::before{content:attr(data-label);font-size:11.5px;font-weight:700;color:var(--muted)}
+ .staff-table td[data-label]>.role-pill{justify-self:start}
+}
