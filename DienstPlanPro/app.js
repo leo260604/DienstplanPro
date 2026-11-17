@@ -2485,7 +2485,7 @@ function notifySwap(name,title,message,sw,date){const p=staff.find(x=>x[0]===nam
  try{save('dienstplanNotifications',notifications,true)}catch(e){notifications.pop();console.warn('Benachrichtigung konnte nicht gespeichert werden.',e)}}
 /* Neue Tauschanfrage – nur Kollegin/Kollege und Datum wählen (weitere Tage optional) */
 async function openSwapRequest(preId){
- if(!SWAP_ROLES.includes(currentRole)){toast('Diensttausch-Anfragen können Mitarbeiter, Deputies und Admins stellen.');return}
+ if(!SWAP_ROLES.includes(currentRole)){toast('Diensttausch-Anfragen können Mitarbeiter, Stellvertretungen und Admins stellen.');return}
  if(!canRequestSwap()){toast('Der Diensttausch ist in deinen Teams deaktiviert.');return}
  const me=currentUserName(),today=isoDate(new Date()),pre=preId?assignments.find(x=>String(x.id)===String(preId)):null;
  if(pre&&swapOpenFor(pre.id)){toast('Für diesen Dienst läuft bereits eine Tauschanfrage.');return}

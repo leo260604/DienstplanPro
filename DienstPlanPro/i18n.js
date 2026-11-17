@@ -310,7 +310,7 @@ Object.assign(EN,{
 'Tausche einen oder mehrere Dienste mit jemandem aus deinem Team.':'Swap one or more duties with someone from your team.','Neue Tauschanfrage':'New swap request','Anfragen':'Requests','Offene Tauschanfragen':'Open swap requests',
 'Getauscht wird erst, wenn deine Kollegin bzw. dein Kollege die Anfrage bestätigt.':'Duties are only swapped once your colleague confirms the request.',
 'Du hast in diesem Zeitraum keinen Dienst in einem gemeinsamen Team.':'You have no duty in a shared team in this period.','Du hast keine offenen Anfragen.':'You have no open requests.',
-'Diensttausch-Anfragen können Mitarbeiter, Deputies und Admins stellen.':'Swap requests can be made by employees, deputies and admins.','In deinen Teams gibt es niemanden, mit dem du tauschen kannst.':'There is nobody in your teams you can swap with.',
+'Diensttausch-Anfragen können Mitarbeiter, Stellvertretungen und Admins stellen.':'Swap requests can be made by employees, deputies and admins.','In deinen Teams gibt es niemanden, mit dem du tauschen kannst.':'There is nobody in your teams you can swap with.',
 'Für einen der Dienste läuft bereits eine Tauschanfrage.':'A swap request is already pending for one of the duties.','Bitte mindestens einen eigenen Dienst auswählen.':'Please select at least one of your duties.',
 'Ein angefragter Dienst wurde inzwischen geändert oder gelöscht.':'A requested duty has been changed or deleted in the meantime.','Ein Gegendienst wurde inzwischen geändert oder gelöscht.':'A duty in return has been changed or deleted in the meantime.',
 'Ein Dienst liegt bereits in der Vergangenheit.':'A duty is already in the past.','Name oder Team suchen …':'Search name or team …','Person auswählen':'Select person','Keine Person gefunden':'No person found',
@@ -411,3 +411,25 @@ EN_RX.unshift([/^Alle Dienste \((\d+)\)$/,'All shifts ($1)'],[/^Alle meine Teams
 Object.assign(EN,{'Neues Team anlegen':'Create new team','z. B. Team Ost':'e.g. Team East','Der Name erscheint im Dienstplan, in der Bereitschaft und in den Filtern.':'The name appears in the duty roster, on-call view and filters.','Keine Abteilung':'No department','Danach legst du Mitglieder, Teamleitung und Deputy fest.':'Next you set members, team lead and deputy.','Neues Team':'New team','0 Mitglieder':'0 members'});
 EN_RX.push([/^(\d+) von (\d+) Teams$/,'$1 of $2 teams']);
 Object.assign(EN,{'Farbe wählen':'Choose colour','Ziehen, bis die Farbe passt':'Drag until the colour fits','Zuletzt verwendet':'Recently used','Vorher / Nachher':'Before / after','Sättigung und Helligkeit':'Saturation and brightness','Farbton':'Hue','Eigene Farbe':'Custom colour'});
+
+/* Deutsche Anzeige: „Deputy“ heißt auf der Website „Stellvertretung“.
+   Intern (Rollen-Schlüssel, gespeicherte Daten) bleibt „Deputy“ unverändert – ersetzt wird nur der sichtbare Text. */
+if(LANG==='de'){
+ const DE_RX=/\bDeputys\b|\bDeputy\b/g,deFix=s=>s.replace(DE_RX,m=>m==='Deputys'?'Stellvertretungen':'Stellvertretung');
+ const deSkip=el=>el&&el.closest&&el.closest('script,style,textarea,[contenteditable="true"],[data-no-translate]');
+ const deNode=root=>{
+  if(!root)return;
+  if(root.nodeType===3){if(!deSkip(root.parentElement)&&root.nodeValue.includes('Deputy'))root.nodeValue=deFix(root.nodeValue);return}
+  if(root.nodeType!==1||deSkip(root))return;
+  const attrs=el=>TR_ATTRS.forEach(a=>{const v=el.getAttribute&&el.getAttribute(a);if(v&&v.includes('Deputy'))el.setAttribute(a,deFix(v))});
+  attrs(root);
+  if(!root.textContent.includes('Deputy')&&!root.querySelector('[title*="Deputy"],[placeholder*="Deputy"],[aria-label*="Deputy"],[data-label*="Deputy"]'))return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);let n;
+  while((n=w.nextNode())){if(n.nodeType===3){if(n.nodeValue.includes('Deputy')&&!deSkip(n.parentElement))n.nodeValue=deFix(n.nodeValue)}else attrs(n)}
+ };
+ const deStart=()=>{deNode(document.body);
+  new MutationObserver(list=>{for(const m of list){if(m.type==='characterData'||m.type==='attributes')deNode(m.target);else m.addedNodes.forEach(deNode)}})
+   .observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:TR_ATTRS})};
+ if(document.body)deStart();else document.addEventListener('DOMContentLoaded',deStart);
+ const _dt=document.title;if(_dt.includes('Deputy'))document.title=deFix(_dt);
+}
