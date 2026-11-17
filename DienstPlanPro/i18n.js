@@ -120,7 +120,7 @@ Object.assign(EN,{
 'Verteilt die Bereitschaft gleichmäßig auf alle Teammitglieder.':'Distributes on-call duty evenly across all team members.',
 'Vorlagen verwenden den oben gewählten Zeitraum und Filter.':'Templates use the period and filters selected above.',
 'Welche Meldungen du über die Glocke oben rechts erhältst.':'Which notifications you receive via the bell at the top right.',
-'Wochenende im Kalender':'Weekend in calendar','Welche Tage Dienstplan und Bereitschaft in Woche, Monat, Team-Ansicht und Zeitleiste zeigen.':'Which days the duty roster and on-call show in week, month, team view and timeline.',
+'Wochenende im Dienstplan':'Weekend in duty roster','Welche Tage der Dienstplan in Woche, Monat und Team-Ansicht zeigt.':'Which days the duty roster shows in week, month and team view.','Wochenende in der Bereitschaft':'Weekend in on-call','Welche Tage die Bereitschaft in Woche, Monat und Zeitleiste zeigt.':'Which days on-call shows in week, month and timeline.',
 'Wer darf was sehen und bearbeiten? Änderungen wirken sofort auf Navigation und Aktionen.':'Who may view and edit what? Changes apply immediately to navigation and actions.',
 'Wird für Bereitschaften und Avatare verwendet':'Used for on-call duties and avatars','Wähle deinen Benutzer – die Rolle wird automatisch übernommen.':'Choose your user – the role is applied automatically.',
 'Wöchentlich (montags)':'Weekly (Mondays)','Zeit':'Time','Zurücksetzen':'Reset','ganztägig':'all day','ist geschützt und hat immer vollen Zugriff.':'is protected and always has full access.',

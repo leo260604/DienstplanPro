@@ -252,8 +252,9 @@ function bindMobileTableDetails(){
 ------------------------------------------------------------------ */
 let currentPage='Dashboard',currentView='Woche',currentDate=new Date(),currentRole='Teamleiter',selectedMobileDate='';
 let expandedMonthView=localStorage.getItem('dienstplanExpandedMonthView')==='1';
-// Angezeigte Tage im Kalender (Dienstplan und Bereitschaft): 5 = Mo–Fr, 6 = Mo–Sa, 7 = Mo–So.
+// Angezeigte Tage: 5 = Mo–Fr, 6 = Mo–Sa, 7 = Mo–So – getrennt für Dienstplan (dutyDays) und Bereitschaft (sbViewDays).
 let dutyDays=[5,6,7].includes(Number(localStorage.getItem('dienstplanDutyDays')))?Number(localStorage.getItem('dienstplanDutyDays')):6;
+let sbViewDays=[5,6,7].includes(Number(localStorage.getItem('dienstplanStandbyDays')))?Number(localStorage.getItem('dienstplanStandbyDays')):(localStorage.getItem('dienstplanDutyDays')?dutyDays:7); // ohne eigene Einstellung: bisherige gemeinsame Einstellung übernehmen
 const __ld_roles=()=>{const saved=load('dienstplanRoles',null);if(Array.isArray(saved)&&saved.every(x=>typeof x==='string'))return saved;return ['Mitarbeiter','Teamleiter','Abteilungsleiter','Deputy','Admin','Lohnverrechnung','Bereitschaftsadmin']};let roles=__ld_roles();
 const safePhoto=v=>typeof v==='string'&&/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$/.test(v)?v:'';
 const __ld_staff=()=>{try{const v=JSON.parse(localStorage.getItem('dienstplanStaff')||'null');if(Array.isArray(v))return v.filter(s=>Array.isArray(s)&&typeof s[0]==='string').map(s=>[s[0],s[1]||initials(s[0]),s[2]||'Noch nicht eingeteilt',s[3]||'—',s[4]||'blue',s[5]||'Team Nord',s[6]||'',s[7]||'',s[8]||'',safePhoto(s[9]),s[10]||'Mitarbeiter',s[11]||'']);}catch(e){console.warn('Alte Mitarbeiterdaten werden ignoriert.',e)}return [
@@ -774,7 +775,7 @@ function colorWithAlpha(hex,alpha){
 // Wie viele Einträge pro Tag direkt sichtbar sind, hängt von der Bildschirmhöhe ab (große Monitore zeigen mehr).
 function entryLimit(){const fk=currentPage+'|'+currentView+'|'+innerWidth+'x'+innerHeight;if(window.__calFit&&window.__calFit.key===fk&&window.__calFit.limit>=1)return window.__calFit.limit;const h=window.innerHeight||800;if(currentView==='Woche')return Math.max(4,Math.floor((h-330)/68));if(currentView==='Monat'){const weeks=Math.ceil((new Date(currentDate.getFullYear(),currentDate.getMonth()+1,0).getDate()+6)/7);return Math.max(2,Math.floor(((h-330)/weeks-34)/50))}return 99}
 let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if((currentPage==='Dienstplan'||currentPage==='Bereitschaft')&&!document.querySelector('.modal-backdrop:not([hidden])'))render()},250)});
-function calDays(){return dutyDays} // gilt für Dienstplan und Bereitschaft
+function calDays(){return currentPage==='Bereitschaft'?sbViewDays:dutyDays} // eigene Einstellung für Dienstplan und Bereitschaft
 /* Konflikte: Dienst + ganztägige Abwesenheit oder überlappende untertägige Abwesenheit am selben Tag */
 const shiftMulti=s=>!s||s.multi!==false;// Standard: Dienst darf mehrfach am Tag besetzt werden
 /* Variable Bereitschaft: ohne feste Uhrzeit → „variabel“ statt „–“ */
@@ -1815,7 +1816,8 @@ function settings(){
    <section class="settings-card" id="set-cal"><h2>Kalender</h2>
     <div class="setting-row"><div><b>Standardansicht Dienstplan</b><small>Beim Öffnen anzeigen</small></div>${seg('def-dienstplan',[['Tag','Tag'],['Woche','Woche'],['Monat','Monat'],['Team','Team']],defaults.Dienstplan||'Woche')}</div>
     <div class="setting-row"><div><b>Standardansicht Bereitschaft</b><small>Beim Öffnen anzeigen</small></div>${seg('def-bereitschaft',[['Woche','Woche'],['Monat','Monat'],['Zeitleiste','Zeitleiste']],defaults.Bereitschaft||'Monat')}</div>
-    <div class="setting-row"><div><b>Wochenende im Kalender</b><small>Welche Tage Dienstplan und Bereitschaft in Woche, Monat, Team-Ansicht und Zeitleiste zeigen.</small></div>${seg('duty-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],dutyDays)}</div>
+    <div class="setting-row"><div><b>Wochenende im Dienstplan</b><small>Welche Tage der Dienstplan in Woche, Monat und Team-Ansicht zeigt.</small></div>${seg('duty-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],dutyDays)}</div>
+    <div class="setting-row"><div><b>Wochenende in der Bereitschaft</b><small>Welche Tage die Bereitschaft in Woche, Monat und Zeitleiste zeigt.</small></div>${seg('standby-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],sbViewDays)}</div>
     <div class="setting-row"><div><b>Darstellung der Einträge</b><small>Kompakt = Woche/Monat passen ins Fenster, Rest als „+ X weitere“ · Erweitert = alle Einträge anzeigen (Seite scrollt)</small></div>${seg('entry-density',[['compact','Kompakt'],['expanded','Erweitert']],expandedMonthView?'expanded':'compact')}</div>
    </section>
    <section class="settings-card" id="set-look"><h2>Darstellung</h2>
@@ -1877,6 +1879,7 @@ function bindSettings(){
  const featBind=(id,k,label)=>togBind(id,on=>{if(currentRole!=='Admin')return;features={...features,[k]:on};save('dienstplanFeatures',features);audit('Geändert','Einstellungen',`${label}: ${on?'eingeblendet':'ausgeblendet'}`,{title:'Funktion geändert',object:label,before:on?'aus':'an',after:on?'an':'aus'});toast(on?'Button wird angezeigt.':'Button ist ausgeblendet.')});
  featBind('feat-rot-duty','rotationDuty','„Rotation automatisch planen“ (Dienstplan)');featBind('feat-rot-sb','rotationStandby','„Rotation automatisch planen“ (Bereitschaft)');
  segBind('duty-days',v=>{dutyDays=Number(v)||6;localStorage.setItem('dienstplanDutyDays',String(dutyDays));saved()});
+ segBind('standby-days',v=>{sbViewDays=Number(v)||7;localStorage.setItem('dienstplanStandbyDays',String(sbViewDays));saved()});
  segBind('entry-density',v=>{expandedMonthView=v==='expanded';localStorage.setItem('dienstplanExpandedMonthView',expandedMonthView?'1':'0');saved()});
  content.querySelectorAll('.theme-card').forEach(b=>b.onclick=()=>{applyTheme(b.dataset.theme);render()});
  content.querySelectorAll('[data-accent]').forEach(b=>b.onclick=()=>{applyAccentColor(b.dataset.accent);render()});
@@ -3742,6 +3745,7 @@ const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{t
  // Einstellungen & Darstellung
  dienstplanDefaults:()=>{const v=load('dienstplanDefaults',null);if(v&&typeof v==='object')defaults=v},
  dienstplanDutyDays:()=>{const v=Number(localStorage.getItem('dienstplanDutyDays'));dutyDays=[5,6,7].includes(v)?v:6},
+ dienstplanStandbyDays:()=>{const v=Number(localStorage.getItem('dienstplanStandbyDays'));sbViewDays=[5,6,7].includes(v)?v:7},
  dienstplanExpandedMonthView:()=>{expandedMonthView=localStorage.getItem('dienstplanExpandedMonthView')==='1'},
  dienstplanMemberOrder:()=>{const v=load('dienstplanMemberOrder',{});memberOrderAll=v&&typeof v==='object'&&!Array.isArray(v)?v:{}},
  dienstplanDateFormat:()=>{const v=localStorage.getItem('dienstplanDateFormat');dateFormat=['dmy','iso','mdy','long'].includes(v)?v:'dmy';updateTopDate()},
