@@ -2771,3 +2771,5 @@ button.dpk-day:hover{background:var(--accent-soft);color:var(--accent-dark)}
 .dpk-day.on{background:var(--accent-color);color:#fff}
 .dpk-day.hol{color:var(--hol)}.dpk-day.hol.on{color:#fff}
 .dpk-day.off{color:var(--muted);opacity:.28;cursor:default;text-decoration:line-through}
+.wd-chip.wd-hol span{min-width:auto;border-style:dashed}
+.wd-chip.wd-hol input:checked+span{border-style:solid}

@@ -2786,6 +2786,8 @@ button.dpk-day:hover{background:var(--accent-soft);color:var(--accent-dark)}
 .dpk-day.on{background:var(--accent-color);color:#fff}
 .dpk-day.hol{color:var(--hol)}.dpk-day.hol.on{color:#fff}
 .dpk-day.off{color:var(--muted);opacity:.28;cursor:default;text-decoration:line-through}
+.wd-chip.wd-hol span{min-width:auto;border-style:dashed}
+.wd-chip.wd-hol input:checked+span{border-style:solid}
 
 </style>
 </head>
@@ -4368,7 +4370,7 @@ async function copyToNextDay(id){
  const item=assignments.find(a=>String(a.id)===String(id));if(!item)return;
  if(!canEditEntry(item.team,item.employee,areaOf(item))){toast('Du darfst diesen Eintrag nicht kopieren.');return}
  let next=addDays(new Date(item.date+'T12:00:00'),1);if(item.kind!=='Bereitschaft')while((next.getDay()+6)%7>=dutyDays||(item.kind==='Dienstplan'&&!item.isAbsence&&isHoliday(isoDate(next))))next=addDays(next,1);
- else{const st=standbyTimeByName(item.shift,item.team);for(let g=0;st&&g<7&&!standbyDayOk(st,isoDate(next));g++)next=addDays(next,1)}
+ else{const st=standbyTimeByName(item.shift,item.team);for(let g=0;st&&g<400&&!standbyDayOk(st,isoDate(next));g++)next=addDays(next,1)}
  const date=isoDate(next);
  if(assignments.some(a=>a.employee===item.employee&&a.date===date&&a.kind===item.kind&&!a.isAbsence)){toast(`${item.employee} hat am ${fmtIsoDate(date)} bereits einen Eintrag.`);return}
  pushUndo('Kopieren');const copy={...item,id:makeId(),date};assignments.push(copy);persistAssignments();
@@ -4693,7 +4695,7 @@ function standbyManagementPage(){
  const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Wochentage</th><th>Teams</th><th class="hide-sm scale-head"><div class="scale-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></th>${admin?'<th>Aktionen</th>':''}</tr>`;
  const sorted=[...standbyTimes].sort((a,b)=>isVariableStandby(a)-isVariableStandby(b)||(a.start||'').localeCompare(b.start||'')||a.name.localeCompare(b.name,'de'));
  const rows=sorted.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]],vari=isVariableStandby(t);
-  return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td><span class="pill sb-days ${standbyDays(t).length<7?'part':''}">${standbyDaysLabel(t)}</span></td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
+  return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td><span class="pill sb-days ${standbyRestricted(t)?'part':''}">${standbyDaysLabel(t)}</span></td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
  return `${heading('Bereitschaft verwalten',sub,actions)}
  ${!admin?`<div class="readonly-note">${icon('eye')}Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>`:''}
  <div class="stats sb-stats">
@@ -4721,11 +4723,16 @@ function durationHoursStart(hhmm){const [h,m]=String(hhmm||'0:0').split(':').map
 /* Dialog: Bereitschaftszeit anlegen / bearbeiten (nur Admin) – mit Auswahl der Teams */
 /* Wochentage einer Bereitschaftszeit (0 = Montag … 6 = Sonntag); ohne Angabe: alle Tage */
 const WD_SHORT=['Mo','Di','Mi','Do','Fr','Sa','So'];
-const standbyDays=x=>Array.isArray(x?.days)&&x.days.length?x.days.filter(d=>d>=0&&d<=6):[0,1,2,3,4,5,6];
-const standbyDayOk=(x,iso)=>standbyDays(x).includes((new Date(iso+'T12:00:00').getDay()+6)%7);
-function standbyDaysLabel(x){const d=standbyDays(x).slice().sort((a,b)=>a-b);if(d.length===7)return 'Täglich';
+const standbyDays=x=>Array.isArray(x?.days)?x.days.filter(d=>d>=0&&d<=6):[0,1,2,3,4,5,6];
+const standbyHol=x=>x?.hol!==false;
+const standbyRestricted=x=>standbyDays(x).length<7||!standbyHol(x);
+/* Feiertag: nur Bereitschaften mit „Feiertage" – Ausnahme Samstag: für Samstag freigegebene bleiben möglich */
+const standbyDayOk=(x,iso)=>{const wd=(new Date(iso+'T12:00:00').getDay()+6)%7,d=standbyDays(x);if(isHoliday(iso))return standbyHol(x)||(wd===5&&d.includes(5));return d.includes(wd)};
+function standbyWdLabel(days){const d=days.slice().sort((a,b)=>a-b);if(d.length===7)return 'Mo–So';
  const runs=[];d.forEach(v=>{const r=runs[runs.length-1];if(r&&v===r[1]+1)r[1]=v;else runs.push([v,v])});
  return runs.map(([a,b])=>a===b?WD_SHORT[a]:b===a+1?WD_SHORT[a]+', '+WD_SHORT[b]:WD_SHORT[a]+'–'+WD_SHORT[b]).join(', ')}
+function standbyDaysLabel(x){const d=standbyDays(x),h=standbyHol(x);if(d.length===7&&h)return 'Täglich';if(!d.length)return h?'Nur Feiertage':'—';
+ const w=standbyWdLabel(d);if(h)return w+', Feiertage';return d.some(v=>v!==5)?w+' (außer Feiertage)':w}
 const standbyTimeByName=(name,team)=>standbyTimes.find(x=>x.name===name&&(!team||standbyTimeForTeam(x,team)))||standbyTimes.find(x=>x.name===name);
 async function openStandbyTime(id){
  if(!standbyTimesEditable()){toast('Bereitschaftszeiten kann nur ein Admin verwalten.');return}
@@ -4738,7 +4745,7 @@ async function openStandbyTime(id){
   <small class="wp-note sb-team-note" id="sbt-team-note"></small>
   <div class="wp-field"><span class="wp-label">Art der Bereitschaft</span><select id="sbt-type" name="type"><option value="fix" ${type0==='fix'?'selected':''}>Fix</option><option value="variabel" ${type0==='variabel'?'selected':''}>Variabel</option></select></div>
   <div class="wp-field" id="sbt-range-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="sbt-start" name="start" value="${escapeHtml(ex?.start||'')}"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="sbt-end" name="end" value="${escapeHtml(ex?.end||'')}"></label></div></div>
-  <div class="wp-field"><span class="wp-label">Mögliche Wochentage</span><div class="wd-chips" id="sbt-days">${WD_SHORT.map((d,i)=>`<label class="wd-chip"><input type="checkbox" name="wd:${i}" value="1" ${standbyDays(ex).includes(i)?'checked':''}><span>${d}</span></label>`).join('')}</div><small class="wp-note" id="sbt-days-note"></small></div>
+  <div class="wp-field"><span class="wp-label">Mögliche Tage</span><div class="wd-chips" id="sbt-days">${WD_SHORT.map((d,i)=>`<label class="wd-chip"><input type="checkbox" name="wd:${i}" value="1" ${standbyDays(ex).includes(i)?'checked':''}><span>${d}</span></label>`).join('')}<label class="wd-chip wd-hol" title="An gesetzlichen Feiertagen (Österreich)"><input type="checkbox" name="wd:hol" value="1" ${standbyHol(ex)?'checked':''}><span>Feiertage</span></label></div><small class="wp-note" id="sbt-days-note"></small></div>
   <div class="wp-summary sb-time-sum"><span class="wp-sum-ic">${icon('clock')}</span><div class="sb-sum-txt"><b id="sbt-dur"></b><small id="sbt-msg"></small><div class="mini-scale" id="sbt-scale"></div></div></div>
   <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft für die gewählten Teams zur Auswahl.',{icon:'clock',cls:'sb-time-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x);
@@ -4747,11 +4754,11 @@ async function openStandbyTime(id){
  const selTeams=()=>[...layer.querySelectorAll('[data-dd-team]')].filter(b=>b.checked).map(b=>b.dataset.ddTeam);
  const isVar=()=>typ.value==='variabel';
  if(typeof fancySelect==='function')fancySelect(typ,{kind:'shift',placeholder:'Art wählen',meta:o=>o.value==='variabel'?{label:'Variabel',sub:'Uhrzeit wird beim Einteilen eingegeben',icon:'refresh',color:'#9b69c8'}:{label:'Fix',sub:'Mit fester Uhrzeit (Beginn – Ende)',icon:'clock',color:'var(--accent-color)'}});
- const selDays=()=>[...layer.querySelectorAll('#sbt-days input')].map((c,i)=>c.checked?i:-1).filter(i=>i>=0);
- const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!selDays().length)return 'Bitte mindestens einen Wochentag auswählen.';if(standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===v.toLowerCase()))return 'Es gibt bereits eine Bereitschaftszeit mit diesem Namen.';if(!selTeams().length)return 'Bitte mindestens ein Team auswählen.';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}return ''};
+ const selDays=()=>WD_SHORT.map((d,i)=>layer.querySelector(`#sbt-days input[name="wd:${i}"]`)?.checked?i:-1).filter(i=>i>=0),selHol=()=>!!layer.querySelector('#sbt-days input[name="wd:hol"]')?.checked;
+ const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!selDays().length&&!selHol())return 'Bitte mindestens einen Wochentag oder Feiertage auswählen.';if(standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===v.toLowerCase()))return 'Es gibt bereits eine Bereitschaftszeit mit diesem Namen.';if(!selTeams().length)return 'Bitte mindestens ein Team auswählen.';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}return ''};
  const upd=()=>{const pr=problem(),c=col.value,vr=isVar(),s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s,sel=selTeams();
   rangeF.hidden=vr;
-  {const dn=$('sbt-days-note'),sd=selDays();dn.textContent=!sd.length?'Bitte mindestens einen Wochentag auswählen.':sd.length===7?'Kann an jedem Tag eingetragen werden.':`Nur an diesen Tagen eintragbar: ${standbyDaysLabel({days:sd})}.`;dn.classList.toggle('bad',!sd.length)}
+  {const dn=$('sbt-days-note'),sd=selDays(),sh=selHol(),none=!sd.length&&!sh;dn.textContent=none?'Bitte mindestens einen Wochentag oder Feiertage auswählen.':sd.length===7&&sh?'Kann an jedem Tag eingetragen werden.':!sd.length?'Nur an Feiertagen eintragbar.':sh?`Eintragbar an: ${standbyWdLabel(sd)} sowie an allen Feiertagen.`:`Eintragbar an: ${standbyWdLabel(sd)}. An Feiertagen nicht möglich${sd.includes(5)?' – außer der Feiertag fällt auf einen Samstag':''}.`;dn.classList.toggle('bad',none)}
   const tn=$('sbt-team-note');tn.textContent=!sel.length?'Nur die gewählten Teams können diese Bereitschaft einteilen.':sel.length===teams.length?'Alle Teams ausgewählt – gilt auch für später angelegte Teams.':`${sel.length} von ${teams.length} Teams können diese Bereitschaft einteilen.`;tn.classList.toggle('bad',!sel.length&&pr==='Bitte mindestens ein Team auswählen.'&&!!name.value.trim());
   $('sbt-dur').textContent=vr?'Variable Bereitschaft':st.value&&en.value&&st.value!==en.value?fmtHours(durationHours(st.value,en.value))+(over?' · über Mitternacht':''):'Uhrzeit eingeben';
   const timeProblem=pr&&pr!=='empty'&&pr!=='Bitte mindestens ein Team auswählen.';
@@ -4766,14 +4773,14 @@ async function openStandbyTime(id){
  layer.addEventListener('submit',e=>{const pr=problem();if(pr){e.preventDefault();e.stopPropagation();if(pr!=='empty'&&!isVar()&&(!st.value||!en.value)){const m=$('sbt-msg');m.textContent=pr;m.classList.add('bad');(st.value?en:st).focus()}else name.focus()}},true);setTimeout(()=>name.focus(),30);
  const res=await dlg;if(!res)return;
  const vr=res.type==='variabel',chosen=teams.filter(t=>res['team:'+t.name]);
- const days=WD_SHORT.map((d,i)=>res['wd:'+i]?i:-1).filter(i=>i>=0);
- const data={name:String(res.name||'').trim().slice(0,60),type:vr?'variabel':'fix',start:vr?'':res.start,end:vr?'':res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8',days:days.length&&days.length<7?days:undefined};
- if(!days.length){toast('Bitte mindestens einen Wochentag auswählen.');return}
+ const days=WD_SHORT.map((d,i)=>res['wd:'+i]?i:-1).filter(i=>i>=0),hol=!!res['wd:hol'];
+ const data={name:String(res.name||'').trim().slice(0,60),type:vr?'variabel':'fix',start:vr?'':res.start,end:vr?'':res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8',days:days.length<7?days:undefined,hol:hol?undefined:false};
+ if(!days.length&&!hol){toast('Bitte mindestens einen Wochentag oder Feiertage auswählen.');return}
  if(!chosen.length||!data.name||standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===data.name.toLowerCase())||(!vr&&(!/^\d\d:\d\d$/.test(data.start)||!/^\d\d:\d\d$/.test(data.end)||data.start===data.end))){toast('Bitte alle Angaben prüfen.');return}
  const allSel=chosen.length===teams.length,teamTxt=allSel?'Alle Teams':chosen.map(t=>t.name).join(', ');
- if(ex){const before=`${ex.name} (${tRange(ex)}) · ${standbyTimeAllTeams(ex)?'Alle Teams':standbyTimeTeams(ex).map(t=>t.name).join(', ')}`;Object.assign(ex,data);if(!data.days)delete ex.days;if(allSel)delete ex.teamIds;else ex.teamIds=chosen.map(t=>t.id);
+ if(ex){const before=`${ex.name} (${tRange(ex)}) · ${standbyTimeAllTeams(ex)?'Alle Teams':standbyTimeTeams(ex).map(t=>t.name).join(', ')}`;Object.assign(ex,data);if(!data.days)delete ex.days;if(data.hol===undefined)delete ex.hol;if(allSel)delete ex.teamIds;else ex.teamIds=chosen.map(t=>t.id);
   persistStandbyConfig();audit('Geändert','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit geändert',object:data.name,before,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit gespeichert.');return}
- const item={id:makeId(),...data};if(!data.days)delete item.days;if(!allSel)item.teamIds=chosen.map(t=>t.id);standbyTimes.push(item);persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit angelegt',object:data.name,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit angelegt.');
+ const item={id:makeId(),...data};if(!data.days)delete item.days;if(data.hol===undefined)delete item.hol;if(!allSel)item.teamIds=chosen.map(t=>t.id);standbyTimes.push(item);persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit angelegt',object:data.name,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit angelegt.');
 }
 /* Dialog: Bereitschaftsfarbe eines Teams (Admin: alle Teams, Teamleitung: eigene Teams) */
 async function openStandbyColor(teamId){
@@ -5654,9 +5661,9 @@ function bindDutyModal(){
   const fIn=document.getElementById('duty-date-from'),tIn=document.getElementById('duty-date-to');
   const svc=()=>standbyTimes.find(x=>String(x.id)===String(shift.value));
   const ok=iso=>{const x=svc();return !x||standbyDayOk(x,iso)};
-  const snap=inp=>{if(!inp.value||ok(inp.value))return;let d=new Date(inp.value+'T12:00:00');for(let g=0;g<7&&!ok(isoDate(d));g++)d=addDays(d,1);inp.value=isoDate(d)};
+  const snap=inp=>{if(!inp.value||ok(inp.value))return;let d=new Date(inp.value+'T12:00:00');for(let g=0;g<400&&!ok(isoDate(d));g++)d=addDays(d,1);inp.value=isoDate(d)};
   if(fIn)attachDayPicker(fIn,ok);if(tIn)attachDayPicker(tIn,iso=>ok(iso)&&(!fIn.value||iso>=fIn.value));
-  const syncDays=()=>{if(fIn){snap(fIn);fIn._dpk?.refresh()}if(tIn){snap(tIn);if(fIn&&tIn.value&&tIn.value<fIn.value)tIn.value=fIn.value;tIn._dpk?.refresh()}const x=svc(),n=document.getElementById('duty-days-hint');if(n){const part=x&&standbyDays(x).length<7;n.hidden=!part;if(part)n.textContent=`„${x.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(x)}. Andere Tage sind im Kalender ausgegraut.`}};
+  const syncDays=()=>{if(fIn){snap(fIn);fIn._dpk?.refresh()}if(tIn){snap(tIn);if(fIn&&tIn.value&&tIn.value<fIn.value)tIn.value=fIn.value;tIn._dpk?.refresh()}const x=svc(),n=document.getElementById('duty-days-hint');if(n){const part=x&&standbyRestricted(x);n.hidden=!part;if(part)n.textContent=`„${x.name}“ – eintragbar: ${standbyDaysLabel(x)}. Andere Tage sind im Kalender ausgegraut.`}};
   shift.addEventListener('change',syncDays);fIn?.addEventListener('change',()=>{if(tIn&&(!tIn.value||tIn.value<fIn.value)){tIn.value=fIn.value;tIn._dpk?.refresh()}});
   window.__dutySummary=()=>{syncDays();updateDutySummary()};
  }else window.__dutySummary=updateDutySummary;
@@ -5679,7 +5686,7 @@ function bindDutyModal(){
    if(multiDay&&currentPage!=='Bereitschaft'&&(cursor.getDay()+6)%7>=dutyDays){skipped++;continue}
    dates.push(isoDate(cursor))}
   // Bereitschaft: nur an den Wochentagen, an denen diese Bereitschaftszeit möglich ist
-  if(currentPage==='Bereitschaft'&&standbyDays(service).length<7){const bad=dates.filter(d=>!standbyDayOk(service,d));if(bad.length){if(dates.length===1){toast(`„${service.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(service)}.`);return}for(const b of bad)dates.splice(dates.indexOf(b),1);skipped+=bad.length}}
+  if(currentPage==='Bereitschaft'&&standbyRestricted(service)){const bad=dates.filter(d=>!standbyDayOk(service,d));if(bad.length){if(dates.length===1){toast(`„${service.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(service)}.`);return}for(const b of bad)dates.splice(dates.indexOf(b),1);skipped+=bad.length}}
   // Feiertage: keine Dienste (Bereitschaften bleiben möglich)
   if(currentPage!=='Bereitschaft'){const hol=dates.filter(isHoliday);if(hol.length){if(dates.length===1){toast(holidayBlockMsg(dates[0]));return}for(const h of hol)dates.splice(dates.indexOf(h),1);skipped+=hol.length;toast(`${hol.length} Feiertag${hol.length>1?'e':''} übersprungen – an Feiertagen werden keine Dienste eingetragen.`)}}
   if(!dates.length){toast('Im gewählten Zeitraum liegen keine Arbeitstage.');return}
