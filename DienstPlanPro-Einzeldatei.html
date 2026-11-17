@@ -2732,6 +2732,11 @@ body.dark-mode{--hol:#f27a8f}
 .side-info{display:flex;flex-direction:column;gap:3px;padding:10px 12px 4px;font-size:11.5px;color:var(--muted);line-height:1.35}
 .side-info .side-ver{font-weight:650}
 .sidebar.collapsed .side-info{display:none}
+.note-tip-item small{display:flex!important;align-items:center;gap:4px}
+.note-tip-item small svg{width:11px;height:11px;flex:none}
+.np-meta small{display:inline-flex;align-items:center;gap:4px}
+.np-meta small svg{width:12px;height:12px;flex:none}
+.np-meta small b{color:var(--ink);font-weight:600}
 
 </style>
 </head>
@@ -2742,6 +2747,7 @@ body.dark-mode{--hol:#f27a8f}
       <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
       <symbol id="i-logo" viewBox="-0.45 -0.65 24 24"><path d="M10.6 19.1H4.6A2.6 2.6 0 0 1 2 16.5V6.6A2.6 2.6 0 0 1 4.6 4h11.8A2.6 2.6 0 0 1 19 6.6v3.3" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 8.6V6.6A2.6 2.6 0 0 1 4.6 4h11.8A2.6 2.6 0 0 1 19 6.6v2z" style="fill:currentColor;stroke:none"/><path d="M7 1.9v3.4M14 1.9v3.4" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><circle cx="16.4" cy="16.1" r="4.7" stroke="currentColor" stroke-width="2.3"/><path d="M16.4 13.5v2.9l2 1.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4.5h11.5l-2.2 4 2.2 4H5"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c.6-4 3.6-6.3 7.5-6.3s6.9 2.3 7.5 6.3"/></symbol>
       <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></symbol>
       <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
       <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
@@ -4132,7 +4138,7 @@ function calendar(){
  const tnTeams=new Set(teams.filter(t=>calTeamOk(t.name)).map(t=>t.name));
  const tnFor=date=>isDuty&&!onlyConflicts?teamNotesOn(date,tnTeams):[];
  const tnHead=(date,cls='')=>{if(!isDuty||onlyConflicts)return '';const list=tnFor(date),can=teamNoteTeams().some(t=>tnTeams.has(t));if(!list.length&&!can)return '';
-  return `<div class="tn-wrap ${cls}">${list.slice(0,2).map(n=>`<button type="button" class="tn-chip" data-tn-open="${date}" title="${escapeHtml(n.team+': '+n.text)}">${icon('chat')}<span>${escapeHtml(n.text)}</span></button>`).join('')}${list.length>2?`<button type="button" class="tn-chip tn-more" data-tn-open="${date}">+${list.length-2} weitere</button>`:''}${!list.length&&can?`<button type="button" class="tn-add" data-tn-add="${date}">${icon('plus')}<span>Teamnotiz</span></button>`:''}</div>`};
+  return `<div class="tn-wrap ${cls}">${list.slice(0,2).map(n=>`<button type="button" class="tn-chip" data-tn-open="${date}" title="${escapeHtml(n.team+': '+n.text+(n.author?' – von '+n.author:''))}">${icon('chat')}<span>${escapeHtml(n.text)}</span></button>`).join('')}${list.length>2?`<button type="button" class="tn-chip tn-more" data-tn-open="${date}">+${list.length-2} weitere</button>`:''}${!list.length&&can?`<button type="button" class="tn-add" data-tn-add="${date}">${icon('plus')}<span>Teamnotiz</span></button>`:''}</div>`};
  const notesBy={},noteHost={};
  visible.forEach(a=>{if(a.kind==='Notiz')(notesBy[noteKeyOf(a)]=notesBy[noteKeyOf(a)]||[]).push(a)});
  const hostRank=a=>a.kind==='Dienstplan'&&!a.isAbsence?0:a.isAbsence?1:a.kind==='Bereitschaft'?2:3;
@@ -6810,7 +6816,7 @@ function noteCard(a,agenda){return noteStub({employee:a.employee,team:a.team,dat
 async function openNotesPopup(k){
  const list=notesForKey(k);const i=k.lastIndexOf('|'),emp=k.slice(0,i),date=k.slice(i+1);const can=canNoteFor(emp);
  if(!list.length){if(can)openNoteDialog(null,date,emp);return}
- const dlg=formDialog(`Notizen · ${emp}`,`<div class="np-list">${list.map(n=>`<article class="np-item"><p class="np-text">${escapeHtml(n.note||'')}</p><div class="np-meta"><small>${n.author&&n.author!==emp?'von '+escapeHtml(n.author)+' · ':''}${escapeHtml(fmtIsoDate(n.date))}</small>${canNoteFor(n.employee)?`<span class="np-actions"><button type="button" class="btn small" data-np-edit="${escapeHtml(n.id)}">${icon('edit')}Bearbeiten</button><button type="button" class="btn small ghost danger-text" data-np-del="${escapeHtml(n.id)}">${icon('trash')}Löschen</button></span>`:''}</div></article>`).join('')}</div>${can?`<button type="button" class="note-add-field np-add" data-np-add="1">${icon('plus')}<span>Weitere Notiz hinzufügen</span></button>`:''}`,'Schließen',escapeHtml(fmtWithWeekday(new Date(date+'T12:00:00'))),{icon:'chat',cls:'np-modal'});
+ const dlg=formDialog(`Notizen · ${emp}`,`<div class="np-list">${list.map(n=>`<article class="np-item"><p class="np-text">${escapeHtml(n.note||'')}</p><div class="np-meta"><small class="np-by">${icon('user')}<span>von <b>${escapeHtml(n.author||noteEmp(n)||emp)}</b> · ${escapeHtml(fmtIsoDate(n.date))}</span></small>${canNoteFor(n.employee)?`<span class="np-actions"><button type="button" class="btn small" data-np-edit="${escapeHtml(n.id)}">${icon('edit')}Bearbeiten</button><button type="button" class="btn small ghost danger-text" data-np-del="${escapeHtml(n.id)}">${icon('trash')}Löschen</button></span>`:''}</div></article>`).join('')}</div>${can?`<button type="button" class="note-add-field np-add" data-np-add="1">${icon('plus')}<span>Weitere Notiz hinzufügen</span></button>`:''}`,'Schließen',escapeHtml(fmtWithWeekday(new Date(date+'T12:00:00'))),{icon:'chat',cls:'np-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),close=()=>layer.querySelector('[data-dlg="cancel"]')?.click();
  layer.querySelectorAll('[data-np-edit]').forEach(b=>b.onclick=()=>{close();openNoteDialog(b.dataset.npEdit)});
  layer.querySelector('[data-np-add]')?.addEventListener('click',()=>{close();openNoteDialog(null,date,emp)});
@@ -6844,7 +6850,7 @@ document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.tar
  const showTip=b=>{const k=b.dataset.notesOpen;if(!k)return;const list=notesForKey(k);if(!list.length)return;
   if(!tipEl){tipEl=document.createElement('div');tipEl.className='note-tip';tipEl.setAttribute('role','tooltip');document.body.appendChild(tipEl)}
   const emp=k.slice(0,k.lastIndexOf('|'));
-  tipEl.innerHTML=`<div class="note-tip-head">${icon('chat')}<b>${list.length>1?list.length+' Notizen':'Notiz'}</b></div>${list.slice(0,4).map(n=>`<div class="note-tip-item"><p>${escapeHtml(n.note||'')}</p>${n.author&&n.author!==emp?`<small>von ${escapeHtml(n.author)}</small>`:''}</div>`).join('')}${list.length>4?`<small class="note-tip-more">+${list.length-4} weitere – klicken zum Öffnen</small>`:''}`;
+  tipEl.innerHTML=`<div class="note-tip-head">${icon('chat')}<b>${list.length>1?list.length+' Notizen':'Notiz'}</b></div>${list.slice(0,4).map(n=>`<div class="note-tip-item"><p>${escapeHtml(n.note||'')}</p><small>${icon('user')}von ${escapeHtml(n.author||noteEmp(n)||emp)}</small></div>`).join('')}${list.length>4?`<small class="note-tip-more">+${list.length-4} weitere – klicken zum Öffnen</small>`:''}`;
   tipEl.style.left='0px';tipEl.style.top='0px';tipEl.classList.add('show');
   const r=b.getBoundingClientRect(),w=tipEl.offsetWidth,h=tipEl.offsetHeight;
   let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8),y=r.top-h-8;if(y<8)y=r.bottom+8;
@@ -6866,7 +6872,7 @@ async function openTeamNotesPopup(date){
  const list=teamNotesOn(date,tnShownTeams()),can=teamNoteTeams().some(t=>tnShownTeams().has(t));
  if(!list.length){if(can)openTeamNoteDialog(null,date);return}
  const multi=new Set(list.map(n=>n.team)).size>1||calendarTeams.length!==1;
- const dlg=formDialog('Teamnotizen',`<div class="np-list">${list.map(n=>`<article class="np-item tn-item"><p class="np-text">${escapeHtml(n.text)}</p><div class="np-meta"><small>${multi?`<b>${escapeHtml(n.team)}</b> · `:''}${n.author?'von '+escapeHtml(n.author):''}</small>${canTeamNote(n.team)?`<span class="np-actions"><button type="button" class="btn small" data-tn-edit="${escapeHtml(n.id)}">${icon('edit')}Bearbeiten</button><button type="button" class="btn small ghost danger-text" data-tn-del="${escapeHtml(n.id)}">${icon('trash')}Löschen</button></span>`:''}</div></article>`).join('')}</div>${can?`<button type="button" class="note-add-field np-add" data-tn-new="1">${icon('plus')}<span>Weitere Teamnotiz hinzufügen</span></button>`:''}`,'Schließen',escapeHtml(fmtWithWeekday(new Date(date+'T12:00:00'))),{icon:'chat',cls:'np-modal'});
+ const dlg=formDialog('Teamnotizen',`<div class="np-list">${list.map(n=>`<article class="np-item tn-item"><p class="np-text">${escapeHtml(n.text)}</p><div class="np-meta"><small>${multi?`<b>${escapeHtml(n.team)}</b> · `:''}${icon('user')}von <b>${escapeHtml(n.author||'Unbekannt')}</b></small>${canTeamNote(n.team)?`<span class="np-actions"><button type="button" class="btn small" data-tn-edit="${escapeHtml(n.id)}">${icon('edit')}Bearbeiten</button><button type="button" class="btn small ghost danger-text" data-tn-del="${escapeHtml(n.id)}">${icon('trash')}Löschen</button></span>`:''}</div></article>`).join('')}</div>${can?`<button type="button" class="note-add-field np-add" data-tn-new="1">${icon('plus')}<span>Weitere Teamnotiz hinzufügen</span></button>`:''}`,'Schließen',escapeHtml(fmtWithWeekday(new Date(date+'T12:00:00'))),{icon:'chat',cls:'np-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),close=()=>layer.querySelector('[data-dlg="cancel"]')?.click();
  layer.querySelectorAll('[data-tn-edit]').forEach(b=>b.onclick=()=>{close();openTeamNoteDialog(b.dataset.tnEdit)});
  layer.querySelector('[data-tn-new]')?.addEventListener('click',()=>{close();openTeamNoteDialog(null,date)});
