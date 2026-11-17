@@ -2711,6 +2711,23 @@ body.dp-range-dragging{cursor:cell}
 .note-tip-item+.note-tip-item{margin-top:7px;padding-top:7px;border-top:1px solid var(--line)}
 .note-tip-item p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .note-tip-item small,.note-tip-more{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+/* ===== Feiertage (Österreich) ===== */
+:root{--hol:#d6455d}
+body.dark-mode{--hol:#f27a8f}
+.hol-badge{display:inline-flex;align-items:center;gap:4px;max-width:100%;min-width:0;padding:2px 8px 2px 6px;border-radius:999px;background:color-mix(in srgb,var(--hol) 13%,var(--surface));color:var(--hol);border:1px solid color-mix(in srgb,var(--hol) 30%,transparent);font-size:11px;font-weight:700;line-height:1.4;letter-spacing:0;text-transform:none;white-space:nowrap}
+.hol-badge svg{width:11px;height:11px;flex:none}
+.hol-badge span{overflow:hidden;text-overflow:ellipsis}
+.day-head .hol-badge{margin-top:5px}
+.day-head.is-holiday b{color:var(--hol)}
+.week-day-cell.is-holiday,.month-cell.is-holiday,.tm-cell.is-holiday{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--hol) 6%,transparent) 0 8px,transparent 8px 16px)}
+.month-cell.is-holiday>.date{color:var(--hol)}
+.hol-badge.hol-month{display:flex;width:fit-content;margin:1px 0 4px;font-size:10px;padding:1px 6px}
+.hol-badge.hol-tm{display:flex;width:fit-content;margin-top:4px;font-size:10px}
+.hol-badge.hol-day,.hol-badge.hol-mobile{margin:0 0 10px;font-size:12px;padding:4px 10px 4px 8px}
+.mobile-date-button.is-holiday b,.mobile-month-day.is-holiday,.mt-day.is-holiday b{color:var(--hol)}
+.mobile-date-button.is-holiday.selected b,.mobile-month-day.is-holiday.selected{color:#fff}
+.mobile-date-button.is-holiday::after,.mt-day.is-holiday::after{content:"";position:absolute;top:4px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--hol)}
+.mobile-date-button,.mt-day{position:relative}
 
 </style>
 </head>
@@ -2720,6 +2737,7 @@ body.dp-range-dragging{cursor:cell}
     <defs>
       <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
       <symbol id="i-logo" viewBox="-0.45 -0.65 24 24"><path d="M10.6 19.1H4.6A2.6 2.6 0 0 1 2 16.5V6.6A2.6 2.6 0 0 1 4.6 4h11.8A2.6 2.6 0 0 1 19 6.6v3.3" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 8.6V6.6A2.6 2.6 0 0 1 4.6 4h11.8A2.6 2.6 0 0 1 19 6.6v2z" style="fill:currentColor;stroke:none"/><path d="M7 1.9v3.4M14 1.9v3.4" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><circle cx="16.4" cy="16.1" r="4.7" stroke="currentColor" stroke-width="2.3"/><path d="M16.4 13.5v2.9l2 1.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4.5h11.5l-2.2 4 2.2 4H5"/></symbol>
       <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></symbol>
       <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
       <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
@@ -3638,6 +3656,20 @@ let calendarTeamFilter='Alle Teams',calendarMemberFilter='Alle Mitarbeiter',mobi
 let reportFrom='',reportTo='';
 let mobileFocusEmp='';
 let editingDutyId=null;
+/* ===== Gesetzliche Feiertage Österreich (bundesweit), berechnet für 1900–2099 =====
+   Fix: Neujahr, Heilige Drei Könige, Staatsfeiertag, Mariä Himmelfahrt, Nationalfeiertag, Allerheiligen,
+        Mariä Empfängnis, Christtag, Stefanitag · Beweglich (Ostern): Ostermontag, Christi Himmelfahrt, Pfingstmontag, Fronleichnam */
+const AT_HOL_CACHE={};
+function easterSunday(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da,12)}
+function atHolidays(y){if(AT_HOL_CACHE[y])return AT_HOL_CACHE[y];const m=new Map();if(y<1900||y>2099)return AT_HOL_CACHE[y]=m;
+ const fix=[[1,1,'Neujahr'],[1,6,'Heilige Drei Könige'],[5,1,'Staatsfeiertag'],[8,15,'Mariä Himmelfahrt'],[10,26,'Nationalfeiertag'],[11,1,'Allerheiligen'],[12,8,'Mariä Empfängnis'],[12,25,'Christtag'],[12,26,'Stefanitag']];
+ fix.forEach(([mo,d,n])=>m.set(`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`,n));
+ const e=easterSunday(y),rel=(o,n)=>{const x=new Date(e);x.setDate(x.getDate()+o);m.set(isoDate(x),m.has(isoDate(x))?m.get(isoDate(x))+' · '+n:n)};
+ rel(0,'Ostersonntag');rel(1,'Ostermontag');rel(39,'Christi Himmelfahrt');rel(49,'Pfingstsonntag');rel(50,'Pfingstmontag');rel(60,'Fronleichnam');
+ return AT_HOL_CACHE[y]=m}
+function holidayName(iso){if(!iso||typeof iso!=='string')return '';return atHolidays(+iso.slice(0,4)).get(iso.slice(0,10))||''}
+const isHoliday=iso=>!!holidayName(iso);
+const holidayBlockMsg=iso=>`Am ${fmtWithWeekday(new Date(iso+'T12:00:00'))} ist Feiertag (${holidayName(iso)}) – an Feiertagen können keine Dienste eingetragen werden, nur Bereitschaften.`;
 // Teamnotizen (gelten für ein ganzes Team an einem Tag)
 const __ld_teamNotes=()=>{const v=load('dienstplanTeamNotes',[]);return Array.isArray(v)?v.filter(n=>n&&typeof n==='object'&&typeof n.id==='string'&&typeof n.team==='string'&&/^\d{4}-\d\d-\d\d$/.test(n.date||'')&&typeof n.text==='string'):[]};
 let teamNotes=__ld_teamNotes();
@@ -4098,6 +4130,8 @@ function calendar(){
  const visible=assignments.filter(a=>{const kindMatches=!isDuty?a.kind==='Bereitschaft':(a.kind==='Dienst'||a.kind==='Abwesenheit'||a.kind==='Dienstplan'||a.kind==='Arbeitsort'||a.kind==='Notiz')||(a.kind==='Bereitschaft'&&canSeeStandbyInDutyPlan(a));return kindMatches&&calTeamOk(a.team)&&(calendarMemberFilter==='Alle Mitarbeiter'||a.employee===calendarMemberFilter)&&(!onlyConflicts||conflicts.has(a.id))&&!wpMerged(a)});
  const byDate={};visible.forEach(a=>{(byDate[a.date]=byDate[a.date]||[]).push(a)});
  // Notizen: Hat die Person an dem Tag einen Eintrag, hängt die Notiz als „Notizen“-Knopf an diesem Eintrag; sonst eine kleine Karte „Notizen“
+ const holTag=(date,cls='')=>{const n=holidayName(date);return n?`<span class="hol-badge ${cls}" title="Gesetzlicher Feiertag: ${escapeHtml(n)}${isDuty?' – keine Dienste möglich':''}">${icon('flag')}<span>${escapeHtml(n)}</span></span>`:''};
+ const holCls=date=>isHoliday(date)?' is-holiday':'';
  const tnTeams=new Set(teams.filter(t=>calTeamOk(t.name)).map(t=>t.name));
  const tnFor=date=>isDuty&&!onlyConflicts?teamNotesOn(date,tnTeams):[];
  const tnHead=(date,cls='')=>{if(!isDuty||onlyConflicts)return '';const list=tnFor(date),can=teamNoteTeams().some(t=>tnTeams.has(t));if(!list.length&&!can)return '';
@@ -4132,21 +4166,21 @@ function calendar(){
  let body='';
  if(currentView==='Woche'){
   body=`<div class="week-grid compact-week cal-cols mobile-hide-calendar" style="--cols:${n}">`;
-  for(let i=0;i<n;i++){const x=addDays(ws,i),date=isoDate(x);body+=`<div class="day-head ${date===todayIso?'today':''}">${WEEKDAYS[i]}<b>${x.getDate()}</b>${tnHead(date)}</div>`;}
-  for(let i=0;i<n;i++){const date=isoDate(addDays(ws,i));body+=`<div class="week-day-cell ${date===todayIso?'today':''}" data-calendar-day="${date}" data-drop-date="${date}">${(dayStack(date)+ownNoteField(date))||'<span class="calendar-empty">—</span>'}</div>`;}
+  for(let i=0;i<n;i++){const x=addDays(ws,i),date=isoDate(x);body+=`<div class="day-head ${date===todayIso?'today':''}${holCls(date)}">${WEEKDAYS[i]}<b>${x.getDate()}</b>${holTag(date)}${tnHead(date)}</div>`;}
+  for(let i=0;i<n;i++){const date=isoDate(addDays(ws,i));body+=`<div class="week-day-cell ${date===todayIso?'today':''}${holCls(date)}" data-calendar-day="${date}" data-drop-date="${date}">${(dayStack(date)+ownNoteField(date))||'<span class="calendar-empty">—</span>'}</div>`;}
   body+='</div>';
   const selected=selectedMobileDate&&selectedMobileDate>=isoDate(ws)&&selectedMobileDate<=isoDate(we)?selectedMobileDate:(isoDate(d)>=isoDate(ws)&&isoDate(d)<=isoDate(we)?isoDate(d):isoDate(ws));
-  body+=`<div class="mobile-agenda-view mobile-week-view"><div class="mobile-date-strip cal-cols" style="--cols:${n}">${Array.from({length:n},(_,i)=>{const x=addDays(ws,i),date=isoDate(x);return `<button type="button" class="mobile-date-button ${date===selected?'selected':''} ${date===todayIso?'is-today':''}" data-mobile-date="${date}"><small>${WEEKDAYS[i]}</small><b>${x.getDate()}</b>${dayEntries(date).length?'<i></i>':''}</button>`}).join('')}</div><div class="mobile-agenda-heading"><b>${fmtWithWeekday(new Date(selected+'T12:00:00'))}</b><span>${dayEntries(selected).length} Einträge</span></div>${tnHead(selected,'tn-mobile')}<div class="mobile-agenda-list">${dayEntries(selected).length?dayEntries(selected).map(agendaCard).join(''):'<div class="mobile-agenda-empty">Keine Einträge für diesen Tag.</div>'}${ownNoteField(selected,'agenda-note-add')}</div></div>`;
+  body+=`<div class="mobile-agenda-view mobile-week-view"><div class="mobile-date-strip cal-cols" style="--cols:${n}">${Array.from({length:n},(_,i)=>{const x=addDays(ws,i),date=isoDate(x);return `<button type="button" class="mobile-date-button ${date===selected?'selected':''} ${date===todayIso?'is-today':''}${holCls(date)}" data-mobile-date="${date}"><small>${WEEKDAYS[i]}</small><b>${x.getDate()}</b>${dayEntries(date).length?'<i></i>':''}</button>`}).join('')}</div><div class="mobile-agenda-heading"><b>${fmtWithWeekday(new Date(selected+'T12:00:00'))}</b><span>${dayEntries(selected).length} Einträge</span></div>${holTag(selected,'hol-mobile')}${tnHead(selected,'tn-mobile')}<div class="mobile-agenda-list">${dayEntries(selected).length?dayEntries(selected).map(agendaCard).join(''):'<div class="mobile-agenda-empty">Keine Einträge für diesen Tag.</div>'}${ownNoteField(selected,'agenda-note-add')}</div></div>`;
  }else if(currentView==='Monat'){
   const firstDow=(first.getDay()+6)%7,offset=firstDow<n?firstDow:0;
   body=`<div class="month-grid cal-cols mobile-hide-calendar" style="--cols:${n}">`+WEEKDAYS.slice(0,n).map(x=>`<div class="month-head">${x}</div>`).join('');
   for(let i=0;i<offset;i++)body+='<div class="month-cell is-blank"></div>';
-  for(let day=1;day<=last.getDate();day++){const x=new Date(d.getFullYear(),d.getMonth(),day);if((x.getDay()+6)%7>=n)continue;const date=isoDate(x);body+=`<div class="month-cell ${date===todayIso?'today':''}" data-calendar-day="${date}" data-drop-date="${date}"><div class="date">${day}</div>${tnFor(date).length?tnHead(date,'tn-month'):''}${dayStack(date)}</div>`;}
+  for(let day=1;day<=last.getDate();day++){const x=new Date(d.getFullYear(),d.getMonth(),day);if((x.getDay()+6)%7>=n)continue;const date=isoDate(x);body+=`<div class="month-cell ${date===todayIso?'today':''}${holCls(date)}" data-calendar-day="${date}" data-drop-date="${date}"><div class="date">${day}</div>${holTag(date,'hol-month')}${tnFor(date).length?tnHead(date,'tn-month'):''}${dayStack(date)}</div>`;}
   body+='</div>';
   const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
   const selected=selectedMobileDate&&selectedMobileDate.startsWith(monthKey)?selectedMobileDate:isoDate(d);
   const mobileDays=[];for(let day=1;day<=last.getDate();day++){const x=new Date(d.getFullYear(),d.getMonth(),day);if((x.getDay()+6)%7<n)mobileDays.push(x)}
-  body+=`<div class="mobile-agenda-view mobile-month-view"><div class="mobile-month-overview"><div class="mobile-month-title"><div><span>MONATSÜBERSICHT</span><b>${monthName(d)}</b></div><small>${visible.filter(a=>a.date.startsWith(monthKey)).length} Einträge im Monat</small></div><div class="mobile-month-grid cal-cols" style="--cols:${n}">${WEEKDAYS.slice(0,n).map(x=>`<span class="mobile-month-weekday">${x}</span>`).join('')}${Array.from({length:offset},()=>'<span class="mobile-month-blank"></span>').join('')}${mobileDays.map(x=>{const date=isoDate(x),count=dayEntries(date).length;return `<button type="button" class="mobile-month-day ${date===selected?'selected':''} ${date===todayIso?'is-today':''} ${count?'has-entries':''}" data-mobile-date="${date}"><span>${x.getDate()}</span>${count?`<i>${count>9?'9+':count}</i>`:''}</button>`}).join('')}</div></div><div class="mobile-month-selected-day"><div class="mobile-agenda-heading"><div><span>GEWÄHLTER TAG</span><b>${fmtWithWeekday(new Date(selected+'T12:00:00'))}</b></div><span class="mobile-month-entry-count">${dayEntries(selected).length} ${dayEntries(selected).length===1?'Eintrag':'Einträge'}</span></div>${tnHead(selected,'tn-mobile')}<div class="mobile-agenda-list">${dayEntries(selected).length?dayEntries(selected).map(agendaCard).join(''):'<div class="mobile-agenda-empty">Keine Einträge für diesen Tag.</div>'}</div></div></div>`;
+  body+=`<div class="mobile-agenda-view mobile-month-view"><div class="mobile-month-overview"><div class="mobile-month-title"><div><span>MONATSÜBERSICHT</span><b>${monthName(d)}</b></div><small>${visible.filter(a=>a.date.startsWith(monthKey)).length} Einträge im Monat</small></div><div class="mobile-month-grid cal-cols" style="--cols:${n}">${WEEKDAYS.slice(0,n).map(x=>`<span class="mobile-month-weekday">${x}</span>`).join('')}${Array.from({length:offset},()=>'<span class="mobile-month-blank"></span>').join('')}${mobileDays.map(x=>{const date=isoDate(x),count=dayEntries(date).length;return `<button type="button" class="mobile-month-day ${date===selected?'selected':''} ${date===todayIso?'is-today':''} ${count?'has-entries':''}${holCls(date)}" data-mobile-date="${date}"><span>${x.getDate()}</span>${count?`<i>${count>9?'9+':count}</i>`:''}</button>`}).join('')}</div></div><div class="mobile-month-selected-day"><div class="mobile-agenda-heading"><div><span>GEWÄHLTER TAG</span><b>${fmtWithWeekday(new Date(selected+'T12:00:00'))}</b></div><span class="mobile-month-entry-count">${dayEntries(selected).length} ${dayEntries(selected).length===1?'Eintrag':'Einträge'}</span></div>${holTag(selected,'hol-mobile')}${tnHead(selected,'tn-mobile')}<div class="mobile-agenda-list">${dayEntries(selected).length?dayEntries(selected).map(agendaCard).join(''):'<div class="mobile-agenda-empty">Keine Einträge für diesen Tag.</div>'}</div></div></div>`;
  }else if(currentView==='Team'||currentView==='Zeitleiste'){
   const editArea=isDuty?'Dienstplan':'Bereitschaft',isWorkItem=a=>isDuty?(a.kind==='Dienstplan'&&!a.isAbsence):a.kind==='Bereitschaft';
   const sbOn=(t,date)=>assignments.find(a=>a.kind==='Bereitschaft'&&a.team===t.name&&a.date===date);
@@ -4163,10 +4197,10 @@ function calendar(){
    members.forEach(p=>{
     const idx=staff.indexOf(p),role=t.leaderId===p[8]?'Teamleiter':t.deputyId===p[8]?'Deputy':'Mitarbeiter',hrs=isDuty?weekHoursOf(p[0],ws):sbHours(p[0]);
     const ord=isDuty&&currentView==='Team'&&allMembers.length>1;
-    rows+=`<div class="tm-row"><div class="tm-name tm-person ${ord?'tm-draggable':''}" ${ord?`draggable="true" data-mo-drag="${escapeHtml(t.id+'|'+p[8])}" title="Ziehen, um die Reihenfolge zu ändern"`:''}>${ord?'<span class="tm-grip" aria-hidden="true">⋮⋮</span>':''}${avatarHtml(p[0],color,32)}<div><b>${escapeHtml(p[0])}</b><small>${role} · ${isDuty?`${hrs.toLocaleString(LOC(),{maximumFractionDigits:1})} h/Woche`:`◷ ${dates.filter(dt=>assignments.some(a=>a.kind==='Bereitschaft'&&a.employee===p[0]&&a.date===dt)).length} Tage`}</small></div></div>${dates.map(date=>{const items=dayEntries(date).filter(a=>a.employee===p[0]);return `<div class="tm-cell ${date===todayIso?'today':''}" data-drop-date="${date}" data-drop-emp="${escapeHtml(p[0])}" data-drop-team="${escapeHtml(t.name)}">${items.map(dayCard).join('')}${items.some(a=>a.kind!=='Bereitschaft')?'':noteAddField(date,p[0],'tm-note-add')}${(manage||(p[8]===currentUserId&&selfEditAllowed(t.name,editArea)))&&!onlyConflicts&&!items.some(isWorkItem)&&(isDuty||!sbOn(t,date))?`<button type="button" class="tm-add" data-quick-add="${date}" data-team="${escapeHtml(t.name)}" data-emp="${idx}" title="${isDuty?'Dienst':'Bereitschaft'} für ${escapeHtml(p[0])} am ${date} anlegen" aria-label="${isDuty?'Dienst':'Bereitschaft'} anlegen">+</button>`:''}</div>`}).join('')}</div>`;
+    rows+=`<div class="tm-row"><div class="tm-name tm-person ${ord?'tm-draggable':''}" ${ord?`draggable="true" data-mo-drag="${escapeHtml(t.id+'|'+p[8])}" title="Ziehen, um die Reihenfolge zu ändern"`:''}>${ord?'<span class="tm-grip" aria-hidden="true">⋮⋮</span>':''}${avatarHtml(p[0],color,32)}<div><b>${escapeHtml(p[0])}</b><small>${role} · ${isDuty?`${hrs.toLocaleString(LOC(),{maximumFractionDigits:1})} h/Woche`:`◷ ${dates.filter(dt=>assignments.some(a=>a.kind==='Bereitschaft'&&a.employee===p[0]&&a.date===dt)).length} Tage`}</small></div></div>${dates.map(date=>{const items=dayEntries(date).filter(a=>a.employee===p[0]);return `<div class="tm-cell ${date===todayIso?'today':''}${holCls(date)}" data-drop-date="${date}" data-drop-emp="${escapeHtml(p[0])}" data-drop-team="${escapeHtml(t.name)}">${items.map(dayCard).join('')}${items.some(a=>a.kind!=='Bereitschaft')?'':noteAddField(date,p[0],'tm-note-add')}${(manage||(p[8]===currentUserId&&selfEditAllowed(t.name,editArea)))&&!onlyConflicts&&!items.some(isWorkItem)&&(isDuty||!sbOn(t,date))&&!(isDuty&&isHoliday(date))?`<button type="button" class="tm-add" data-quick-add="${date}" data-team="${escapeHtml(t.name)}" data-emp="${idx}" title="${isDuty?'Dienst':'Bereitschaft'} für ${escapeHtml(p[0])} am ${date} anlegen" aria-label="${isDuty?'Dienst':'Bereitschaft'} anlegen">+</button>`:''}</div>`}).join('')}</div>`;
    });
   });
-  body=`<div class="team-matrix-scroll"><div class="team-matrix" style="--cols:${n}"><div class="tm-row tm-head"><div class="tm-name">Mitarbeiter</div>${dates.map((date,i)=>`<div class="${date===todayIso?'today':''}">${WEEKDAYS[i]}<b>${fmtShort(new Date(date+'T12:00:00'))}</b>${tnHead(date,'tn-tm')}</div>`).join('')}</div>${rows||`<div class="empty-note">${onlyConflicts?'Keine Konflikte in dieser Woche. 🎉':'Keine Mitarbeiter für diesen Filter.'}</div>`}</div></div>`;
+  body=`<div class="team-matrix-scroll"><div class="team-matrix" style="--cols:${n}"><div class="tm-row tm-head"><div class="tm-name">Mitarbeiter</div>${dates.map((date,i)=>`<div class="${date===todayIso?'today':''}">${WEEKDAYS[i]}<b>${fmtShort(new Date(date+'T12:00:00'))}</b>${holTag(date,'hol-tm')}${tnHead(date,'tn-tm')}</div>`).join('')}</div>${rows||`<div class="empty-note">${onlyConflicts?'Keine Konflikte in dieser Woche. 🎉':'Keine Mitarbeiter für diesen Filter.'}</div>`}</div></div>`;
   // Handy: kompakte Wochenübersicht + Details zum gewählten Tag
   const selDay=selectedMobileDate&&dates.includes(selectedMobileDate)?selectedMobileDate:(dates.includes(todayIso)?todayIso:dates[0]);
   const abbr=a=>{if(a.kind==='Arbeitsort')return a.shift==='Homeoffice'?'HO':'BÜ';const nn=String(a.shift||'').replace(/[^A-Za-zÄÖÜäöüß0-9]/g,'');return (nn.slice(0,2)||'•')};
@@ -4184,9 +4218,9 @@ function calendar(){
    mDay+=`<div class="md-team"><div class="md-team-head"><span><i class="dot" style="--c:${color}"></i><b>${escapeHtml(t.name)}</b></span>${isDuty?`<span class="md-cov ${c/allMembers.length>=.8?'ok':c/allMembers.length>=.5?'mid':'low'}">${c}/${allMembers.length}</span>`:selSb?`<span class="md-cov ok">${escapeHtml(selSb.employee)}</span>`:`<span class="md-cov low">Lücke</span>`}</div>${members.map(p=>{const idx=staff.indexOf(p),role=t.leaderId===p[8]?'Teamleiter':t.deputyId===p[8]?'Deputy':'Mitarbeiter';const items=dayEntries(selDay).filter(a=>a.employee===p[0]);const hasDuty=items.some(isWorkItem)||(!isDuty&&!!selSb);return `<div class="md-person ${mobileFocusEmp===p[0]?'focus':''}" data-emp-card="${escapeHtml(p[0])}"><div class="md-person-head">${avatarHtml(p[0],color,32)}<div><b>${escapeHtml(p[0])}</b><small>${role}</small></div>${(manage||(p[8]===currentUserId&&selfEditAllowed(t.name,editArea)))&&!hasDuty?`<button type="button" class="btn small" data-quick-add="${selDay}" data-team="${escapeHtml(t.name)}" data-emp="${idx}">${isDuty?'＋ Dienst':'＋ Bereitschaft'}</button>`:''}</div>${items.length?`<div class="md-entries">${items.map(agendaCard).join('')}</div>`:'<div class="md-free">Kein Eintrag</div>'}</div>`}).join('')}</div>`;
   });
   const legend=[...legendMap.entries()].slice(0,8).map(([k,v])=>`<span><b>${escapeHtml(k)}</b> ${escapeHtml(v)}</span>`).join('');
-  body+=`<div class="mobile-team-view"><div class="mt-head"><b>Wochenübersicht</b><small>Tippe auf einen Tag oder ein Feld, um Details zu sehen.</small></div><div class="mt-days cal-cols" style="--cols:${n}"><span class="mt-corner"></span>${dates.map((date,i)=>`<button type="button" class="mt-day ${date===selDay?'sel':''} ${date===todayIso?'is-today':''}" data-mobile-date="${date}"><small>${WEEKDAYS[i]}</small><b>${new Date(date+'T12:00:00').getDate()}</b></button>`).join('')}</div>${mWeek||'<div class="empty-note">Keine Mitarbeiter für diesen Filter.</div>'}<div class="mt-legend">${legend}<span><i class="mt-sb" style="--c:#159da8"></i> Bereitschaft</span><span><span class="mt-tile is-absence mini">U</span> Abwesenheit</span></div><div class="md-heading"><b>${escapeHtml(fmtWithWeekday(new Date(selDay+'T12:00:00')))}</b></div>${tnHead(selDay,'tn-mobile')}${mDay}</div>`;
+  body+=`<div class="mobile-team-view"><div class="mt-head"><b>Wochenübersicht</b><small>Tippe auf einen Tag oder ein Feld, um Details zu sehen.</small></div><div class="mt-days cal-cols" style="--cols:${n}"><span class="mt-corner"></span>${dates.map((date,i)=>`<button type="button" class="mt-day ${date===selDay?'sel':''} ${date===todayIso?'is-today':''}${holCls(date)}" data-mobile-date="${date}"><small>${WEEKDAYS[i]}</small><b>${new Date(date+'T12:00:00').getDate()}</b></button>`).join('')}</div>${mWeek||'<div class="empty-note">Keine Mitarbeiter für diesen Filter.</div>'}<div class="mt-legend">${legend}<span><i class="mt-sb" style="--c:#159da8"></i> Bereitschaft</span><span><span class="mt-tile is-absence mini">U</span> Abwesenheit</span></div><div class="md-heading"><b>${escapeHtml(fmtWithWeekday(new Date(selDay+'T12:00:00')))}</b></div>${holTag(selDay,'hol-mobile')}${tnHead(selDay,'tn-mobile')}${mDay}</div>`;
  }else{
-  const date=isoDate(d),entries=dayEntries(date);body=`${tnHead(date,'tn-day')}<div class="day-assignment-list" data-drop-date="${date}">${entries.length?entries.map(a=>`<div class="day-assignment-row">${dayCard(a)}</div>`).join(''):'<div class="empty-note">Für diesen Tag sind noch keine Dienste eingetragen.</div>'}${ownNoteField(date,'day-note-add')}</div>`;
+  const date=isoDate(d),entries=dayEntries(date);body=`${holTag(date,'hol-day')}${tnHead(date,'tn-day')}<div class="day-assignment-list" data-drop-date="${date}">${entries.length?entries.map(a=>`<div class="day-assignment-row">${dayCard(a)}</div>`).join(''):'<div class="empty-note">Für diesen Tag sind noch keine Dienste eingetragen.</div>'}${ownNoteField(date,'day-note-add')}</div>`;
  }
  const managerWorkplace=['Admin','Teamleiter','Abteilungsleiter'].includes(currentRole);
  const canAdd=entryTeams().length>0,canManageAny=manageableTeams().length>0;
@@ -4265,6 +4299,7 @@ const fullDayAbsent=(name,date)=>assignments.some(a=>a.isAbsence&&a.employee===n
 async function moveAssignment(id,date,emp){
  const item=assignments.find(a=>String(a.id)===String(id));if(!item||!date)return;
  const target=emp||item.employee;if(item.date===date&&target===item.employee)return;
+ if(item.kind==='Dienstplan'&&!item.isAbsence&&isHoliday(date)){toast(holidayBlockMsg(date));return}
  if(!canEditEntry(item.team,item.employee,areaOf(item))||(target!==item.employee&&!managesTeam(item.team,areaOf(item)))){toast(selfEditAllowed(item.team,areaOf(item))?'Du darfst nur deine eigenen Einträge verschieben.':'Du darfst Einträge dieses Teams nicht bearbeiten.');return}
  const team=teamByName(item.team),person=staff.find(p=>p[0]===target);
  if(!person||!team||!team.memberIds.includes(person[8])){toast('Einträge können nur innerhalb des eigenen Teams verschoben werden.');return}
@@ -4279,7 +4314,7 @@ async function moveAssignment(id,date,emp){
 async function copyToNextDay(id){
  const item=assignments.find(a=>String(a.id)===String(id));if(!item)return;
  if(!canEditEntry(item.team,item.employee,areaOf(item))){toast('Du darfst diesen Eintrag nicht kopieren.');return}
- let next=addDays(new Date(item.date+'T12:00:00'),1);if(item.kind!=='Bereitschaft')while((next.getDay()+6)%7>=dutyDays)next=addDays(next,1);
+ let next=addDays(new Date(item.date+'T12:00:00'),1);if(item.kind!=='Bereitschaft')while((next.getDay()+6)%7>=dutyDays||(item.kind==='Dienstplan'&&!item.isAbsence&&isHoliday(isoDate(next))))next=addDays(next,1);
  const date=isoDate(next);
  if(assignments.some(a=>a.employee===item.employee&&a.date===date&&a.kind===item.kind&&!a.isAbsence)){toast(`${item.employee} hat am ${fmtIsoDate(date)} bereits einen Eintrag.`);return}
  pushUndo('Kopieren');const copy={...item,id:makeId(),date};assignments.push(copy);persistAssignments();
@@ -4430,7 +4465,7 @@ async function dutyRotation(){
  const picked=names.filter(n=>res['shift:'+n]);if(!picked.length){toast('Bitte mindestens einen Dienst wählen.');return}
  if(!validDateInput(res.from)||!validDateInput(res.to)){toast(DATE_RANGE_MSG);return}
  if(res.to<res.from){toast('Das Enddatum darf nicht vor dem Startdatum liegen.');return}
- const dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1)){if(dates.length>366)break;if((c.getDay()+6)%7<ROT_DAYS)dates.push(isoDate(c))}
+ const dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1)){if(dates.length>366)break;if((c.getDay()+6)%7<ROT_DAYS&&!isHoliday(isoDate(c)))dates.push(isoDate(c))}
  if(Math.round((new Date(res.to+'T12:00:00')-new Date(res.from+'T12:00:00'))/86400000)+1>366){toast('Bitte einen Zeitraum von höchstens 366 Tagen auswählen.');return}
  if(!dates.length){toast('Im gewählten Zeitraum liegen keine Arbeitstage.');return}
  const keep=!!res.keep,inRange=a=>a.kind==='Dienstplan'&&!a.isAbsence&&a.date>=res.from&&a.date<=res.to&&chosen.some(t=>t.name===a.team);
@@ -5537,6 +5572,8 @@ function bindDutyModal(){
    // Bei mehreren Tagen nur die eingestellten Arbeitstage belegen (Bereitschaft immer Mo–So)
    if(multiDay&&currentPage!=='Bereitschaft'&&(cursor.getDay()+6)%7>=dutyDays){skipped++;continue}
    dates.push(isoDate(cursor))}
+  // Feiertage: keine Dienste (Bereitschaften bleiben möglich)
+  if(currentPage!=='Bereitschaft'){const hol=dates.filter(isHoliday);if(hol.length){if(dates.length===1){toast(holidayBlockMsg(dates[0]));return}for(const h of hol)dates.splice(dates.indexOf(h),1);skipped+=hol.length;toast(`${hol.length} Feiertag${hol.length>1?'e':''} übersprungen – an Feiertagen werden keine Dienste eingetragen.`)}}
   if(!dates.length){toast('Im gewählten Zeitraum liegen keine Arbeitstage.');return}
   if(editingDutyId!==null&&dates.length>1){toast('Beim Bearbeiten bitte nur einen Tag wählen.');return}
   const variableSb=currentPage==='Bereitschaft'&&isVariableStandby(service);
@@ -6645,6 +6682,7 @@ const HELP_SECTIONS=[
   {t:'Dienst einteilen',when:c=>c.plan||c.selfDuty,s:['Klicke auf „Eintrag erstellen“ – oder im Kalender bei der Person und dem Tag auf „+“.','Wähle Team, Mitarbeiter und Dienst. Beginn und Ende werden aus der Dienstzeit übernommen und können für diesen Eintrag angepasst werden.','Wähle das Datum – für mehrere Tage ein „Bis“-Datum. Es werden nur die eingestellten Arbeitstage belegt.','Prüfe die Zusammenfassung und klicke auf „Speichern“.'],tip:'Ist die Person an dem Tag abwesend oder schon eingeteilt, wirst du vor dem Speichern gewarnt.'},
   {t:'Nur eigene Dienste eintragen',when:c=>c.selfDuty&&!c.plan,s:['Dein Team erlaubt dir, eigene Dienste selbst einzutragen.','Im Dialog bist du als Mitarbeiter bereits ausgewählt – wähle Dienst und Datum und speichere.','Einträge anderer Personen kannst du nicht ändern.']},
   {t:'Eintrag bearbeiten oder löschen',when:c=>c.plan||c.selfDuty,s:['Klicke auf einen Eintrag oder auf „⋯“ daneben.','Wähle „Bearbeiten“ oder „Löschen“.','Versehentlich gelöscht? Strg Z macht es rückgängig.']},
+  {t:'Feiertage',s:['Gesetzliche Feiertage in Österreich sind im Kalender rot markiert und mit Namen beschriftet (z. B. „Nationalfeiertag“).','An Feiertagen können keine Dienste eingetragen werden – Bereitschaften sind weiterhin möglich.','Bei mehrtägigen Einträgen und bei der automatischen Rotation werden Feiertage übersprungen.']},
   {t:'Notizen lesen',s:['Hat jemand an einem Tag eine Notiz, steht beim Eintrag „Notizen“ – ohne Dienst an dem Tag erscheint eine eigene Karte „Notizen“.','Klicke auf „Notizen“: Der Text öffnet sich in einem Popup.'],tip:'Notizen sieht jeder, der diesen Dienstplan sieht.'},
   {t:'Teamnotizen',s:['Notizen für ein ganzes Team stehen im Kalender direkt unter dem Datum (z. B. „Teambesprechung 09:00“).','Klicke darauf, um alle Teamnotizen des Tages zu sehen.'],tip:c=>teamNoteTeams().length?'Neue Teamnotiz: Fahre über das Datum und klicke auf „+ Teamnotiz“ – oder im Teamnotizen-Popup auf „Weitere Teamnotiz hinzufügen“.':''},
   {t:'Notiz hinzufügen',s:['Hast du an dem Tag einen Dienst, klicke bei deinem Dienst auf „⋯“ und wähle „Notiz hinzufügen“. Die Notiz hängt dann an diesem Dienst.','Hast du an dem Tag keinen Dienst, klicke im Kalender auf das Feld „Notiz hinzufügen“.','Schreibe die Notiz und speichere. Im Notizen-Popup kannst du sie später bearbeiten, löschen oder weitere hinzufügen.'],tip:c=>c.admin?'Als Admin kannst du Notizen für alle Personen anlegen.':['Teamleiter','Deputy'].includes(currentRole)?'Notizen kannst du für dich selbst und für Personen deiner Teams anlegen.':'Notizen kannst du für dich selbst anlegen.'},

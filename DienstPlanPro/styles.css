@@ -2696,3 +2696,20 @@ body.dp-range-dragging{cursor:cell}
 .note-tip-item+.note-tip-item{margin-top:7px;padding-top:7px;border-top:1px solid var(--line)}
 .note-tip-item p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .note-tip-item small,.note-tip-more{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+/* ===== Feiertage (Österreich) ===== */
+:root{--hol:#d6455d}
+body.dark-mode{--hol:#f27a8f}
+.hol-badge{display:inline-flex;align-items:center;gap:4px;max-width:100%;min-width:0;padding:2px 8px 2px 6px;border-radius:999px;background:color-mix(in srgb,var(--hol) 13%,var(--surface));color:var(--hol);border:1px solid color-mix(in srgb,var(--hol) 30%,transparent);font-size:11px;font-weight:700;line-height:1.4;letter-spacing:0;text-transform:none;white-space:nowrap}
+.hol-badge svg{width:11px;height:11px;flex:none}
+.hol-badge span{overflow:hidden;text-overflow:ellipsis}
+.day-head .hol-badge{margin-top:5px}
+.day-head.is-holiday b{color:var(--hol)}
+.week-day-cell.is-holiday,.month-cell.is-holiday,.tm-cell.is-holiday{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--hol) 6%,transparent) 0 8px,transparent 8px 16px)}
+.month-cell.is-holiday>.date{color:var(--hol)}
+.hol-badge.hol-month{display:flex;width:fit-content;margin:1px 0 4px;font-size:10px;padding:1px 6px}
+.hol-badge.hol-tm{display:flex;width:fit-content;margin-top:4px;font-size:10px}
+.hol-badge.hol-day,.hol-badge.hol-mobile{margin:0 0 10px;font-size:12px;padding:4px 10px 4px 8px}
+.mobile-date-button.is-holiday b,.mobile-month-day.is-holiday,.mt-day.is-holiday b{color:var(--hol)}
+.mobile-date-button.is-holiday.selected b,.mobile-month-day.is-holiday.selected{color:#fff}
+.mobile-date-button.is-holiday::after,.mt-day.is-holiday::after{content:"";position:absolute;top:4px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--hol)}
+.mobile-date-button,.mt-day{position:relative}
