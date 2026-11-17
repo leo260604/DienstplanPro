@@ -2214,34 +2214,70 @@ function bindAbsenceModal(){
   createAssignmentNotifications(created,{absence:true});close();toast(days===1?'Abwesenheit wurde eingetragen.':`Abwesenheit für ${days} Tage wurde eingetragen.`);render();
  };
 }
-/* Eigene Datumsauswahl: zeigt einen Monatskalender, in dem nur erlaubte Tage wählbar sind */
+/* Eigene Datumsauswahl: schöner Monatskalender für alle Datumsfelder (Feiertage, KW, Zeitraum, nur erlaubte Tage wählbar) */
+const DPK_VAL=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+const DPK_MON=['Jänner','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+function dpkPartner(inp){const key=inp.id||inp.name||'',m=key.match(/^(.*?)(from|to)$/i);if(!m)return null;
+ const other=m[1]+(m[2].toLowerCase()==='from'?(m[2]==='FROM'?'TO':m[2]==='From'?'To':'to'):(m[2]==='TO'?'FROM':m[2]==='To'?'From':'from'));
+ const root=inp.closest('form,.modal,.panel,section')||document;const p=inp.id?root.querySelector('#'+CSS.escape(other)):root.querySelector(`input[name="${CSS.escape(other)}"]`);
+ return p&&p!==inp?{el:p,role:m[2].toLowerCase()==='from'?'to':'from'}:null}
 function attachDayPicker(inp,allowed){
- if(inp._dpk){inp._dpk.allowed=allowed;inp._dpk.refresh();return}
+ if(inp._dpk){if(allowed)inp._dpk.allowed=allowed;inp._dpk.refresh();return}
  inp.classList.add('dpk-native');inp.tabIndex=-1;
- const btn=document.createElement('button');btn.type='button';btn.className='dpk-btn';inp.after(btn);
- const st={allowed};
- const refresh=()=>{const v=inp.value;btn.innerHTML=`${icon('cal')}<span>${v?escapeHtml(fmtWithWeekday(new Date(v+'T12:00:00'))):'Datum wählen'}</span>`;btn.classList.toggle('bad',!!v&&!st.allowed(v))};
- st.refresh=refresh;inp._dpk=st;inp.addEventListener('change',refresh);inp.addEventListener('input',refresh);refresh();
- btn.onclick=e=>{e.preventDefault();e.stopPropagation();openDayPickerPop(inp,btn)};
+ const btn=document.createElement('button');btn.type='button';btn.className='dpk-btn';if(inp.getAttribute('aria-label'))btn.setAttribute('aria-label',inp.getAttribute('aria-label'));inp.after(btn);
+ const st={allowed:allowed||(()=>true),btn};
+ st.ok=iso=>{if(inp.min&&iso<inp.min)return false;if(inp.max&&iso>inp.max)return false;const pr=st.pair();if(pr&&pr.role==='from'&&pr.el.value&&iso<pr.el.value)return false;return st.allowed(iso)};
+ st.pair=()=>{if(st._pair===undefined)st._pair=dpkPartner(inp);return st._pair};
+ const compact=!!inp.closest('.date-range');if(compact)btn.classList.add('compact');
+ const label=d=>compact?`${WD_SHORT[(d.getDay()+6)%7]}, ${fmt(d)}`:fmtWithWeekday(d);
+ const refresh=()=>{const v=DPK_VAL.get.call(inp);btn.innerHTML=`${compact?'':icon('cal')}<span class="${v?'':'ph'}">${v?escapeHtml(label(new Date(v+'T12:00:00'))):'Datum wählen'}</span>${!compact&&v&&holidayName(v)?`<em class="dpk-btn-hol">${escapeHtml(holidayName(v))}</em>`:''}`;btn.classList.toggle('bad',!!v&&!st.ok(v));btn.disabled=inp.disabled};
+ st.refresh=refresh;inp._dpk=st;
+ Object.defineProperty(inp,'value',{configurable:true,get(){return DPK_VAL.get.call(this)},set(v){DPK_VAL.set.call(this,v);refresh()}});
+ inp.addEventListener('change',refresh);inp.addEventListener('input',refresh);refresh();
+ btn.onclick=e=>{e.preventDefault();e.stopPropagation();if(document.querySelector('.dpk-pop')?.__inp===inp){document.querySelector('.dpk-pop').__close();return}openDayPickerPop(inp,btn)};
 }
 function openDayPickerPop(inp,btn){
- document.querySelector('.dpk-pop')?.remove();
+ document.querySelector('.dpk-pop')?.__close?.();
  const st=inp._dpk,base=inp.value?new Date(inp.value+'T12:00:00'):new Date();let ym=new Date(base.getFullYear(),base.getMonth(),1,12);
- const pop=document.createElement('div');pop.className='dpk-pop';pop.setAttribute('role','dialog');document.body.appendChild(pop);
- const MON=['Jänner','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
- const draw=()=>{const y=ym.getFullYear(),m=ym.getMonth(),first=(new Date(y,m,1,12).getDay()+6)%7,days=new Date(y,m+1,0).getDate(),today=isoDate(new Date());let cells='';
-  for(let i=0;i<first;i++)cells+='<span class="dpk-blank"></span>';
-  for(let d=1;d<=days;d++){const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,ok=st.allowed(iso),hol=holidayName(iso);
-   cells+=ok?`<button type="button" class="dpk-day ${iso===inp.value?'on':''} ${iso===today?'today':''} ${hol?'hol':''}" data-iso="${iso}" ${hol?`title="${escapeHtml(hol)}"`:''}>${d}</button>`:`<span class="dpk-day off" aria-hidden="true">${d}</span>`}
-  pop.innerHTML=`<div class="dpk-head"><button type="button" class="dpk-nav" data-nav="-1" aria-label="Vorheriger Monat">‹</button><b>${MON[m]} ${y}</b><button type="button" class="dpk-nav" data-nav="1" aria-label="Nächster Monat">›</button></div><div class="dpk-grid">${WD_SHORT.map(w=>`<span class="dpk-wd">${w}</span>`).join('')}${cells}</div>`;
+ const pop=document.createElement('div');pop.className='dpk-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Datum auswählen');pop.__inp=inp;document.body.appendChild(pop);
+ const pad=n=>String(n).padStart(2,'0'),today=isoDate(new Date());
+ const kw=d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-n+3);const f=new Date(Date.UTC(t.getUTCFullYear(),0,4));return 1+Math.round(((t-f)/864e5-3+((f.getUTCDay()+6)%7))/7)};
+ const set=iso=>{inp.value=iso;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close();setTimeout(()=>btn.focus({preventScroll:true}))};
+ const draw=()=>{const y=ym.getFullYear(),m=ym.getMonth(),lead=(new Date(y,m,1,12).getDay()+6)%7,start=addDays(new Date(y,m,1,12),-lead),pr=st.pair();
+  let rs='',re='';if(pr){const o=pr.el.value,v=inp.value;if(pr.role==='to'){rs=v;re=o}else{rs=o;re=v}if(!rs||!re||re<rs){rs=re=''}}
+  const weeks=Math.ceil((lead+new Date(y,m+1,0).getDate())/7);let rows='';
+  for(let w=0;w<weeks;w++){rows+=`<span class="dpk-kw">${kw(addDays(start,w*7))}</span>`;
+   for(let i=0;i<7;i++){const d=addDays(start,w*7+i),iso=isoDate(d),out=d.getMonth()!==m,ok=st.ok(iso),hol=holidayName(iso);
+    const cls=['dpk-day',out?'out':'',i>=5?'we':'',iso===today?'today':'',iso===inp.value?'on':'',hol?'hol':'',rs&&iso>=rs&&iso<=re?'rng':'',iso===rs&&rs!==re?'rs':'',iso===re&&rs!==re?'re':''].filter(Boolean).join(' ');
+    const tip=[hol,iso===today?'Heute':''].filter(Boolean).join(' · ');
+    rows+=ok?`<button type="button" class="${cls}" data-iso="${iso}" ${tip?`title="${escapeHtml(tip)}"`:''} aria-label="${escapeHtml(fmtWithWeekday(d)+(hol?' – '+hol:''))}"${iso===inp.value?' aria-pressed="true"':''}><span>${d.getDate()}</span></button>`:`<span class="${cls} off" aria-hidden="true" ${hol?`title="${escapeHtml(hol)}"`:''}><span>${d.getDate()}</span></span>`}}
+  const optional=!inp.required&&!!inp.closest('form');
+  pop.innerHTML=`<div class="dpk-head"><button type="button" class="dpk-nav" data-nav="-1" aria-label="Vorheriger Monat">${icon('chev')}</button><div class="dpk-title"><b>${DPK_MON[m]}</b> <span>${y}</span></div><button type="button" class="dpk-nav next" data-nav="1" aria-label="Nächster Monat">${icon('chev')}</button></div>
+  <div class="dpk-grid"><span class="dpk-wd dpk-kwh">KW</span>${WD_SHORT.map((w,i)=>`<span class="dpk-wd${i>=5?' we':''}">${w}</span>`).join('')}${rows}</div>
+  <div class="dpk-foot"><button type="button" class="dpk-link" data-today ${st.ok(today)?'':'disabled'}>Heute</button>${optional&&inp.value?'<button type="button" class="dpk-link muted" data-clear>Entfernen</button>':''}</div>`;
   pop.querySelectorAll('[data-nav]').forEach(b=>b.onclick=e=>{e.stopPropagation();ym=new Date(y,m+Number(b.dataset.nav),1,12);draw()});
-  pop.querySelectorAll('[data-iso]').forEach(b=>b.onclick=e=>{e.stopPropagation();inp.value=b.dataset.iso;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close()})};
+  pop.querySelectorAll('[data-iso]').forEach(b=>b.onclick=e=>{e.stopPropagation();set(b.dataset.iso)});
+  pop.querySelector('[data-today]').onclick=e=>{e.stopPropagation();set(today)};
+  const cl=pop.querySelector('[data-clear]');if(cl)cl.onclick=e=>{e.stopPropagation();set('')};
+ };
  draw();
+ pop.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)<20)return;e.preventDefault();ym=new Date(ym.getFullYear(),ym.getMonth()+(e.deltaY>0?1:-1),1,12);draw()},{passive:false});
  const place=()=>{const r=btn.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;let x=Math.min(Math.max(8,r.left),innerWidth-w-8),y=r.bottom+6;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-6);pop.style.left=x+'px';pop.style.top=y+'px'};place();
- const outside=e=>{if(!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close()},key=e=>{if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close()}};
- function close(){pop.remove();document.removeEventListener('mousedown',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('resize',close)}
- setTimeout(()=>{document.addEventListener('mousedown',outside,true);document.addEventListener('keydown',key,true);window.addEventListener('resize',close)});
+ requestAnimationFrame(()=>pop.classList.add('show'));btn.classList.add('open');
+ const outside=e=>{if(!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close()},key=e=>{if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();btn.focus({preventScroll:true})}};
+ function close(){pop.remove();btn.classList.remove('open');document.removeEventListener('mousedown',outside,true);document.removeEventListener('touchstart',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('resize',close);document.removeEventListener('scroll',onScroll,true)}
+ const onScroll=e=>{if(!pop.contains(e.target))place()};
+ pop.__close=close;
+ setTimeout(()=>{document.addEventListener('mousedown',outside,true);document.addEventListener('touchstart',outside,true);document.addEventListener('keydown',key,true);window.addEventListener('resize',close);document.addEventListener('scroll',onScroll,true)});
+ setTimeout(()=>(pop.querySelector('.dpk-day.on')||pop.querySelector('.dpk-day.today')||pop.querySelector('button.dpk-day'))?.focus({preventScroll:true}),30);
 }
+/* Alle Datumsfelder der App automatisch mit der eigenen Auswahl versehen */
+(function(){const scan=()=>document.querySelectorAll('input[type=date]:not(.dpk-native)').forEach(i=>attachDayPicker(i));
+ const start=()=>{new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});scan()};
+ if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
+ document.addEventListener('reset',()=>setTimeout(()=>document.querySelectorAll('input.dpk-native').forEach(i=>i._dpk?.refresh())),true);
+ document.addEventListener('change',e=>{const t=e.target;if(t?._dpk){const pr=t._dpk.pair();if(pr?.el._dpk)pr.el._dpk.refresh()}},true);
+})();
 function bindDutyModal(){
  const team=document.getElementById('duty-team'),employee=document.getElementById('duty-employee'),shift=document.getElementById('duty-shift'),standbyGroup=document.getElementById('duty-standby-group'),form=document.getElementById('duty-form'),modal=document.getElementById('duty-modal');
  const close=document.getElementById('close-duty'),cancel=document.getElementById('cancel-duty');
@@ -2300,7 +2336,7 @@ function bindDutyModal(){
   const syncDays=()=>{if(fIn){snap(fIn);fIn._dpk?.refresh()}if(tIn){snap(tIn);if(fIn&&tIn.value&&tIn.value<fIn.value)tIn.value=fIn.value;tIn._dpk?.refresh()}const x=svc(),n=document.getElementById('duty-days-hint');if(n){const part=x&&standbyRestricted(x);n.hidden=!part;if(part)n.textContent=`„${x.name}“ – eintragbar: ${standbyDaysLabel(x)}. Andere Tage sind im Kalender ausgegraut.`}};
   shift.addEventListener('change',syncDays);fIn?.addEventListener('change',()=>{if(tIn&&(!tIn.value||tIn.value<fIn.value)){tIn.value=fIn.value;tIn._dpk?.refresh()}});
   window.__dutySummary=()=>{syncDays();updateDutySummary()};
- }else window.__dutySummary=updateDutySummary;
+ }else{window.__dutySummary=updateDutySummary;['duty-date-from','duty-date-to'].forEach(id=>{const i=document.getElementById(id);if(i)attachDayPicker(i,()=>true)})}
  form.onsubmit=async e=>{
   e.preventDefault();
   const person=staff[Number(employee.value)],service=(currentPage==='Bereitschaft'?standbyTimes:shiftTypes).find(x=>String(x.id)===String(shift.value));
