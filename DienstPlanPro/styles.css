@@ -2722,3 +2722,23 @@ body.dark-mode{--hol:#f27a8f}
 .np-meta small{display:inline-flex;align-items:center;gap:4px}
 .np-meta small svg{width:12px;height:12px;flex:none}
 .np-meta small b{color:var(--ink);font-weight:600}
+/* Monat: Namen, Dienstart und Feiertage nicht abschneiden, sondern umbrechen */
+@media(min-width:901px){
+  body.cal-fit .month-cell .hol-badge.hol-month{width:fit-content;max-width:100%}
+  body.cal-fit .month-cell .hol-badge span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25}
+  body.cal-fit .month-cell .calendar-assignment b,body.cal-fit .month-cell .calendar-assignment small,body.cal-fit .month-cell .calendar-assignment .ca-shift,body.cal-fit .month-cell .calendar-assignment .ca-time,body.cal-fit .month-cell .calendar-assignment .ca-shift-name{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word;hyphens:auto;min-width:0}
+  body.cal-fit .month-cell .calendar-assignment .ca-shift-row{flex-wrap:wrap;column-gap:4px}
+  body.cal-fit .month-grid{align-content:stretch}
+}
+@media(min-width:901px){
+  /* Feiertag neben dem Datum statt in eigener Zeile */
+  body.cal-fit .month-cell.is-holiday{position:relative}
+  body.cal-fit .month-cell .hol-badge.hol-month{position:absolute;top:5px;right:5px;left:30px;margin:0;width:auto;justify-content:flex-end;background:none;border:0;padding:1px 0;text-align:right}
+  body.cal-fit .month-cell .hol-badge.hol-month span{text-align:right}
+  /* nur ein Team gewählt → Teamname im Monat überflüssig */
+  body.cal-fit.cal-one-team .month-cell .calendar-assignment>small{display:none}
+}
+@media(min-width:901px){
+  body.cal-fit .month-cell .hol-badge.hol-month svg{display:none}
+  body.cal-fit .month-cell .hol-badge.hol-month{font-size:11.5px;top:6px}
+}

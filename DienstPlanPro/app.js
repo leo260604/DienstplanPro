@@ -252,7 +252,7 @@ function bindMobileTableDetails(){
 ------------------------------------------------------------------ */
 let currentPage='Dashboard',currentView='Woche',currentDate=new Date(),currentRole='Teamleiter',selectedMobileDate='';
 let expandedMonthView=localStorage.getItem('dienstplanExpandedMonthView')==='1';
-// Arbeitstage im Dienstplan: 5 = Mo–Fr, 6 = Mo–Sa, 7 = Mo–So (Bereitschaft immer Mo–So).
+// Angezeigte Tage im Kalender (Dienstplan und Bereitschaft): 5 = Mo–Fr, 6 = Mo–Sa, 7 = Mo–So.
 let dutyDays=[5,6,7].includes(Number(localStorage.getItem('dienstplanDutyDays')))?Number(localStorage.getItem('dienstplanDutyDays')):6;
 const __ld_roles=()=>{const saved=load('dienstplanRoles',null);if(Array.isArray(saved)&&saved.every(x=>typeof x==='string'))return saved;return ['Mitarbeiter','Teamleiter','Abteilungsleiter','Deputy','Admin','Lohnverrechnung','Bereitschaftsadmin']};let roles=__ld_roles();
 const safePhoto=v=>typeof v==='string'&&/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$/.test(v)?v:'';
@@ -774,7 +774,7 @@ function colorWithAlpha(hex,alpha){
 // Wie viele Einträge pro Tag direkt sichtbar sind, hängt von der Bildschirmhöhe ab (große Monitore zeigen mehr).
 function entryLimit(){const fk=currentPage+'|'+currentView+'|'+innerWidth+'x'+innerHeight;if(window.__calFit&&window.__calFit.key===fk&&window.__calFit.limit>=1)return window.__calFit.limit;const h=window.innerHeight||800;if(currentView==='Woche')return Math.max(4,Math.floor((h-330)/68));if(currentView==='Monat'){const weeks=Math.ceil((new Date(currentDate.getFullYear(),currentDate.getMonth()+1,0).getDate()+6)/7);return Math.max(2,Math.floor(((h-330)/weeks-34)/50))}return 99}
 let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if((currentPage==='Dienstplan'||currentPage==='Bereitschaft')&&!document.querySelector('.modal-backdrop:not([hidden])'))render()},250)});
-function calDays(){return currentPage==='Bereitschaft'?7:dutyDays}
+function calDays(){return dutyDays} // gilt für Dienstplan und Bereitschaft
 /* Konflikte: Dienst + ganztägige Abwesenheit oder überlappende untertägige Abwesenheit am selben Tag */
 const shiftMulti=s=>!s||s.multi!==false;// Standard: Dienst darf mehrfach am Tag besetzt werden
 /* Variable Bereitschaft: ohne feste Uhrzeit → „variabel“ statt „–“ */
@@ -1792,7 +1792,7 @@ function settings(){
    <section class="settings-card" id="set-cal"><h2>Kalender</h2>
     <div class="setting-row"><div><b>Standardansicht Dienstplan</b><small>Beim Öffnen anzeigen</small></div>${seg('def-dienstplan',[['Tag','Tag'],['Woche','Woche'],['Monat','Monat'],['Team','Team']],defaults.Dienstplan||'Woche')}</div>
     <div class="setting-row"><div><b>Standardansicht Bereitschaft</b><small>Beim Öffnen anzeigen</small></div>${seg('def-bereitschaft',[['Woche','Woche'],['Monat','Monat'],['Zeitleiste','Zeitleiste']],defaults.Bereitschaft||'Monat')}</div>
-    <div class="setting-row"><div><b>Wochenende im Dienstplan</b><small>Welche Tage Woche, Monat und Team-Ansicht zeigen. Bereitschaft zeigt immer Mo–So.</small></div>${seg('duty-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],dutyDays)}</div>
+    <div class="setting-row"><div><b>Wochenende im Kalender</b><small>Welche Tage Dienstplan und Bereitschaft in Woche, Monat, Team-Ansicht und Zeitleiste zeigen.</small></div>${seg('duty-days',[[5,'Mo–Fr'],[6,'Mo–Sa'],[7,'Mo–So']],dutyDays)}</div>
     <div class="setting-row"><div><b>Darstellung der Einträge</b><small>Kompakt = Woche/Monat passen ins Fenster, Rest als „+ X weitere“ · Erweitert = alle Einträge anzeigen (Seite scrollt)</small></div>${seg('entry-density',[['compact','Kompakt'],['expanded','Erweitert']],expandedMonthView?'expanded':'compact')}</div>
    </section>
    <section class="settings-card" id="set-look"><h2>Darstellung</h2>
@@ -3612,6 +3612,23 @@ function calTargetHeight(card){const c=document.getElementById('content'),main=c
 function growCalendar(){const card=document.querySelector('#content .calendar-card');if(!card)return;const rows={};document.querySelectorAll('#content .week-day-cell,#content .month-cell').forEach(c=>{if(!c.offsetParent)return;const k=Math.round(c.getBoundingClientRect().top),o=c.scrollHeight-c.clientHeight;if(o>0)rows[k]=Math.max(rows[k]||0,o)});const allRows=(currentView==='Monat'&&window.__calFrRows)||new Set([...document.querySelectorAll('#content .week-day-cell,#content .month-cell')].filter(c=>c.offsetParent).map(c=>Math.round(c.getBoundingClientRect().top))).size||1,extra=Math.ceil(Math.max(0,...Object.values(rows))*allRows);if(extra>0)card.style.height=(card.offsetHeight+extra+2)+'px'}
 /* ===== Kalender an die Fensterhöhe anpassen (Seite ohne Scrollen, Rest als „+ x weitere“) ===== */
 let calFitBusy=false,calFitTimer=null;
+/* Monatsansicht gleichmäßig skalieren: jede Woche bekommt mindestens ihren Inhalt, der restliche Platz wird gleichmäßig verteilt */
+function monthRowsFit(){const g=document.querySelector('#content .month-grid');if(!g)return true;const sc=g.parentElement;
+ const cells=[...g.children].filter(c=>c.classList.contains('month-cell'));if(!cells.length)return true;
+ g.style.gridTemplateRows='auto';g.style.gridAutoRows='auto';g.style.flex='none';
+ const tops=[...new Set(cells.map(c=>c.offsetTop))].sort((a,b)=>a-b);
+ const rows=tops.map(t=>Math.max(...cells.filter(c=>c.offsetTop===t).map(c=>{const st=getComputedStyle(c);let h=parseFloat(st.paddingTop)+parseFloat(st.paddingBottom)+parseFloat(st.borderTopWidth)+parseFloat(st.borderBottomWidth);[...c.children].forEach(ch=>{const s2=getComputedStyle(ch);if(s2.position!=='absolute')h+=ch.offsetHeight+parseFloat(s2.marginTop)+parseFloat(s2.marginBottom)});return Math.ceil(h)}),56));
+ const headH=cells[0].offsetTop-(g.firstElementChild?g.firstElementChild.offsetTop:0);
+ g.style.flex='';g.style.gridAutoRows='';
+ g.style.gridTemplateRows='auto '+rows.map(h=>`minmax(${h}px,1fr)`).join(' ');
+ const avail=sc.clientHeight-headH-2,need=rows.reduce((a,b)=>a+b,0);return {ok:need<=avail,over:need-avail}}
+function fitMonth(card){const fk=currentPage+'|Monat|'+innerWidth+'x'+innerHeight;
+ const rer=l=>{window.__calFit={key:fk,limit:l};calFitBusy=true;const y=window.scrollY;render();fitCalendarSizeOnly();window.scrollTo(0,y);calFitBusy=false};
+ if(!window.__calFit||window.__calFit.key!==fk)rer(4);
+ let r=monthRowsFit(),l=window.__calFit.limit,guard=0;
+ while(!r.ok&&l>1&&guard++<8){l--;rer(l);r=monthRowsFit()}
+ // passt selbst ein Eintrag pro Tag nicht → Kalender wird so hoch wie nötig (mind. 1 Eintrag bleibt sichtbar)
+ if(!r.ok){const c=document.querySelector('#content .calendar-card');if(c)c.style.height=(c.offsetHeight+r.over+4)+'px'}}
 function fitCalendar(){
  const card=document.querySelector('#content .calendar-card');document.body.classList.toggle('cal-fit',false);{const fk0=currentPage+'|'+currentView+'|'+innerWidth+'x'+innerHeight;document.body.classList.toggle('cal-tight',!!(window.__calFit&&window.__calFit.key===fk0&&window.__calFit.tight&&currentView==='Monat'&&!expandedMonthView))}
  if(!card||!['Dienstplan','Bereitschaft'].includes(currentPage)||window.innerWidth<901)return;
@@ -3620,13 +3637,10 @@ function fitCalendar(){
  const fillView=!(expandedMonthView&&(currentView==='Monat'||currentView==='Woche'));
  if(!fillView)return;
  document.body.classList.add('cal-fit');
- // Monat: Wochen ohne Einträge bleiben niedrig, nur Wochen mit Einträgen teilen sich die restliche Höhe
  window.__calFrRows=0;
- if(currentView==='Monat'){const g=card.querySelector('.month-grid');if(g){const cols=getComputedStyle(g).gridTemplateColumns.split(' ').length||7,cells=[...g.children].filter(c=>c.classList.contains('month-cell')),rows=[];
-  for(let i=0;i<cells.length;i+=cols)rows.push(cells.slice(i,i+cols).some(c=>c.querySelector('.calendar-assignment,.calendar-more,.tn-chip')));
-  const fr=rows.filter(Boolean).length;window.__calFrRows=fr;g.style.gridTemplateRows='auto '+rows.map(h=>h?'minmax(0,1fr)':'var(--month-empty-row,64px)').join(' ');
-  if(!fr){card.style.height='';card.style.minHeight='0';return}}}
  const tgt=calTargetHeight(card);if(tgt<280){document.body.classList.remove('cal-fit','cal-tight');window.__calFit=null;if(window.__calFitWasOn){window.__calFitWasOn=false;if(!calFitBusy){calFitBusy=true;render();calFitBusy=false}}return}window.__calFitWasOn=true;card.style.height=tgt+'px';card.style.minHeight='0';
+ document.body.classList.toggle('cal-one-team',(calendarTeams||[]).length===1);
+ if(currentView==='Monat'){if(!calFitBusy)fitMonth(card);return}
  if(currentView!=='Woche'&&currentView!=='Monat')return;
  // Platz pro Tag messen und passende Anzahl Einträge bestimmen
  const cells=[...card.querySelectorAll(currentView==='Woche'?'.week-day-cell':'.month-cell:not(.is-blank)')].filter(c=>c.offsetParent);if(!cells.length)return;
