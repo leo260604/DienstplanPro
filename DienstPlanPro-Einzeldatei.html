@@ -4842,7 +4842,7 @@ function standbyManagementPage(){
   <div class="stat-card"><div><div class="stat-label">Tagesabdeckung</div><div class="stat-value">${Math.round(cover*10)/10} / 24 Std.</div><div class="meter ${cover<24?'warn':''}"><i style="width:${Math.min(100,cover/24*100)}%"></i></div></div></div>
  </div>
  <section class="panel flush sb-times-panel">
-  <div class="panel-toolbar sb-toolbar"><div><h2>Bereitschaftszeiten</h2></div><span class="pill push-right">${timeCount} ${timeCount===1?'Zeit':'Zeiten'}</span></div>
+  <div class="panel-toolbar sb-toolbar"><div><h2>Bereitschaftszeiten</h2></div></div>
   ${timeCount?`<div class="table-wrap borderless shift-times-table-wrap"><table class="sb-times-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`
    :`<div class="empty-note sb-empty">${admin?`Noch keine Bereitschaftszeiten. Lege die erste an und wähle die Teams, die sie haben sollen.<div><button class="btn primary" type="button" id="sb-new-time-empty">${icon('plus')}Bereitschaftszeit anlegen</button></div>`:'Es sind noch keine Bereitschaftszeiten angelegt.'}</div>`}
  </section>`;
@@ -5187,7 +5187,7 @@ function dashboard(){
  const tools=`<button class="btn" id="dash-customize">${icon('sliders')}Dashboard anpassen</button>`;
  const head=c.lead?heading('Guten Tag, '+escapeHtml(c.name.split(' ')[0]||''),'',dashEditing?'':(manageableTeams('Dienstplan').length?`<button class="btn primary" data-go="Dienstplan">＋ Dienst einteilen</button>`:'')+tools)
   :heading('Hallo '+escapeHtml(c.name.split(' ')[0]||''),'',dashEditing?'':tools);
- const bar=dashEditing?`<div class="dash-editbar"><div><b>${icon('edit')}Ansicht bearbeiten</b><small>Kacheln und Bereiche frei an eine andere Stelle ziehen. Am Handy: kurz gedrückt halten oder am Griff ziehen.</small></div><div class="btn-row"><button class="btn ghost" id="dash-edit-reset">${icon('refresh')}Standard wiederherstellen</button><button class="btn" id="dash-edit-cancel">Abbrechen</button><button class="btn primary" id="dash-edit-save">${icon('check')}Speichern</button></div></div>`:'';
+ const bar=dashEditing?`<div class="dash-editbar"><div><b>${icon('edit')}Ansicht bearbeiten</b></div><div class="btn-row"><button class="btn ghost" id="dash-edit-reset">${icon('refresh')}Standard wiederherstellen</button><button class="btn" id="dash-edit-cancel">Abbrechen</button><button class="btn primary" id="dash-edit-save">${icon('check')}Speichern</button></div></div>`:'';
  return `${head}${bar}<div class="dash dash-grid ${colored?'dash-colored':''} ${dashEditing?'dash-editing':''}" id="dash">${body||'<div class="empty-note">Alle Ansichten sind ausgeblendet. Über „Dashboard anpassen“ kannst du sie wieder einblenden.</div>'}</div>`;
 }
 
@@ -5221,8 +5221,7 @@ async function customizeDashboard(){
  const hidden=dashHidden(),list=dashWidgetsForRole(),sizeLabel={tile:'Kachel',half:'Bereich',full:'Banner'};
  const row=w=>`<div class="dash-cfg-row" data-cfg="${w.id}"><label class="check"><input type="checkbox" name="w:${w.id}" ${hidden.includes(w.id)?'':'checked'}><span><b>${escapeHtml(w.title)}</b><small class="muted block">${escapeHtml(w.desc||'')}</small></span></label><span class="pill">${sizeLabel[w.size]}</span></div>`;
  const dlg=formDialog('Dashboard anpassen',`<div class="dash-cfg-list">${list.map(row).join('')}</div>
-  <div class="dash-cfg-actions"><button type="button" class="btn" id="dash-cfg-edit">${icon('edit')}Ansicht bearbeiten</button><button type="button" class="btn ghost" id="dash-cfg-reset">${icon('refresh')}Standard wiederherstellen</button></div>
-  <p class="small muted">Häkchen = Ansicht wird angezeigt. Über „Ansicht bearbeiten“ verschiebst du Kacheln und Bereiche frei an jede Stelle.</p>`,'Speichern','Wähle aus, was du auf deinem Dashboard siehst.');
+  <div class="dash-cfg-actions"><button type="button" class="btn" id="dash-cfg-edit">${icon('edit')}Ansicht bearbeiten</button><button type="button" class="btn ghost" id="dash-cfg-reset">${icon('refresh')}Standard wiederherstellen</button></div>`,'Speichern','Wähle aus, was du auf deinem Dashboard siehst.');
  const layer=[...document.querySelectorAll('.app-dialog')].pop();let reset=false,toEdit=false;
  layer.querySelector('#dash-cfg-reset').onclick=()=>{reset=true;list.forEach(w=>{layer.querySelector(`[name="w:${w.id}"]`).checked=!w.hidden});toast('Standard ausgewählt – mit „Speichern“ übernehmen.')};
  layer.querySelector('#dash-cfg-edit').onclick=()=>{toEdit=true;layer.querySelector('form').requestSubmit()};
