@@ -5699,7 +5699,7 @@ function openDayPickerPop(inp,btn,opts={}){
   const optional=!inp.required&&!!inp.closest('form');
   pop.innerHTML=`<div class="dpk-head"><button type="button" class="dpk-nav" data-nav="-1" aria-label="Vorheriger Monat">${icon('chev')}</button><div class="dpk-title"><b>${DPK_MON[m]}</b> <span>${y}</span></div><button type="button" class="dpk-nav next" data-nav="1" aria-label="Nächster Monat">${icon('chev')}</button></div>
   <div class="dpk-grid"><span class="dpk-wd dpk-kwh">KW</span>${WD_SHORT.map((w,i)=>`<span class="dpk-wd${i>=5?' we':''}">${w}</span>`).join('')}${rows}</div>
-  <div class="dpk-foot"><button type="button" class="dpk-link" data-today ${st.ok(today)?'':'disabled'}>${week?'Diese Woche':'Heute'}</button>${week?'<small class="dpk-foot-hint">Woche anklicken</small>':''}${optional&&inp.value?'<button type="button" class="dpk-link muted" data-clear>Entfernen</button>':''}</div>`;
+  <div class="dpk-foot"><button type="button" class="dpk-link" data-today ${st.ok(today)?'':'disabled'}>${week?'Diese Woche':'Heute'}</button>${optional&&inp.value?'<button type="button" class="dpk-link muted" data-clear>Entfernen</button>':''}</div>`;
   pop.querySelectorAll('[data-nav]').forEach(b=>b.onclick=e=>{e.stopPropagation();ym=new Date(y,m+Number(b.dataset.nav),1,12);draw()});
   pop.querySelectorAll('[data-iso]').forEach(b=>b.onclick=e=>{e.stopPropagation();set(b.dataset.iso)});
   pop.querySelector('[data-today]').onclick=e=>{e.stopPropagation();set(today)};
