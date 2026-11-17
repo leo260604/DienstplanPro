@@ -2829,6 +2829,38 @@ button.dpk-day:focus-visible{outline:none}button.dpk-day:focus-visible>span{box-
 .dpk-btn.compact{width:auto;min-height:30px;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-size:13px}
 .dpk-btn.compact:hover,.dpk-btn.compact.open,.dpk-btn.compact:focus-visible{background:var(--accent-soft);color:var(--accent-dark);box-shadow:none}
 @media (max-width:900px){.date-range .dpk-btn.compact{flex:1;justify-content:center}}
+/* Datumsauswahl im Kalenderkopf (Tag / Woche / Monat) */
+.cal-pick{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;height:32px;padding:0 8px 0 4px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;transition:background .12s}
+.cal-pick strong{pointer-events:none}
+.cal-pick .cal-pick-chev{width:14px;height:14px;color:var(--muted);flex:none;transition:transform .15s}
+.cal-pick:hover,.cal-pick.open{background:var(--surface)}
+.cal-pick.open .cal-pick-chev{transform:rotate(180deg)}
+.cal-pick:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-ring)}
+@media (max-width:900px){.cal-pick{overflow:hidden}.cal-pick strong{overflow:hidden;text-overflow:ellipsis}}
+.dpk-row{display:contents}
+/* Wochenauswahl: ganze Zeile markieren */
+.dpk-week .dpk-day,.dpk-week .dpk-kw{position:relative;height:36px;display:grid;place-items:center}
+.dpk-week .dpk-kw{border:0;padding:0;background:transparent;font:inherit;font-size:10.5px;font-weight:800;color:var(--muted);cursor:pointer;text-align:center}
+.dpk-week .dpk-kw::before,.dpk-week .dpk-day::before{content:"";position:absolute;inset:2px 0;background:transparent;transition:background .1s}
+.dpk-week .dpk-kw::before{border-radius:10px 0 0 10px;left:1px}
+.dpk-week .dpk-row>:last-child::before{border-radius:0 10px 10px 0;right:1px}
+.dpk-week .dpk-row:hover>*::before{background:var(--accent-soft)}
+.dpk-week .dpk-row:hover .dpk-kw,.dpk-week .dpk-row:hover .dpk-day{color:var(--accent-dark)}
+.dpk-week button.dpk-day:hover>span{background:transparent;color:inherit}
+.dpk-week .dpk-row.sel>*::before{background:var(--accent-color)}
+.dpk-week .dpk-row.sel .dpk-kw,.dpk-week .dpk-row.sel .dpk-day,.dpk-week .dpk-row.sel .dpk-day>span{color:#fff!important;background:transparent!important;box-shadow:none}
+.dpk-week .dpk-row.sel .dpk-day.hol>span::after{background:#fff}
+.dpk-week .dpk-day.rs::before,.dpk-week .dpk-day.re::before{left:0;right:0}
+.dpk-week .dpk-row.sel>:last-child::before{right:1px}
+.dpk-foot-hint{font-size:11.5px;color:var(--muted)}
+/* Monatsauswahl */
+.dpk-months{width:272px}
+.dpk-mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:2px 0 4px}
+.dpk-mon{height:42px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;font-weight:650;cursor:pointer}
+.dpk-mon:hover{background:var(--accent-soft);border-color:var(--accent-color);color:var(--accent-dark)}
+.dpk-mon.today{border-color:var(--accent-color);color:var(--accent-dark)}
+.dpk-mon.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff;box-shadow:0 6px 14px -6px var(--accent-color)}
+.dpk-week .dpk-kw>span{position:relative;z-index:1}
 
 </style>
 </head>
@@ -4336,7 +4368,7 @@ function calendar(){
   <div class="legend push-right"><span><i class="dot" style="--c:#3974c6"></i>Dienst</span><span><i class="lg-standby"></i>Bereitschaft</span><span><i class="lg-absence">Abw.</i>Abwesenheit</span><span>${icon('home')}Homeoffice</span></div>
  </div>`;
  const tip=''; // keine Tipp-Texte unter dem Kalender
- const controls=`<div class="calendar-toolbar"><div class="calendar-nav"><button class="btn" id="prev" aria-label="Zurück">‹</button><strong>${range}</strong><button class="btn" id="next" aria-label="Weiter">›</button><button class="btn" id="today">Heute</button></div><div class="view-switch">${views.map(v=>`<button data-view="${v}" class="${currentView===v?'active':''}">${v}</button>`).join('')}</div></div>`;
+ const controls=`<div class="calendar-toolbar"><div class="calendar-nav"><button class="btn" id="prev" aria-label="Zurück">‹</button><button type="button" class="cal-pick" id="cal-pick" aria-haspopup="dialog" title="${currentView==='Tag'?'Tag auswählen':currentView==='Monat'?'Monat auswählen':'Kalenderwoche auswählen'}"><strong>${range}</strong><svg class="ic cal-pick-chev" aria-hidden="true"><use href="#i-down"/></svg></button><button class="btn" id="next" aria-label="Weiter">›</button><button class="btn" id="today">Heute</button></div><div class="view-switch">${views.map(v=>`<button data-view="${v}" class="${currentView===v?'active':''}">${v}</button>`).join('')}</div></div>`;
  return `${heading(title,sub,actions)}${nowBlock}
  <div class="calendar-shell panel standby-shell${isDuty?' duty-shell':''}">${controls}${filterbar}<div class="calendar-card ${currentView==='Monat'?'month-compact-card':''} view-${currentView.toLowerCase()}"><div class="calendar-scroll">${body}</div></div>${tip}</div>
  <div class="modal-backdrop" id="day-details-modal" hidden><div class="modal day-details-modal"><div class="panel-head"><div><h2 id="day-details-title">Dienste des Tages</h2><p class="small muted" id="day-details-subtitle"></p></div><button class="icon-btn" id="close-day-details" type="button" aria-label="Schließen">×</button></div><div id="day-details-list" class="day-assignment-list"></div><div class="btn-row" style="justify-content:flex-end;margin-top:12px"><button class="btn" id="close-day-details-bottom" type="button">Schließen</button></div></div></div>
@@ -5647,25 +5679,27 @@ function attachDayPicker(inp,allowed){
  inp.addEventListener('change',refresh);inp.addEventListener('input',refresh);refresh();
  btn.onclick=e=>{e.preventDefault();e.stopPropagation();if(document.querySelector('.dpk-pop')?.__inp===inp){document.querySelector('.dpk-pop').__close();return}openDayPickerPop(inp,btn)};
 }
-function openDayPickerPop(inp,btn){
+function openDayPickerPop(inp,btn,opts={}){
  document.querySelector('.dpk-pop')?.__close?.();
+ if(!inp){inp={value:opts.value||'',required:true,closest:()=>null,dispatchEvent(){},_dpk:{ok:()=>true,pair:()=>null}}}
+ const week=!!opts.week,mon=iso=>isoDate(addDays(new Date(iso+'T12:00:00'),-((new Date(iso+'T12:00:00').getDay()+6)%7)));
  const st=inp._dpk,base=inp.value?new Date(inp.value+'T12:00:00'):new Date();let ym=new Date(base.getFullYear(),base.getMonth(),1,12);
- const pop=document.createElement('div');pop.className='dpk-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Datum auswählen');pop.__inp=inp;document.body.appendChild(pop);
+ const pop=document.createElement('div');pop.className='dpk-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Datum auswählen');pop.__inp=inp;pop.__anchor=btn;if(week)pop.classList.add('dpk-week');document.body.appendChild(pop);
  const pad=n=>String(n).padStart(2,'0'),today=isoDate(new Date());
  const kw=d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-n+3);const f=new Date(Date.UTC(t.getUTCFullYear(),0,4));return 1+Math.round(((t-f)/864e5-3+((f.getUTCDay()+6)%7))/7)};
- const set=iso=>{inp.value=iso;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close();setTimeout(()=>btn.focus({preventScroll:true}))};
+ const set=iso=>{if(opts.onPick){close();opts.onPick(week&&iso?mon(iso):iso);return}inp.value=iso;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close();setTimeout(()=>btn.focus({preventScroll:true}))};
  const draw=()=>{const y=ym.getFullYear(),m=ym.getMonth(),lead=(new Date(y,m,1,12).getDay()+6)%7,start=addDays(new Date(y,m,1,12),-lead),pr=st.pair();
-  let rs='',re='';if(pr){const o=pr.el.value,v=inp.value;if(pr.role==='to'){rs=v;re=o}else{rs=o;re=v}if(!rs||!re||re<rs){rs=re=''}}
+  let rs='',re='';if(week&&inp.value){rs=mon(inp.value);re=isoDate(addDays(new Date(rs+'T12:00:00'),6))}else if(pr){const o=pr.el.value,v=inp.value;if(pr.role==='to'){rs=v;re=o}else{rs=o;re=v}if(!rs||!re||re<rs){rs=re=''}}
   const weeks=Math.ceil((lead+new Date(y,m+1,0).getDate())/7);let rows='';
-  for(let w=0;w<weeks;w++){rows+=`<span class="dpk-kw">${kw(addDays(start,w*7))}</span>`;
+  for(let w=0;w<weeks;w++){const wIso=isoDate(addDays(start,w*7));rows+=`<div class="dpk-row${week&&wIso===rs?' sel':''}">`+(week?`<button type="button" class="dpk-kw" data-iso="${wIso}" aria-label="KW ${kw(addDays(start,w*7))} auswählen"><span>${kw(addDays(start,w*7))}</span></button>`:`<span class="dpk-kw">${kw(addDays(start,w*7))}</span>`);
    for(let i=0;i<7;i++){const d=addDays(start,w*7+i),iso=isoDate(d),out=d.getMonth()!==m,ok=st.ok(iso),hol=holidayName(iso);
-    const cls=['dpk-day',out?'out':'',i>=5?'we':'',iso===today?'today':'',iso===inp.value?'on':'',hol?'hol':'',rs&&iso>=rs&&iso<=re?'rng':'',iso===rs&&rs!==re?'rs':'',iso===re&&rs!==re?'re':''].filter(Boolean).join(' ');
+    const cls=['dpk-day',out?'out':'',i>=5?'we':'',iso===today?'today':'',!week&&iso===inp.value?'on':'',hol?'hol':'',rs&&iso>=rs&&iso<=re?'rng':'',iso===rs&&rs!==re?'rs':'',iso===re&&rs!==re?'re':''].filter(Boolean).join(' ');
     const tip=[hol,iso===today?'Heute':''].filter(Boolean).join(' · ');
-    rows+=ok?`<button type="button" class="${cls}" data-iso="${iso}" ${tip?`title="${escapeHtml(tip)}"`:''} aria-label="${escapeHtml(fmtWithWeekday(d)+(hol?' – '+hol:''))}"${iso===inp.value?' aria-pressed="true"':''}><span>${d.getDate()}</span></button>`:`<span class="${cls} off" aria-hidden="true" ${hol?`title="${escapeHtml(hol)}"`:''}><span>${d.getDate()}</span></span>`}}
+    rows+=ok?`<button type="button" class="${cls}" data-iso="${iso}" ${tip?`title="${escapeHtml(tip)}"`:''} aria-label="${escapeHtml(fmtWithWeekday(d)+(hol?' – '+hol:''))}"${iso===inp.value?' aria-pressed="true"':''}><span>${d.getDate()}</span></button>`:`<span class="${cls} off" aria-hidden="true" ${hol?`title="${escapeHtml(hol)}"`:''}><span>${d.getDate()}</span></span>`}rows+='</div>'}
   const optional=!inp.required&&!!inp.closest('form');
   pop.innerHTML=`<div class="dpk-head"><button type="button" class="dpk-nav" data-nav="-1" aria-label="Vorheriger Monat">${icon('chev')}</button><div class="dpk-title"><b>${DPK_MON[m]}</b> <span>${y}</span></div><button type="button" class="dpk-nav next" data-nav="1" aria-label="Nächster Monat">${icon('chev')}</button></div>
   <div class="dpk-grid"><span class="dpk-wd dpk-kwh">KW</span>${WD_SHORT.map((w,i)=>`<span class="dpk-wd${i>=5?' we':''}">${w}</span>`).join('')}${rows}</div>
-  <div class="dpk-foot"><button type="button" class="dpk-link" data-today ${st.ok(today)?'':'disabled'}>Heute</button>${optional&&inp.value?'<button type="button" class="dpk-link muted" data-clear>Entfernen</button>':''}</div>`;
+  <div class="dpk-foot"><button type="button" class="dpk-link" data-today ${st.ok(today)?'':'disabled'}>${week?'Diese Woche':'Heute'}</button>${week?'<small class="dpk-foot-hint">Woche anklicken</small>':''}${optional&&inp.value?'<button type="button" class="dpk-link muted" data-clear>Entfernen</button>':''}</div>`;
   pop.querySelectorAll('[data-nav]').forEach(b=>b.onclick=e=>{e.stopPropagation();ym=new Date(y,m+Number(b.dataset.nav),1,12);draw()});
   pop.querySelectorAll('[data-iso]').forEach(b=>b.onclick=e=>{e.stopPropagation();set(b.dataset.iso)});
   pop.querySelector('[data-today]').onclick=e=>{e.stopPropagation();set(today)};
@@ -5676,11 +5710,29 @@ function openDayPickerPop(inp,btn){
  const place=()=>{const r=btn.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;let x=Math.min(Math.max(8,r.left),innerWidth-w-8),y=r.bottom+6;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-6);pop.style.left=x+'px';pop.style.top=y+'px'};place();
  requestAnimationFrame(()=>pop.classList.add('show'));btn.classList.add('open');
  const outside=e=>{if(!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close()},key=e=>{if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();btn.focus({preventScroll:true})}};
- function close(){pop.remove();btn.classList.remove('open');document.removeEventListener('mousedown',outside,true);document.removeEventListener('touchstart',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('resize',close);document.removeEventListener('scroll',onScroll,true)}
+ function close(){if(!pop.isConnected)return;pop.remove();btn.classList.remove('open');document.removeEventListener('mousedown',outside,true);document.removeEventListener('touchstart',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('resize',close);document.removeEventListener('scroll',onScroll,true)}
  const onScroll=e=>{if(!pop.contains(e.target))place()};
  pop.__close=close;
  setTimeout(()=>{document.addEventListener('mousedown',outside,true);document.addEventListener('touchstart',outside,true);document.addEventListener('keydown',key,true);window.addEventListener('resize',close);document.addEventListener('scroll',onScroll,true)});
  setTimeout(()=>(pop.querySelector('.dpk-day.on')||pop.querySelector('.dpk-day.today')||pop.querySelector('button.dpk-day'))?.focus({preventScroll:true}),30);
+}
+/* Monatsauswahl (Monatsansicht) */
+function openMonthPickerPop(btn,cur,onPick){
+ document.querySelector('.dpk-pop')?.__close?.();
+ let y=cur.getFullYear();const pop=document.createElement('div');pop.className='dpk-pop dpk-months';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Monat auswählen');pop.__anchor=btn;document.body.appendChild(pop);
+ const now=new Date(),SH=['Jän','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+ const draw=()=>{pop.innerHTML=`<div class="dpk-head"><button type="button" class="dpk-nav" data-nav="-1" aria-label="Voriges Jahr">${icon('chev')}</button><div class="dpk-title"><b>${y}</b></div><button type="button" class="dpk-nav next" data-nav="1" aria-label="Nächstes Jahr">${icon('chev')}</button></div>
+  <div class="dpk-mgrid">${SH.map((m,i)=>`<button type="button" class="dpk-mon${y===cur.getFullYear()&&i===cur.getMonth()?' on':''}${y===now.getFullYear()&&i===now.getMonth()?' today':''}" data-m="${i}" aria-label="${DPK_MON[i]} ${y}">${m}</button>`).join('')}</div>
+  <div class="dpk-foot"><button type="button" class="dpk-link" data-today>Dieser Monat</button></div>`;
+  pop.querySelectorAll('[data-nav]').forEach(b=>b.onclick=e=>{e.stopPropagation();y+=Number(b.dataset.nav);draw()});
+  pop.querySelectorAll('[data-m]').forEach(b=>b.onclick=e=>{e.stopPropagation();close();onPick(`${y}-${String(+b.dataset.m+1).padStart(2,'0')}-01`)});
+  pop.querySelector('[data-today]').onclick=e=>{e.stopPropagation();close();onPick(isoDate(new Date(now.getFullYear(),now.getMonth(),1,12)))}};
+ draw();
+ const r=btn.getBoundingClientRect();pop.style.left=Math.min(Math.max(8,r.left),innerWidth-pop.offsetWidth-8)+'px';pop.style.top=(r.bottom+6)+'px';
+ requestAnimationFrame(()=>pop.classList.add('show'));btn.classList.add('open');
+ const outside=e=>{if(!pop.contains(e.target)&&!btn.contains(e.target))close()},key=e=>{if(e.key==='Escape'){e.preventDefault();close()}};
+ function close(){if(!pop.isConnected)return;pop.remove();btn.classList.remove('open');document.removeEventListener('mousedown',outside,true);document.removeEventListener('touchstart',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('resize',close)}
+ pop.__close=close;setTimeout(()=>{document.addEventListener('mousedown',outside,true);document.addEventListener('touchstart',outside,true);document.addEventListener('keydown',key,true);window.addEventListener('resize',close)});
 }
 /* Alle Datumsfelder der App automatisch mit der eigenen Auswahl versehen */
 (function(){const scan=()=>document.querySelectorAll('input[type=date]:not(.dpk-native)').forEach(i=>attachDayPicker(i));
@@ -7244,6 +7296,8 @@ function render(){
  if(currentPage==='Dienstplan')bindAbsenceModal();
  content.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const date=b.dataset.goDate;go(b.dataset.go);if(date){currentDate=new Date(date+'T12:00:00');selectedMobileDate=date;render();}});
  content.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;selectedMobileDate='';render()});
+ {const cp=document.getElementById('cal-pick');if(cp)cp.onclick=e=>{e.stopPropagation();const open=document.querySelector('.dpk-pop');if(open&&open.__anchor===cp){open.__close();return}const go2=iso=>{currentDate=new Date(iso+'T12:00:00');selectedMobileDate='';render()};
+  if(currentView==='Monat')openMonthPickerPop(cp,currentDate,go2);else openDayPickerPop(null,cp,{week:currentView!=='Tag',value:isoDate(currentDate),onPick:go2})}}
  ['prev','next','today'].forEach(id=>{const b=document.getElementById(id);if(b)b.onclick=()=>{if(id==='today'){currentDate=new Date();selectedMobileDate='';}else if(currentView==='Monat'){currentDate.setDate(1);currentDate.setMonth(currentDate.getMonth()+(id==='next'?1:-1));selectedMobileDate='';}else{currentDate.setDate(currentDate.getDate()+(id==='next'?1:-1)*(currentView==='Tag'?1:7));selectedMobileDate='';}render()}});
  const absenceAdd=document.getElementById('add-absence');if(absenceAdd)absenceAdd.onclick=()=>{bindAbsenceModal();const m=document.getElementById('absence-modal');m.hidden=false;if(!window.matchMedia('(pointer: coarse)').matches)setTimeout(()=>m.querySelector('[data-pp="absence-type"] .pp-btn')?.focus({preventScroll:true}),30)};
  const dpAct=document.getElementById('dp-actions-toggle');if(dpAct)dpAct.onclick=openDutyActionsSheet;

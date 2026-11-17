@@ -2814,3 +2814,35 @@ button.dpk-day:focus-visible{outline:none}button.dpk-day:focus-visible>span{box-
 .dpk-btn.compact{width:auto;min-height:30px;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-size:13px}
 .dpk-btn.compact:hover,.dpk-btn.compact.open,.dpk-btn.compact:focus-visible{background:var(--accent-soft);color:var(--accent-dark);box-shadow:none}
 @media (max-width:900px){.date-range .dpk-btn.compact{flex:1;justify-content:center}}
+/* Datumsauswahl im Kalenderkopf (Tag / Woche / Monat) */
+.cal-pick{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;height:32px;padding:0 8px 0 4px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;transition:background .12s}
+.cal-pick strong{pointer-events:none}
+.cal-pick .cal-pick-chev{width:14px;height:14px;color:var(--muted);flex:none;transition:transform .15s}
+.cal-pick:hover,.cal-pick.open{background:var(--surface)}
+.cal-pick.open .cal-pick-chev{transform:rotate(180deg)}
+.cal-pick:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-ring)}
+@media (max-width:900px){.cal-pick{overflow:hidden}.cal-pick strong{overflow:hidden;text-overflow:ellipsis}}
+.dpk-row{display:contents}
+/* Wochenauswahl: ganze Zeile markieren */
+.dpk-week .dpk-day,.dpk-week .dpk-kw{position:relative;height:36px;display:grid;place-items:center}
+.dpk-week .dpk-kw{border:0;padding:0;background:transparent;font:inherit;font-size:10.5px;font-weight:800;color:var(--muted);cursor:pointer;text-align:center}
+.dpk-week .dpk-kw::before,.dpk-week .dpk-day::before{content:"";position:absolute;inset:2px 0;background:transparent;transition:background .1s}
+.dpk-week .dpk-kw::before{border-radius:10px 0 0 10px;left:1px}
+.dpk-week .dpk-row>:last-child::before{border-radius:0 10px 10px 0;right:1px}
+.dpk-week .dpk-row:hover>*::before{background:var(--accent-soft)}
+.dpk-week .dpk-row:hover .dpk-kw,.dpk-week .dpk-row:hover .dpk-day{color:var(--accent-dark)}
+.dpk-week button.dpk-day:hover>span{background:transparent;color:inherit}
+.dpk-week .dpk-row.sel>*::before{background:var(--accent-color)}
+.dpk-week .dpk-row.sel .dpk-kw,.dpk-week .dpk-row.sel .dpk-day,.dpk-week .dpk-row.sel .dpk-day>span{color:#fff!important;background:transparent!important;box-shadow:none}
+.dpk-week .dpk-row.sel .dpk-day.hol>span::after{background:#fff}
+.dpk-week .dpk-day.rs::before,.dpk-week .dpk-day.re::before{left:0;right:0}
+.dpk-week .dpk-row.sel>:last-child::before{right:1px}
+.dpk-foot-hint{font-size:11.5px;color:var(--muted)}
+/* Monatsauswahl */
+.dpk-months{width:272px}
+.dpk-mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:2px 0 4px}
+.dpk-mon{height:42px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;font-weight:650;cursor:pointer}
+.dpk-mon:hover{background:var(--accent-soft);border-color:var(--accent-color);color:var(--accent-dark)}
+.dpk-mon.today{border-color:var(--accent-color);color:var(--accent-dark)}
+.dpk-mon.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff;box-shadow:0 6px 14px -6px var(--accent-color)}
+.dpk-week .dpk-kw>span{position:relative;z-index:1}
