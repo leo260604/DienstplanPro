@@ -2757,6 +2757,35 @@ body.dark-mode{--hol:#f27a8f}
   body.cal-fit .month-cell .hol-badge.hol-month svg{display:none}
   body.cal-fit .month-cell .hol-badge.hol-month{font-size:11.5px;top:6px}
 }
+/* Wochentage einer Bereitschaftszeit */
+.wd-chips{display:flex;flex-wrap:wrap;gap:6px}
+.wd-chip{position:relative;cursor:pointer}
+.wd-chip input{position:absolute;opacity:0;pointer-events:none}
+.wd-chip span{display:inline-grid;place-items:center;min-width:42px;height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:700;font-size:13px;transition:background .12s,border-color .12s,color .12s}
+.wd-chip input:checked+span{background:var(--accent-soft);border-color:var(--accent-color);color:var(--accent-dark)}
+.wd-chip input:focus-visible+span{box-shadow:0 0 0 3px var(--accent-ring)}
+.pill.sb-days{white-space:nowrap}.pill.sb-days.part{background:var(--accent-soft);color:var(--accent-dark)}
+.sb-days-hint{display:block;margin-top:6px}
+/* Eigene Datumsauswahl (Bereitschaft) */
+.dpk-native{position:absolute!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important;padding:0!important;border:0!important}
+.dpk-btn{display:flex;align-items:center;gap:8px;width:100%;min-height:42px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.dpk-btn svg{width:16px;height:16px;color:var(--muted);flex:none}
+.dpk-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dpk-btn:hover,.dpk-btn:focus-visible{border-color:var(--accent-color);outline:none;box-shadow:0 0 0 3px var(--accent-ring)}
+.dpk-btn.bad{border-color:var(--hol)}
+.dpk-pop{position:fixed;z-index:4000;width:292px;padding:10px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:0 20px 44px -14px rgba(15,23,42,.4)}
+.dpk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.dpk-head b{font-size:14px}
+.dpk-nav{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--ink);font-size:18px;cursor:pointer}
+.dpk-nav:hover{background:var(--surface-3)}
+.dpk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dpk-wd{text-align:center;font-size:10.5px;font-weight:700;color:var(--muted);padding:2px 0 4px}
+.dpk-day{height:34px;border:0;border-radius:8px;background:transparent;color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:grid;place-items:center}
+button.dpk-day:hover{background:var(--accent-soft);color:var(--accent-dark)}
+.dpk-day.today{box-shadow:inset 0 0 0 1.5px var(--accent-color)}
+.dpk-day.on{background:var(--accent-color);color:#fff}
+.dpk-day.hol{color:var(--hol)}.dpk-day.hol.on{color:#fff}
+.dpk-day.off{color:var(--muted);opacity:.28;cursor:default;text-decoration:line-through}
 
 </style>
 </head>
@@ -4299,7 +4328,7 @@ function calendar(){
 
   <div class="wp-field"><span class="wp-label">${!isDuty?'Bereitschaftszeit':'Dienst'}</span><select id="duty-shift"></select></div>
   <div class="wp-field" id="duty-time-override" hidden><span class="wp-label">Uhrzeit für diesen Eintrag</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="duty-start-time"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="duty-end-time"></label></div><small class="wp-note" id="duty-time-hint" hidden>Die Uhrzeiten gelten nur für diesen Eintrag und ändern die hinterlegte Dienstzeit nicht.</small></div>
-  <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Von</small><input type="date" id="duty-date-from" value="${isoDate(new Date())}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Bis</small><input type="date" id="duty-date-to" value="${isoDate(new Date())}" required></label></div></div>
+  <div class="wp-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Von</small><input type="date" id="duty-date-from" value="${isoDate(new Date())}" required></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Bis</small><input type="date" id="duty-date-to" value="${isoDate(new Date())}" required></label></div><small class="wp-note sb-days-hint" id="duty-days-hint" hidden></small></div>
   <div class="wp-summary" id="duty-summary" aria-live="polite"></div>
   <div class="btn-row modal-actions wp-actions"><span class="wp-actions-right"><button type="button" class="btn" id="cancel-duty">Abbrechen</button><button type="submit" class="btn primary">${icon('check')}${!isDuty?'Bereitschaft einteilen':'Dienst einteilen'}</button></span></div>
  </form></div></div>`;
@@ -4323,6 +4352,7 @@ async function moveAssignment(id,date,emp){
  const item=assignments.find(a=>String(a.id)===String(id));if(!item||!date)return;
  const target=emp||item.employee;if(item.date===date&&target===item.employee)return;
  if(item.kind==='Dienstplan'&&!item.isAbsence&&isHoliday(date)){toast(holidayBlockMsg(date));return}
+ if(item.kind==='Bereitschaft'){const st=standbyTimeByName(item.shift,item.team);if(st&&!standbyDayOk(st,date)){toast(`„${st.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(st)}.`);return}}
  if(!canEditEntry(item.team,item.employee,areaOf(item))||(target!==item.employee&&!managesTeam(item.team,areaOf(item)))){toast(selfEditAllowed(item.team,areaOf(item))?'Du darfst nur deine eigenen Einträge verschieben.':'Du darfst Einträge dieses Teams nicht bearbeiten.');return}
  const team=teamByName(item.team),person=staff.find(p=>p[0]===target);
  if(!person||!team||!team.memberIds.includes(person[8])){toast('Einträge können nur innerhalb des eigenen Teams verschoben werden.');return}
@@ -4338,6 +4368,7 @@ async function copyToNextDay(id){
  const item=assignments.find(a=>String(a.id)===String(id));if(!item)return;
  if(!canEditEntry(item.team,item.employee,areaOf(item))){toast('Du darfst diesen Eintrag nicht kopieren.');return}
  let next=addDays(new Date(item.date+'T12:00:00'),1);if(item.kind!=='Bereitschaft')while((next.getDay()+6)%7>=dutyDays||(item.kind==='Dienstplan'&&!item.isAbsence&&isHoliday(isoDate(next))))next=addDays(next,1);
+ else{const st=standbyTimeByName(item.shift,item.team);for(let g=0;st&&g<7&&!standbyDayOk(st,isoDate(next));g++)next=addDays(next,1)}
  const date=isoDate(next);
  if(assignments.some(a=>a.employee===item.employee&&a.date===date&&a.kind===item.kind&&!a.isAbsence)){toast(`${item.employee} hat am ${fmtIsoDate(date)} bereits einen Eintrag.`);return}
  pushUndo('Kopieren');const copy={...item,id:makeId(),date};assignments.push(copy);persistAssignments();
@@ -4436,7 +4467,8 @@ async function autoRotation(){
  {const bad=chosen.filter(t=>!standbyTimeForTeam(st,t.name));if(bad.length){toast(`„${st.name}“ ist für ${bad.map(t=>t.name).join(', ')} nicht freigegeben. Bitte diese Teams abwählen oder eine andere Bereitschaftszeit wählen.`);return}}
  const rotVar=isVariableStandby(st),rotStart=rotVar?res.vstart:st.start,rotEnd=rotVar?res.vend:st.end;
  if(rotVar&&(!/^\d\d:\d\d$/.test(rotStart||'')||!/^\d\d:\d\d$/.test(rotEnd||'')||rotStart===rotEnd)){toast(`${st.name} ist eine variable Bereitschaft – bitte Beginn und Ende eingeben.`);return}
- const keep=!!res.keep,dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1))dates.push(isoDate(c));
+ const keep=!!res.keep,dates=[];for(let c=new Date(res.from+'T12:00:00');isoDate(c)<=res.to;c=addDays(c,1))if(standbyDayOk(st,isoDate(c)))dates.push(isoDate(c));
+ if(!dates.length){toast(`„${st.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(st)} – im Zeitraum liegt kein passender Tag.`);return}
  if(dates.length>366){toast('Bitte einen Zeitraum von höchstens 366 Tagen auswählen.');return}
  pushUndo('Rotation');const created=[];
  chosen.forEach(t=>{
@@ -4658,10 +4690,10 @@ function standbyManagementPage(){
  const sub=admin?'Bereitschaftszeiten je Team – unabhängig von den regulären Dienstzeiten. Bereitschaften verwenden die Teamfarbe.'
   :'Bereitschaftszeiten im Überblick. Bereitschaften verwenden die Teamfarbe.';
  const actions=admin?`<button class="btn primary" id="sb-new-time">${icon('plus')}Bereitschaftszeit anlegen</button>`:'';
- const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Teams</th><th class="hide-sm scale-head"><div class="scale-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></th>${admin?'<th>Aktionen</th>':''}</tr>`;
+ const head=`<tr><th>Bezeichnung</th><th>Art</th><th>Zeit</th><th>Dauer</th><th>Wochentage</th><th>Teams</th><th class="hide-sm scale-head"><div class="scale-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></th>${admin?'<th>Aktionen</th>':''}</tr>`;
  const sorted=[...standbyTimes].sort((a,b)=>isVariableStandby(a)-isVariableStandby(b)||(a.start||'').localeCompare(b.start||'')||a.name.localeCompare(b.name,'de'));
  const rows=sorted.map(t=>{const c=shiftHexColor(t.color||'#159da8'),s=durationHoursStart(t.start),e=durationHoursStart(t.end),segs=e>s?[[s,e]]:[[s,24],[0,e]],vari=isVariableStandby(t);
-  return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
+  return `<tr><td><span class="shift-color-tag" style="--shift-color:${c}"><i></i>${escapeHtml(t.name)}</span></td><td>${vari?'<span class="pill sb-type var">Variabel</span>':'<span class="pill sb-type fix">Fix</span>'}</td><td>${vari?'<span class="muted">Ohne feste Uhrzeit</span>':`${escapeHtml(t.start)} – ${escapeHtml(t.end)}${e<=s?' <span class="pill">über Mitternacht</span>':''}`}</td><td>${vari?'<span class="muted">—</span>':fmtHours(durationHours(t.start,t.end))}</td><td><span class="pill sb-days ${standbyDays(t).length<7?'part':''}">${standbyDaysLabel(t)}</span></td><td>${standbyTeamsCell(t)}</td><td class="hide-sm"><div class="mini-scale${vari?' is-variable':''}" ${vari?'title="Ohne feste Uhrzeit"':''}>${vari?'':segs.map(([a,b])=>`<i style="left:${a/24*100}%;width:${(b-a)/24*100}%;background:${c}"></i>`).join('')}</div></td>${admin?`<td class="nowrap row-actions"><button class="icon-btn" type="button" data-sb-edit-time="${escapeHtml(t.id)}" title="Bearbeiten" aria-label="${escapeHtml(t.name)} bearbeiten">${icon('edit')}</button><button class="icon-btn danger" type="button" data-sb-delete-time="${escapeHtml(t.id)}" title="Löschen" aria-label="${escapeHtml(t.name)} löschen">${icon('trash')}</button></td>`:''}</tr>`}).join('');
  return `${heading('Bereitschaft verwalten',sub,actions)}
  ${!admin?`<div class="readonly-note">${icon('eye')}Nur Lesezugriff – Änderungen sind deiner Rolle nicht erlaubt.</div>`:''}
  <div class="stats sb-stats">
@@ -4687,6 +4719,14 @@ function standbyTeamsCell(t){
 }
 function durationHoursStart(hhmm){const [h,m]=String(hhmm||'0:0').split(':').map(Number);return h+(m||0)/60}
 /* Dialog: Bereitschaftszeit anlegen / bearbeiten (nur Admin) – mit Auswahl der Teams */
+/* Wochentage einer Bereitschaftszeit (0 = Montag … 6 = Sonntag); ohne Angabe: alle Tage */
+const WD_SHORT=['Mo','Di','Mi','Do','Fr','Sa','So'];
+const standbyDays=x=>Array.isArray(x?.days)&&x.days.length?x.days.filter(d=>d>=0&&d<=6):[0,1,2,3,4,5,6];
+const standbyDayOk=(x,iso)=>standbyDays(x).includes((new Date(iso+'T12:00:00').getDay()+6)%7);
+function standbyDaysLabel(x){const d=standbyDays(x).slice().sort((a,b)=>a-b);if(d.length===7)return 'Täglich';
+ const runs=[];d.forEach(v=>{const r=runs[runs.length-1];if(r&&v===r[1]+1)r[1]=v;else runs.push([v,v])});
+ return runs.map(([a,b])=>a===b?WD_SHORT[a]:b===a+1?WD_SHORT[a]+', '+WD_SHORT[b]:WD_SHORT[a]+'–'+WD_SHORT[b]).join(', ')}
+const standbyTimeByName=(name,team)=>standbyTimes.find(x=>x.name===name&&(!team||standbyTimeForTeam(x,team)))||standbyTimes.find(x=>x.name===name);
 async function openStandbyTime(id){
  if(!standbyTimesEditable()){toast('Bereitschaftszeiten kann nur ein Admin verwalten.');return}
  if(!teams.length){toast('Bitte zuerst unter „Administration“ ein Team anlegen.');return}
@@ -4698,6 +4738,7 @@ async function openStandbyTime(id){
   <small class="wp-note sb-team-note" id="sbt-team-note"></small>
   <div class="wp-field"><span class="wp-label">Art der Bereitschaft</span><select id="sbt-type" name="type"><option value="fix" ${type0==='fix'?'selected':''}>Fix</option><option value="variabel" ${type0==='variabel'?'selected':''}>Variabel</option></select></div>
   <div class="wp-field" id="sbt-range-field"><span class="wp-label">Zeitraum</span><div class="wp-range"><label><small>Beginn</small><input type="time" id="sbt-start" name="start" value="${escapeHtml(ex?.start||'')}"></label><span class="wp-range-arrow" aria-hidden="true">→</span><label><small>Ende</small><input type="time" id="sbt-end" name="end" value="${escapeHtml(ex?.end||'')}"></label></div></div>
+  <div class="wp-field"><span class="wp-label">Mögliche Wochentage</span><div class="wd-chips" id="sbt-days">${WD_SHORT.map((d,i)=>`<label class="wd-chip"><input type="checkbox" name="wd:${i}" value="1" ${standbyDays(ex).includes(i)?'checked':''}><span>${d}</span></label>`).join('')}</div><small class="wp-note" id="sbt-days-note"></small></div>
   <div class="wp-summary sb-time-sum"><span class="wp-sum-ic">${icon('clock')}</span><div class="sb-sum-txt"><b id="sbt-dur"></b><small id="sbt-msg"></small><div class="mini-scale" id="sbt-scale"></div></div></div>
   <div class="wp-field shift-color-field"><span class="wp-label">Farbe in der Übersicht</span><div class="shift-color-presets">${SHIFT_SWATCHES.map(c=>`<button type="button" class="color-swatch" data-color="${c}" style="--swatch:${c}" aria-label="Farbe ${c}" title="${c}"></button>`).join('')}<label class="color-swatch custom" title="Eigene Farbe wählen"><input type="text" data-color-input readonly inputmode="none" autocomplete="off" spellcheck="false" id="sbt-color-pick" value="${c0}" aria-label="Eigene Farbe wählen"></label></div><input type="hidden" name="color" id="sbt-color" value="${c0}"></div>`,ex?'Speichern':'Bereitschaftszeit anlegen',ex?'Bestehende Bereitschaftseinträge bleiben unverändert.':'Steht beim Einteilen der Bereitschaft für die gewählten Teams zur Auswahl.',{icon:'clock',cls:'sb-time-modal'});
  const layer=[...document.querySelectorAll('.app-dialog')].pop(),$=x=>layer.querySelector('#'+x);
@@ -4706,9 +4747,11 @@ async function openStandbyTime(id){
  const selTeams=()=>[...layer.querySelectorAll('[data-dd-team]')].filter(b=>b.checked).map(b=>b.dataset.ddTeam);
  const isVar=()=>typ.value==='variabel';
  if(typeof fancySelect==='function')fancySelect(typ,{kind:'shift',placeholder:'Art wählen',meta:o=>o.value==='variabel'?{label:'Variabel',sub:'Uhrzeit wird beim Einteilen eingegeben',icon:'refresh',color:'#9b69c8'}:{label:'Fix',sub:'Mit fester Uhrzeit (Beginn – Ende)',icon:'clock',color:'var(--accent-color)'}});
- const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===v.toLowerCase()))return 'Es gibt bereits eine Bereitschaftszeit mit diesem Namen.';if(!selTeams().length)return 'Bitte mindestens ein Team auswählen.';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}return ''};
+ const selDays=()=>[...layer.querySelectorAll('#sbt-days input')].map((c,i)=>c.checked?i:-1).filter(i=>i>=0);
+ const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!selDays().length)return 'Bitte mindestens einen Wochentag auswählen.';if(standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===v.toLowerCase()))return 'Es gibt bereits eine Bereitschaftszeit mit diesem Namen.';if(!selTeams().length)return 'Bitte mindestens ein Team auswählen.';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}return ''};
  const upd=()=>{const pr=problem(),c=col.value,vr=isVar(),s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s,sel=selTeams();
   rangeF.hidden=vr;
+  {const dn=$('sbt-days-note'),sd=selDays();dn.textContent=!sd.length?'Bitte mindestens einen Wochentag auswählen.':sd.length===7?'Kann an jedem Tag eingetragen werden.':`Nur an diesen Tagen eintragbar: ${standbyDaysLabel({days:sd})}.`;dn.classList.toggle('bad',!sd.length)}
   const tn=$('sbt-team-note');tn.textContent=!sel.length?'Nur die gewählten Teams können diese Bereitschaft einteilen.':sel.length===teams.length?'Alle Teams ausgewählt – gilt auch für später angelegte Teams.':`${sel.length} von ${teams.length} Teams können diese Bereitschaft einteilen.`;tn.classList.toggle('bad',!sel.length&&pr==='Bitte mindestens ein Team auswählen.'&&!!name.value.trim());
   $('sbt-dur').textContent=vr?'Variable Bereitschaft':st.value&&en.value&&st.value!==en.value?fmtHours(durationHours(st.value,en.value))+(over?' · über Mitternacht':''):'Uhrzeit eingeben';
   const timeProblem=pr&&pr!=='empty'&&pr!=='Bitte mindestens ein Team auswählen.';
@@ -4719,16 +4762,18 @@ async function openStandbyTime(id){
   layer.querySelector('button[type=submit]').disabled=!!pr};
  const setColor=c=>{col.value=c;pick.value=c;upd()};
  layer.querySelectorAll('.shift-color-presets .color-swatch[data-color]').forEach(b=>b.onclick=()=>setColor(b.dataset.color));pick.oninput=pick.onchange=()=>setColor(pick.value);
- [name,st,en].forEach(x=>{x.addEventListener('input',upd);x.addEventListener('change',upd)});layer.addEventListener('dd-teams',upd);layer.querySelectorAll('[data-dd-team],[data-dd-all]').forEach(b=>b.addEventListener('change',()=>setTimeout(upd)));typ.addEventListener('change',()=>{upd();if(!isVar()&&!st.value)setTimeout(()=>st.focus(),30)});upd();
+ [name,st,en].forEach(x=>{x.addEventListener('input',upd);x.addEventListener('change',upd)});layer.querySelectorAll('#sbt-days input').forEach(c=>c.addEventListener('change',upd));layer.addEventListener('dd-teams',upd);layer.querySelectorAll('[data-dd-team],[data-dd-all]').forEach(b=>b.addEventListener('change',()=>setTimeout(upd)));typ.addEventListener('change',()=>{upd();if(!isVar()&&!st.value)setTimeout(()=>st.focus(),30)});upd();
  layer.addEventListener('submit',e=>{const pr=problem();if(pr){e.preventDefault();e.stopPropagation();if(pr!=='empty'&&!isVar()&&(!st.value||!en.value)){const m=$('sbt-msg');m.textContent=pr;m.classList.add('bad');(st.value?en:st).focus()}else name.focus()}},true);setTimeout(()=>name.focus(),30);
  const res=await dlg;if(!res)return;
  const vr=res.type==='variabel',chosen=teams.filter(t=>res['team:'+t.name]);
- const data={name:String(res.name||'').trim().slice(0,60),type:vr?'variabel':'fix',start:vr?'':res.start,end:vr?'':res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8'};
+ const days=WD_SHORT.map((d,i)=>res['wd:'+i]?i:-1).filter(i=>i>=0);
+ const data={name:String(res.name||'').trim().slice(0,60),type:vr?'variabel':'fix',start:vr?'':res.start,end:vr?'':res.end,color:/^#[0-9a-f]{6}$/i.test(res.color)?res.color:'#159da8',days:days.length&&days.length<7?days:undefined};
+ if(!days.length){toast('Bitte mindestens einen Wochentag auswählen.');return}
  if(!chosen.length||!data.name||standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===data.name.toLowerCase())||(!vr&&(!/^\d\d:\d\d$/.test(data.start)||!/^\d\d:\d\d$/.test(data.end)||data.start===data.end))){toast('Bitte alle Angaben prüfen.');return}
  const allSel=chosen.length===teams.length,teamTxt=allSel?'Alle Teams':chosen.map(t=>t.name).join(', ');
- if(ex){const before=`${ex.name} (${tRange(ex)}) · ${standbyTimeAllTeams(ex)?'Alle Teams':standbyTimeTeams(ex).map(t=>t.name).join(', ')}`;Object.assign(ex,data);if(allSel)delete ex.teamIds;else ex.teamIds=chosen.map(t=>t.id);
+ if(ex){const before=`${ex.name} (${tRange(ex)}) · ${standbyTimeAllTeams(ex)?'Alle Teams':standbyTimeTeams(ex).map(t=>t.name).join(', ')}`;Object.assign(ex,data);if(!data.days)delete ex.days;if(allSel)delete ex.teamIds;else ex.teamIds=chosen.map(t=>t.id);
   persistStandbyConfig();audit('Geändert','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit geändert',object:data.name,before,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit gespeichert.');return}
- const item={id:makeId(),...data};if(!allSel)item.teamIds=chosen.map(t=>t.id);standbyTimes.push(item);persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit angelegt',object:data.name,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit angelegt.');
+ const item={id:makeId(),...data};if(!data.days)delete item.days;if(!allSel)item.teamIds=chosen.map(t=>t.id);standbyTimes.push(item);persistStandbyConfig();audit('Erstellt','Bereitschaftszeiten',`${data.name} (${tRange(data)}) · ${teamTxt}`,{title:'Bereitschaftszeit angelegt',object:data.name,after:`${data.name} (${tRange(data)}) · ${teamTxt}`});render();toast('Bereitschaftszeit angelegt.');
 }
 /* Dialog: Bereitschaftsfarbe eines Teams (Admin: alle Teams, Teamleitung: eigene Teams) */
 async function openStandbyColor(teamId){
@@ -5528,6 +5573,34 @@ function bindAbsenceModal(){
   createAssignmentNotifications(created,{absence:true});close();toast(days===1?'Abwesenheit wurde eingetragen.':`Abwesenheit für ${days} Tage wurde eingetragen.`);render();
  };
 }
+/* Eigene Datumsauswahl: zeigt einen Monatskalender, in dem nur erlaubte Tage wählbar sind */
+function attachDayPicker(inp,allowed){
+ if(inp._dpk){inp._dpk.allowed=allowed;inp._dpk.refresh();return}
+ inp.classList.add('dpk-native');inp.tabIndex=-1;
+ const btn=document.createElement('button');btn.type='button';btn.className='dpk-btn';inp.after(btn);
+ const st={allowed};
+ const refresh=()=>{const v=inp.value;btn.innerHTML=`${icon('cal')}<span>${v?escapeHtml(fmtWithWeekday(new Date(v+'T12:00:00'))):'Datum wählen'}</span>`;btn.classList.toggle('bad',!!v&&!st.allowed(v))};
+ st.refresh=refresh;inp._dpk=st;inp.addEventListener('change',refresh);inp.addEventListener('input',refresh);refresh();
+ btn.onclick=e=>{e.preventDefault();e.stopPropagation();openDayPickerPop(inp,btn)};
+}
+function openDayPickerPop(inp,btn){
+ document.querySelector('.dpk-pop')?.remove();
+ const st=inp._dpk,base=inp.value?new Date(inp.value+'T12:00:00'):new Date();let ym=new Date(base.getFullYear(),base.getMonth(),1,12);
+ const pop=document.createElement('div');pop.className='dpk-pop';pop.setAttribute('role','dialog');document.body.appendChild(pop);
+ const MON=['Jänner','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+ const draw=()=>{const y=ym.getFullYear(),m=ym.getMonth(),first=(new Date(y,m,1,12).getDay()+6)%7,days=new Date(y,m+1,0).getDate(),today=isoDate(new Date());let cells='';
+  for(let i=0;i<first;i++)cells+='<span class="dpk-blank"></span>';
+  for(let d=1;d<=days;d++){const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,ok=st.allowed(iso),hol=holidayName(iso);
+   cells+=ok?`<button type="button" class="dpk-day ${iso===inp.value?'on':''} ${iso===today?'today':''} ${hol?'hol':''}" data-iso="${iso}" ${hol?`title="${escapeHtml(hol)}"`:''}>${d}</button>`:`<span class="dpk-day off" aria-hidden="true">${d}</span>`}
+  pop.innerHTML=`<div class="dpk-head"><button type="button" class="dpk-nav" data-nav="-1" aria-label="Vorheriger Monat">‹</button><b>${MON[m]} ${y}</b><button type="button" class="dpk-nav" data-nav="1" aria-label="Nächster Monat">›</button></div><div class="dpk-grid">${WD_SHORT.map(w=>`<span class="dpk-wd">${w}</span>`).join('')}${cells}</div>`;
+  pop.querySelectorAll('[data-nav]').forEach(b=>b.onclick=e=>{e.stopPropagation();ym=new Date(y,m+Number(b.dataset.nav),1,12);draw()});
+  pop.querySelectorAll('[data-iso]').forEach(b=>b.onclick=e=>{e.stopPropagation();inp.value=b.dataset.iso;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));close()})};
+ draw();
+ const place=()=>{const r=btn.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;let x=Math.min(Math.max(8,r.left),innerWidth-w-8),y=r.bottom+6;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-6);pop.style.left=x+'px';pop.style.top=y+'px'};place();
+ const outside=e=>{if(!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close()},key=e=>{if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close()}};
+ function close(){pop.remove();document.removeEventListener('mousedown',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('resize',close)}
+ setTimeout(()=>{document.addEventListener('mousedown',outside,true);document.addEventListener('keydown',key,true);window.addEventListener('resize',close)});
+}
 function bindDutyModal(){
  const team=document.getElementById('duty-team'),employee=document.getElementById('duty-employee'),shift=document.getElementById('duty-shift'),standbyGroup=document.getElementById('duty-standby-group'),form=document.getElementById('duty-form'),modal=document.getElementById('duty-modal');
  const close=document.getElementById('close-duty'),cancel=document.getElementById('cancel-duty');
@@ -5576,7 +5649,17 @@ function bindDutyModal(){
  // „Bis“ folgt „Von“, solange nur ein Tag gewählt ist oder „Bis“ davor läge
  const dFrom=document.getElementById('duty-date-from'),dTo=document.getElementById('duty-date-to');
  if(dFrom&&dTo){dFrom.addEventListener('focus',()=>{dFrom.dataset.prev=dFrom.value});dFrom.addEventListener('change',()=>{const v=dFrom.value;if(v&&(!dTo.value||dTo.value<v||dTo.value===dFrom.dataset.prev))dTo.value=v;dFrom.dataset.prev=v;updateDutySummary()});dTo.addEventListener('change',updateDutySummary)}
- window.__dutySummary=updateDutySummary;
+ // Bereitschaft: Kalenderauswahl zeigt nur die Wochentage, an denen die gewählte Bereitschaftszeit möglich ist
+ if(currentPage==='Bereitschaft'){
+  const fIn=document.getElementById('duty-date-from'),tIn=document.getElementById('duty-date-to');
+  const svc=()=>standbyTimes.find(x=>String(x.id)===String(shift.value));
+  const ok=iso=>{const x=svc();return !x||standbyDayOk(x,iso)};
+  const snap=inp=>{if(!inp.value||ok(inp.value))return;let d=new Date(inp.value+'T12:00:00');for(let g=0;g<7&&!ok(isoDate(d));g++)d=addDays(d,1);inp.value=isoDate(d)};
+  if(fIn)attachDayPicker(fIn,ok);if(tIn)attachDayPicker(tIn,iso=>ok(iso)&&(!fIn.value||iso>=fIn.value));
+  const syncDays=()=>{if(fIn){snap(fIn);fIn._dpk?.refresh()}if(tIn){snap(tIn);if(fIn&&tIn.value&&tIn.value<fIn.value)tIn.value=fIn.value;tIn._dpk?.refresh()}const x=svc(),n=document.getElementById('duty-days-hint');if(n){const part=x&&standbyDays(x).length<7;n.hidden=!part;if(part)n.textContent=`„${x.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(x)}. Andere Tage sind im Kalender ausgegraut.`}};
+  shift.addEventListener('change',syncDays);fIn?.addEventListener('change',()=>{if(tIn&&(!tIn.value||tIn.value<fIn.value)){tIn.value=fIn.value;tIn._dpk?.refresh()}});
+  window.__dutySummary=()=>{syncDays();updateDutySummary()};
+ }else window.__dutySummary=updateDutySummary;
  form.onsubmit=async e=>{
   e.preventDefault();
   const person=staff[Number(employee.value)],service=(currentPage==='Bereitschaft'?standbyTimes:shiftTypes).find(x=>String(x.id)===String(shift.value));
@@ -5595,6 +5678,8 @@ function bindDutyModal(){
    // Bei mehreren Tagen nur die eingestellten Arbeitstage belegen (Bereitschaft immer Mo–So)
    if(multiDay&&currentPage!=='Bereitschaft'&&(cursor.getDay()+6)%7>=dutyDays){skipped++;continue}
    dates.push(isoDate(cursor))}
+  // Bereitschaft: nur an den Wochentagen, an denen diese Bereitschaftszeit möglich ist
+  if(currentPage==='Bereitschaft'&&standbyDays(service).length<7){const bad=dates.filter(d=>!standbyDayOk(service,d));if(bad.length){if(dates.length===1){toast(`„${service.name}“ ist nur an diesen Tagen möglich: ${standbyDaysLabel(service)}.`);return}for(const b of bad)dates.splice(dates.indexOf(b),1);skipped+=bad.length}}
   // Feiertage: keine Dienste (Bereitschaften bleiben möglich)
   if(currentPage!=='Bereitschaft'){const hol=dates.filter(isHoliday);if(hol.length){if(dates.length===1){toast(holidayBlockMsg(dates[0]));return}for(const h of hol)dates.splice(dates.indexOf(h),1);skipped+=hol.length;toast(`${hol.length} Feiertag${hol.length>1?'e':''} übersprungen – an Feiertagen werden keine Dienste eingetragen.`)}}
   if(!dates.length){toast('Im gewählten Zeitraum liegen keine Arbeitstage.');return}
