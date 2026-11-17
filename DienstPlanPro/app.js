@@ -1355,13 +1355,13 @@ const WD_SHORT=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const standbyDays=x=>Array.isArray(x?.days)?x.days.filter(d=>d>=0&&d<=6):[0,1,2,3,4,5,6];
 const standbyHol=x=>x?.hol!==false;
 const standbyRestricted=x=>standbyDays(x).length<7||!standbyHol(x);
-/* Feiertag: nur Bereitschaften mit „Feiertage" – Ausnahme Samstag: Feiertag am Samstag zählt als Samstag (nur Samstags-Freigabe) */
-const standbyDayOk=(x,iso)=>{const wd=(new Date(iso+'T12:00:00').getDay()+6)%7,d=standbyDays(x);if(isHoliday(iso)&&wd!==5)return standbyHol(x);return d.includes(wd)};
+/* Feiertag: nur Bereitschaften mit „Feiertage" – Ausnahme Wochenende: Feiertag am Samstag/Sonntag zählt als normaler Samstag/Sonntag */
+const standbyDayOk=(x,iso)=>{const wd=(new Date(iso+'T12:00:00').getDay()+6)%7,d=standbyDays(x);if(isHoliday(iso)&&wd<5)return standbyHol(x);return d.includes(wd)};
 function standbyWdLabel(days){const d=days.slice().sort((a,b)=>a-b);if(d.length===7)return 'Mo–So';
  const runs=[];d.forEach(v=>{const r=runs[runs.length-1];if(r&&v===r[1]+1)r[1]=v;else runs.push([v,v])});
  return runs.map(([a,b])=>a===b?WD_SHORT[a]:b===a+1?WD_SHORT[a]+', '+WD_SHORT[b]:WD_SHORT[a]+'–'+WD_SHORT[b]).join(', ')}
 function standbyDaysLabel(x){const d=standbyDays(x),h=standbyHol(x);if(d.length===7&&h)return 'Täglich';if(!d.length)return h?'Nur Feiertage':'—';
- const w=standbyWdLabel(d);if(h)return w+', Feiertage';return d.some(v=>v!==5)?w+' (außer Feiertage)':w}
+ const w=standbyWdLabel(d);if(h)return w+', Feiertage';return d.some(v=>v<5)?w+' (außer Feiertage)':w}
 const standbyTimeByName=(name,team)=>standbyTimes.find(x=>x.name===name&&(!team||standbyTimeForTeam(x,team)))||standbyTimes.find(x=>x.name===name);
 async function openStandbyTime(id){
  if(!standbyTimesEditable()){toast('Bereitschaftszeiten kann nur ein Admin verwalten.');return}
@@ -1389,7 +1389,7 @@ async function openStandbyTime(id){
  const problem=()=>{const v=name.value.trim();if(!v)return 'empty';if(!selDays().length&&!selHol())return 'Bitte mindestens einen Wochentag oder Feiertage auswählen.';if(standbyTimes.some(t=>t.id!==id&&t.name.toLowerCase()===v.toLowerCase()))return 'Es gibt bereits eine Bereitschaftszeit mit diesem Namen.';if(!selTeams().length)return 'Bitte mindestens ein Team auswählen.';if(!isVar()){if(!st.value||!en.value)return 'Bitte Beginn und Ende angeben.';if(st.value===en.value)return 'Beginn und Ende dürfen nicht gleich sein.'}return ''};
  const upd=()=>{const pr=problem(),c=col.value,vr=isVar(),s=durationHoursStart(st.value),e=durationHoursStart(en.value),over=st.value&&en.value&&e<=s,sel=selTeams();
   rangeF.hidden=vr;
-  {const dn=$('sbt-days-note'),sd=selDays(),sh=selHol(),none=!sd.length&&!sh;dn.textContent=none?'Bitte mindestens einen Wochentag oder Feiertage auswählen.':sd.length===7&&sh?'Kann an jedem Tag eingetragen werden.':!sd.length?'Nur an Feiertagen eintragbar – fällt ein Feiertag auf einen Samstag, ist sie gesperrt.':sh?`Eintragbar an: ${standbyWdLabel(sd)} sowie an Feiertagen${sd.includes(5)?'':' (fällt ein Feiertag auf einen Samstag, ist sie gesperrt)'}.`:`Eintragbar an: ${standbyWdLabel(sd)}. An Feiertagen nicht möglich${sd.includes(5)?' – außer der Feiertag fällt auf einen Samstag':''}.`;dn.classList.toggle('bad',none)}
+  {const dn=$('sbt-days-note'),sd=selDays(),sh=selHol(),none=!sd.length&&!sh;dn.textContent=none?'Bitte mindestens einen Wochentag oder Feiertage auswählen.':sd.length===7&&sh?'Kann an jedem Tag eingetragen werden.':!sd.length?'Nur an Feiertagen (Mo–Fr) eintragbar – fällt ein Feiertag auf Samstag oder Sonntag, ist sie gesperrt.':sh?`Eintragbar an: ${standbyWdLabel(sd)} sowie an Feiertagen (Mo–Fr). Feiertage am Wochenende zählen als normaler Samstag/Sonntag.`:`Eintragbar an: ${standbyWdLabel(sd)}.${sd.some(v=>v<5)?' An Feiertagen (Mo–Fr) nicht möglich.':''}${sd.some(v=>v>=5)?' Feiertage am Wochenende zählen als normaler Samstag/Sonntag.':''}`;dn.classList.toggle('bad',none)}
   const tn=$('sbt-team-note');tn.textContent=!sel.length?'Nur die gewählten Teams können diese Bereitschaft einteilen.':sel.length===teams.length?'Alle Teams ausgewählt – gilt auch für später angelegte Teams.':`${sel.length} von ${teams.length} Teams können diese Bereitschaft einteilen.`;tn.classList.toggle('bad',!sel.length&&pr==='Bitte mindestens ein Team auswählen.'&&!!name.value.trim());
   $('sbt-dur').textContent=vr?'Variable Bereitschaft':st.value&&en.value&&st.value!==en.value?fmtHours(durationHours(st.value,en.value))+(over?' · über Mitternacht':''):'Uhrzeit eingeben';
   const timeProblem=pr&&pr!=='empty'&&pr!=='Bitte mindestens ein Team auswählen.';
