@@ -3885,24 +3885,24 @@ sidebarCollapse.onclick=()=>{sidebarManual=true;const collapsed=sidebar.classLis
 const ACCENTS={turquoise:['#14A1A9','#0e8a91','#0b7f86','#14A1A9'],navy:['#0068A8','#00588f','#004d7d','#2f8fd1']};
 const ACCENT_LABEL={turquoise:'Türkis',navy:'Blau'};
 const systemDark=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
-function applyTheme(mode){
+function applyTheme(mode,persist=true){
  if(!['light','dark','system'].includes(mode))mode='light';
- localStorage.setItem('dienstplanTheme',mode);
+ if(persist)localStorage.setItem('dienstplanTheme',mode);
  const dark=mode==='dark'||(mode==='system'&&!!systemDark&&systemDark.matches);
  document.body.classList.toggle('dark-mode',dark);
  const t=document.querySelector('#theme-toggle use');if(t)t.setAttribute('href',dark?'#i-sun':'#i-moon');
- applyAccentColor(localStorage.getItem('dienstplanAccentColor')||'turquoise');
+ applyAccentColor(localStorage.getItem('dienstplanAccentColor')||'turquoise',false);
 }
 if(systemDark&&systemDark.addEventListener)systemDark.addEventListener('change',()=>{if(localStorage.getItem('dienstplanTheme')==='system')applyTheme('system')});
-function applyAccentColor(key){
- if(!ACCENTS[key])key='turquoise';localStorage.setItem('dienstplanAccentColor',key);
+function applyAccentColor(key,persist=true){
+ if(!ACCENTS[key])key='turquoise';if(persist)localStorage.setItem('dienstplanAccentColor',key);
  const dark=document.body.classList.contains('dark-mode'),[base,hov,d,darkC]=ACCENTS[key],c=dark?darkC:base,h=dark&&darkC!==base?base:hov,st=document.body.style;
  const rgb=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)).join(',');
  st.setProperty('--accent-color',c);st.setProperty('--accent-hover',h);st.setProperty('--accent-dark',dark?`color-mix(in srgb,${c} 55%,#fff)`:d);
  st.setProperty('--accent-soft',dark?`rgba(${rgb},.18)`:`color-mix(in srgb,${c} 11%,#fff)`);st.setProperty('--accent-ring',`rgba(${rgb},.2)`);
  document.body.classList.toggle('navy-accent',key==='navy');
 }
-function applyFontScale(v){if(!['small','normal','large'].includes(v))v='normal';localStorage.setItem('dienstplanFontScale',v);document.documentElement.style.zoom=window.matchMedia('(max-width: 700px)').matches?'':{small:'0.92',normal:'',large:'1.1'}[v];}
+function applyFontScale(v,persist=true){if(!['small','normal','large'].includes(v))v='normal';if(persist)localStorage.setItem('dienstplanFontScale',v);document.documentElement.style.zoom=window.matchMedia('(max-width: 700px)').matches?'':{small:'0.92',normal:'',large:'1.1'}[v];}
 function applyCompact(on){localStorage.setItem('dienstplanCompact',on?'1':'0');document.body.classList.toggle('compact',!!on);}
 applyTheme(localStorage.getItem('dienstplanTheme')||'light');
 applyFontScale(localStorage.getItem('dienstplanFontScale')||'normal');
@@ -6903,6 +6903,22 @@ let calFitW=window.innerWidth,calFitH=window.innerHeight;window.addEventListener
 const DP_REMOTE={dienstplanStaff:()=>{staff=__ld_staff()},dienstplanTeams:()=>{teams=__ld_teams()},dienstplanDepartments:()=>{departments=__ld_departments()},dienstplanAssignments:()=>{assignments=__ld_assignments()},dienstplanTeamNotes:()=>{teamNotes=__ld_teamNotes()},dienstplanFeatures:()=>{features=__ld_features()},
  dienstplanShiftTypes:()=>{const v=__ld_shiftTypesParse(load('dienstplanShiftTypes',null));if(v)shiftTypes=v},dienstplanStandbyGroups:()=>{standbyGroups=__ld_standbyGroups()},dienstplanStandbyTimes:()=>{standbyTimes=__ld_standbyTimes()},
  dienstplanSwaps:()=>{swaps=__ld_swaps()},dienstplanNotifications:()=>{notifications=__ld_notifications()},dienstplanRoles:()=>{roles=__ld_roles()},dienstplanPermissions:()=>{permissions=__ld_permissions()},
+ // Einstellungen & Darstellung
+ dienstplanDefaults:()=>{const v=load('dienstplanDefaults',null);if(v&&typeof v==='object')defaults=v},
+ dienstplanDutyDays:()=>{const v=Number(localStorage.getItem('dienstplanDutyDays'));dutyDays=[5,6,7].includes(v)?v:6},
+ dienstplanExpandedMonthView:()=>{expandedMonthView=localStorage.getItem('dienstplanExpandedMonthView')==='1'},
+ dienstplanMemberOrder:()=>{const v=load('dienstplanMemberOrder',{});memberOrderAll=v&&typeof v==='object'&&!Array.isArray(v)?v:{}},
+ dienstplanDateFormat:()=>{const v=localStorage.getItem('dienstplanDateFormat');dateFormat=['dmy','iso','mdy','long'].includes(v)?v:'dmy';updateTopDate()},
+ dienstplanTheme:()=>applyTheme(localStorage.getItem('dienstplanTheme')||'light',false),
+ dienstplanAccentColor:()=>applyAccentColor(localStorage.getItem('dienstplanAccentColor')||'turquoise',false),
+ dienstplanFontScale:()=>applyFontScale(localStorage.getItem('dienstplanFontScale')||'normal',false),
+ dienstplanCompact:()=>document.body.classList.toggle('compact',localStorage.getItem('dienstplanCompact')==='1'),
+ dienstplanSidebarCollapsed:()=>{if(window.innerWidth<=700||sidebarAuto())return;const c=localStorage.getItem('dienstplanSidebarCollapsed')==='1';sidebar.classList.toggle('collapsed',c);setSidebarArrow(c)},
+ dienstplanDashLayout:()=>{const v=load('dienstplanDashLayout',{});dashLayouts=v&&typeof v==='object'&&!Array.isArray(v)?v:{}},
+ dienstplanFavorites:()=>{},// wird bei jeder Anzeige frisch gelesen
+ dienstplanNotifyPrefs:()=>{const v=load('dienstplanNotifyPrefs',{});notifyPrefs=v&&typeof v==='object'?v:{}},
+ dienstplanCockpitLink:()=>{const v=load('dienstplanCockpitLink',{});cockpitLink=v&&typeof v==='object'?v:{}},
+ dienstplanLang:()=>location.reload(),// Sprache wird beim Laden festgelegt
  dienstplanAuditLog:()=>{const v=load('dienstplanAuditLog',[]);auditLog=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]},dienstplanExportLog:()=>{const v=load('dienstplanExportLog',[]);exportLog=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[]}};
 let dpRemoteQueue=new Set(),dpRemoteTimer=null;
 const dpBusy=()=>!document.getElementById('login-modal')?.hidden||!!document.querySelector('.app-dialog')||[...document.querySelectorAll('.modal-backdrop')].some(m=>!m.hidden)||!!document.querySelector('details.team-dd[open],.team-dd.open')||(document.activeElement&&document.activeElement.closest('#content')&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&document.activeElement.type!=='search')||(typeof dashEditing!=='undefined'&&dashEditing);
