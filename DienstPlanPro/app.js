@@ -671,8 +671,8 @@ function openLogin(){
  const modal=document.getElementById('login-modal'),list=document.getElementById('login-user-list'),search=document.getElementById('login-user-search'),chips=document.getElementById('login-role-chips');
  loginSel={userId:currentUserId||staff[0]?.[8]||'',role:''};
  const userRole=id=>{const p=staff.find(x=>x[8]===id);return p&&roles.includes(p[10])?p[10]:(roles[0]||'Mitarbeiter')};
- loginSel.role=hasSession&&loginSel.userId===currentUserId?currentRole:userRole(loginSel.userId);
- const drawRoles=()=>{chips.innerHTML=roles.map(r=>`<button type="button" class="${r===loginSel.role?'active':''}" data-login-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('');chips.querySelectorAll('[data-login-role]').forEach(b=>b.onclick=()=>{loginSel.role=b.dataset.loginRole;drawRoles()});document.getElementById('sso-account')&&(()=>{const p=staff.find(x=>x[8]===loginSel.userId);const em=document.querySelector('#sso-account em');if(em)em.textContent=loginSel.role})()};
+ loginSel.role=userRole(loginSel.userId); // Rolle kommt immer aus dem Benutzerprofil
+ const drawRoles=()=>{if(chips)chips.innerHTML=roles.map(r=>`<button type="button" class="${r===loginSel.role?'active':''}" data-login-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('');if(chips)chips.querySelectorAll('[data-login-role]').forEach(b=>b.onclick=()=>{loginSel.role=b.dataset.loginRole;drawRoles()});document.getElementById('sso-account')&&(()=>{const p=staff.find(x=>x[8]===loginSel.userId);const em=document.querySelector('#sso-account em');if(em)em.textContent=loginSel.role})()};
  const drawUsers=()=>{const q=(search.value||'').trim().toLowerCase();const items=staff.filter(x=>!q||x[0].toLowerCase().includes(q)||(x[10]||'').toLowerCase().includes(q)||teams.some(t=>t.memberIds.includes(x[8])&&t.name.toLowerCase().includes(q)));
   list.innerHTML=items.map(x=>{const t=teams.find(t=>t.memberIds.includes(x[8]));return `<button type="button" role="option" aria-selected="${x[8]===loginSel.userId}" class="login-user ${x[8]===loginSel.userId?'selected':''}" data-login-user="${escapeHtml(x[8])}">${avatarHtml(x[0],teamColor(t),38)}<span><b>${escapeHtml(x[0])}</b><small>${escapeHtml(t?.name||'Ohne Team')}</small></span><em class="${(x[10]||'')==='Admin'?'admin':''}">${escapeHtml(x[10]||'Mitarbeiter')}</em></button>`}).join('')||'<div class="empty-note">Kein Benutzer gefunden.</div>';
   list.querySelectorAll('[data-login-user]').forEach(b=>{b.onclick=()=>{loginSel.userId=b.dataset.loginUser;loginSel.role=userRole(loginSel.userId);drawUsers();drawRoles();const dm=document.getElementById('login-demo');if(dm&&dm.open)setTimeout(()=>{dm.open=false;document.getElementById('sso-btn')?.focus({preventScroll:true})},120)};b.ondblclick=()=>document.getElementById('login-form').requestSubmit()});
@@ -705,8 +705,8 @@ document.getElementById('login-close').onclick=()=>{if(hasSession)document.getEl
 document.getElementById('login-modal').addEventListener('keydown',e=>{if(e.key==='Escape'&&hasSession)document.getElementById('login-modal').hidden=true});
 document.getElementById('login-form').onsubmit=e=>{
  e.preventDefault();
- const user=staff.find(x=>x[8]===loginSel.userId),role=loginSel.role;
- if(!user||!roles.includes(role)){toast('Bitte Benutzer und Rolle auswählen.');return}
+ const user=staff.find(x=>x[8]===loginSel.userId),role=user&&roles.includes(user[10])?user[10]:(roles.includes('Mitarbeiter')?'Mitarbeiter':roles[0]);
+ if(!user||!roles.includes(role)){toast('Bitte Benutzer auswählen.');return}
  currentUserId=user[8];currentRole=role;hasSession=true;
  save('dienstplanDemoSession',{userId:currentUserId,role:currentRole});
  updateSignedInUser();
@@ -719,7 +719,7 @@ document.getElementById('login-form').onsubmit=e=>{
 };
 function restoreDemoSession(){
  const session=load('dienstplanDemoSession',null);
- if(session&&staff.some(x=>x[8]===session.userId)&&roles.includes(session.role)){currentUserId=session.userId;currentRole=session.role;updateSignedInUser();return true}
+ if(session&&staff.some(x=>x[8]===session.userId)){const p=staff.find(x=>x[8]===session.userId);currentUserId=session.userId;currentRole=roles.includes(p[10])?p[10]:(roles.includes(session.role)?session.role:'Mitarbeiter');updateSignedInUser();return true}
  updateSignedInUser();return false;
 }
 
@@ -3447,7 +3447,7 @@ function helpCaps(){
 const HELP_SECTIONS=[
  {id:'start',page:null,icon:'spark',title:'Erste Schritte',intro:'Grundlagen, die auf jeder Seite gelten.',items:[
   {t:'Im Menü navigieren',s:['Links im Menü findest du alle Bereiche, die deine Rolle nutzen darf – oben die Arbeitsbereiche, darunter „Verwaltung“.','Mit dem Pfeil am Menürand klappst du das Menü auf schmale Symbole zusammen.','Am Handy öffnest du das Menü über das Symbol ☰ oben links.'],tip:'Was du nicht siehst, ist für deine Rolle nicht freigegeben. Freigaben verwaltet die Administration unter „Team Berechtigungen“.'},
-  {t:'Anmelden und Benutzer wechseln',s:['Klicke oben rechts auf dein Profilbild und dann auf „Benutzer wechseln“.','Wähle die Person und die Rolle aus und bestätige mit „Anmelden“.','Die Seite passt sich sofort an die gewählte Rolle an.']},
+  {t:'Anmelden und Benutzer wechseln',s:['Klicke oben rechts auf dein Profilbild und dann auf „Benutzer wechseln“.','Wähle die Person aus und bestätige mit „Anmelden“ – die Rolle ist im Benutzerprofil hinterlegt.','Die Seite passt sich sofort an die gewählte Rolle an.']},
   {t:'Schnellsuche (Strg K)',s:['Drücke Strg K (am Mac ⌘ K) oder klicke oben auf das Suchfeld.','Tippe einen Namen, ein Team, einen Dienst oder eine Seite – auch Anleitungen aus dieser Hilfe werden gefunden.','Mit ↑ ↓ wählen, mit Enter öffnen, mit Esc schließen.']},
   {t:'Benachrichtigungen',s:['Die Glocke oben rechts zeigt neue Hinweise, z. B. wenn du eingeteilt wurdest oder eine Tauschanfrage bekommst.','Klicke auf einen Hinweis, um direkt zum Eintrag zu springen.','Welche Hinweise du bekommst, stellst du in „Mein Konto“ → „Benachrichtigungen“ ein.']},
   {t:'Mein Konto und Profilbild',s:['Klicke oben rechts auf deinen Avatar.','Unter „Konto“ änderst du Profilbild, E-Mail und Telefonnummer.','Unter „Benachrichtigungen“ legst du fest, worüber du informiert wirst.']},
@@ -3895,7 +3895,11 @@ hasSession=restoreDemoSession();
 if(hasSession)calendarTeams=currentUserTeamNames().slice(0,1);
 // Nach einem Neuladen (z. B. Sprachwechsel) auf derselben Seite bleiben
 let afterReload='';
-try{const last=sessionStorage.getItem('dienstplanPage');if(hasSession&&last&&allowedPages().includes(last))currentPage=last;afterReload=sessionStorage.getItem('dienstplanAfterReload')||'';sessionStorage.removeItem('dienstplanAfterReload')}catch(e){}
+try{const last=sessionStorage.getItem('dienstplanPage');afterReload=sessionStorage.getItem('dienstplanAfterReload')||'';sessionStorage.removeItem('dienstplanAfterReload');
+ // Nach F5 / Strg+F5 immer aufs Dashboard – nur ein von der App ausgelöstes Neuladen (z. B. Sprachwechsel) kehrt zur letzten Seite zurück
+ if(hasSession&&afterReload&&last&&allowedPages().includes(last))currentPage=last;
+ else if(hasSession){currentPage=allowedPages().includes('Dashboard')?'Dashboard':(allowedPages()[0]||'Einstellungen');sessionStorage.setItem('dienstplanPage',currentPage)}
+ if(currentPage==='Dienstplan'||currentPage==='Bereitschaft'){currentView=defaults[currentPage]||'Woche';if(currentPage==='Bereitschaft'&&currentView==='Team')currentView='Woche'}}catch(e){}
 refreshNotifications();
 render();
 try{if(Date.now()-(+sessionStorage.getItem('dienstplanStorageFull')||0)<15000)setTimeout(()=>toast('Browserspeicher voll – die letzte Änderung konnte nicht gespeichert werden. Bitte unter Einstellungen alte Einträge archivieren.'),80)}catch(e){}
